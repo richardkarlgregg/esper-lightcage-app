@@ -1,0 +1,12 @@
+// Custom styles that will be processed by SASS
+.site-header {
+    @apply bg-white shadow-md py-4;
+    
+    h1 {
+        @apply text-3xl font-bold;
+        
+        a {
+            @apply text-gray-900 hover:text-gray-700;
+        }
+    }
+} 

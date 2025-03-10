@@ -1,0 +1,25 @@
+/*
+Theme Name: Esper Light Cage Software
+Theme URI: 
+Author: Richard
+Description: A minimal WordPress theme for Esper Light Cage Software
+Version: 1.0
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: esper-lightcage-software
+*/
+
+/* Add your custom styles below */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+} 
