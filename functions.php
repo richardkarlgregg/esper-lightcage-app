@@ -345,17 +345,14 @@ function esper_get_job_template($post) {
             <div class="bg-gray-700 rounded-lg shadow-lg p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
-                        <input type="text" 
-                               id="jobTitle" 
-                               class="text-2xl font-bold bg-transparent border-b-2 border-transparent hover:border-yellow-300 focus:border-yellow-300 focus:outline-none text-white w-full" 
-                               value="<?php echo esc_attr($post->post_title); ?>" 
-                               data-job-id="<?php echo esc_attr($post->ID); ?>">
+                        <div class="flex items-center justify-between mb-2 group relative">
+                            <h2 class="text-2xl font-bold text-white job-title-display" data-job-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
+                            <input type="text" class="hidden absolute inset-0 bg-gray-700 text-white text-2xl font-bold px-2 py-1 rounded job-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="material-icons">edit</span>
+                            </button>
+                        </div>
                         <div class="text-gray-400 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
-                    </div>
-                    <div class="flex space-x-2">
-                        <button id="saveJob" class="bg-yellow-300 hover:bg-yellow-400 text-black px-4 py-2 rounded">
-                            Save Changes
-                        </button>
                     </div>
                 </div>
                 
@@ -598,7 +595,13 @@ function esper_get_take_template($post) {
             <div class="bg-gray-700 rounded-lg shadow-lg p-4">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
-                        <h2 class="text-2xl font-bold text-white mb-1"><?php echo esc_html($post->post_title); ?></h2>
+                        <div class="flex items-center justify-between mb-4 group relative">
+                            <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?>4</h3>
+                            <input type="text" class="hidden absolute inset-0 bg-gray-700 text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="material-icons text-sm">edit</span>
+                            </button>
+                        </div>
                         <div class="text-gray-400 text-sm">
                             <?php 
                             $parent_capture_id = get_post_meta($post->ID, 'parent_capture', true);
@@ -769,25 +772,38 @@ function esper_get_content() {
         return;
     }
     
-    $content = '';
-    switch ($post_type) {
-        case 'job':
-            $content = esper_get_job_template($post);
-            break;
-        case 'session':
-            $content = esper_get_session_template($post);
-            break;
-        case 'capture':
-            $content = esper_get_capture_template($post);
-            break;
-        case 'take':
-            $content = esper_get_take_template($post);
-            break;
+    if ($post_type === 'take') {
+        // For takes, return the post data instead of template
+        $parent_capture_id = get_post_meta($post->ID, 'parent_capture', true);
+        $parent_capture = get_post($parent_capture_id);
+        
+        wp_send_json_success(array(
+            'title' => $post->post_title,
+            'date' => get_the_date('F j, Y g:i a', $post),
+            'parent_capture' => array(
+                'id' => $parent_capture_id,
+                'title' => $parent_capture->post_title
+            )
+        ));
+    } else {
+        // For other types, return the template
+        $content = '';
+        switch ($post_type) {
+            case 'job':
+                $content = esper_get_job_template($post);
+                break;
+            case 'session':
+                $content = esper_get_session_template($post);
+                break;
+            case 'capture':
+                $content = esper_get_capture_template($post);
+                break;
+        }
+        
+        wp_send_json_success(array(
+            'content' => $content
+        ));
     }
-    
-    wp_send_json_success(array(
-        'content' => $content
-    ));
 }
 add_action('wp_ajax_esper_get_content', 'esper_get_content');
 

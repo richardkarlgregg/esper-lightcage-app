@@ -572,7 +572,10 @@ async function loadPostContent(postId, postType) {
 // Initialize job content interaction handlers
 function initJobContentHandlers() {
     let saveTimeout;
-    const jobId = $('#jobTitle').data('job-id');
+    const jobId = $('.job-title-display').data('job-id');
+    
+    // Initialize job title editing
+    initializeJobTitleEditor(jobId);
     
     // Save changes button handler
     $('#saveJob').on('click', async function() {
@@ -642,7 +645,7 @@ function initJobContentHandlers() {
             action: 'esper_update_job',
             nonce: esperApi.nonce,
             job_id: jobId,
-            title: $('#jobTitle').val(),
+            title: $('.job-title-display').text(),
             notes: $('#jobNotes').val(),
             tags: getTags()
         };
@@ -665,6 +668,88 @@ function initJobContentHandlers() {
             return $(this).contents().first().text().trim();
         }).get();
     }
+}
+
+// Add job title editor functionality
+function initializeJobTitleEditor(jobId) {
+    const $titleDisplay = $('.job-title-display');
+    const $titleInput = $('.job-title-input');
+    const $editButton = $titleDisplay.siblings('button');
+
+    // Store original title for reverting if needed
+    $titleDisplay.data('original-title', $titleDisplay.text());
+
+    function startEditing() {
+        $titleDisplay.addClass('hidden');
+        $titleInput.removeClass('hidden').val($titleDisplay.text()).focus();
+    }
+
+    function stopEditing() {
+        const newTitle = $titleInput.val().trim();
+        if (!newTitle) {
+            $titleInput.val($titleDisplay.text());
+            $titleInput.addClass('hidden');
+            $titleDisplay.removeClass('hidden');
+            return;
+        }
+
+        $titleInput.addClass('hidden');
+        $titleDisplay.removeClass('hidden').text('Saving...');
+
+        // Save the new title
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'esper_update_job',
+                nonce: esperApi.nonce,
+                job_id: jobId,
+                title: newTitle
+            }
+        }).then(response => {
+            if (response && response.success) {
+                // Update title display
+                $titleDisplay.text(newTitle);
+                $titleDisplay.data('original-title', newTitle);
+                
+                // Update folder tree item title
+                const $folderItem = $(`.folder-item[data-id="${jobId}"][data-type="job"]`);
+                $folderItem.find('> div > .text-white.truncate').text(newTitle);
+                $('#currentJobTitle').text(newTitle);
+                
+                showSuccess('Job name updated successfully');
+            } else {
+                const errorMsg = response && response.data ? response.data : 'Failed to update job name';
+                $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
+                showError(errorMsg);
+            }
+        }).catch(error => {
+            console.error('Error updating job name:', error);
+            $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
+            showError('Failed to update job name. Please try again.');
+        });
+    }
+
+    // Click on title or edit button to start editing
+    $titleDisplay.add($editButton).on('click', startEditing);
+
+    // Handle input blur and Enter key
+    $titleInput
+        .on('blur', stopEditing)
+        .on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                stopEditing();
+            }
+        })
+        .on('keyup', function(e) {
+            if (e.which === 27) { // Escape key
+                $titleInput.val($titleDisplay.text()); // Revert to current display value
+                $titleInput.addClass('hidden');
+                $titleDisplay.removeClass('hidden');
+            }
+        });
 }
 
 // Initialize capture screen handlers
