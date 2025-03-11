@@ -143,6 +143,15 @@ function initFolderTree() {
             closeCurrentJob();
         });
 
+        // About
+        $('#aboutBtn').on('click', function() {
+            $('#content').html(`
+                <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <p class="text-lg">Not potato farmers</p>
+                </div>
+            `);
+        });
+
         // Job Search
         $('#jobSearch').on('input', function() {
             const searchTerm = $(this).val().toLowerCase();
