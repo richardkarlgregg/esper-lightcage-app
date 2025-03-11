@@ -1031,13 +1031,17 @@ function initializeResizeHandlers($takeCard) {
             });
         } else if (currentHandle === 'horizontal') {
             const containerHeight = $takeCard.height();
+            const handleHeight = $horizontalHandle.height();
             const newHeight = Math.max(100, Math.min(300, startHeight + (startY - e.clientY)));
+            
+            // Ensure handle maintains its height
+            $horizontalHandle.css('height', '4px').css('min-height', '4px');
             
             // Update thumbnails pane height
             $thumbnailsPane.css('height', newHeight + 'px');
             
-            // Update main container height to fill remaining space
-            const mainContainerHeight = containerHeight - newHeight - $horizontalHandle.height();
+            // Update main container height to fill remaining space while accounting for handle height
+            const mainContainerHeight = containerHeight - newHeight - handleHeight;
             $mainContainer.css('height', mainContainerHeight + 'px');
             
             // Calculate available height for thumbnails (subtract toolbar height)
@@ -1047,18 +1051,8 @@ function initializeResizeHandlers($takeCard) {
             // Update thumbnails container height
             $thumbnailsContent.css('height', availableHeight + 'px');
             
-            // Update thumbnail dimensions based on available height while maintaining 11:7 aspect ratio
+            // Update thumbnail dimensions
             $thumbnails.each(function() {
-                // Calculate width based on 11:7 aspect ratio using the container height
-                const thumbWidth = (availableHeight * 11) / 7;
-                
-                // Only set the width and flex basis
-                //$(this).css({
-                    //'width': thumbWidth + 'px',
-                   // 'flex': '0 0 ' + thumbWidth + 'px'
-               // });
-                
-                // Ensure the image inside maintains aspect ratio
                 $(this).find('img').css({
                     'width': '100%',
                     'height': '100%',
