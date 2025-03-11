@@ -55,14 +55,14 @@
         }
     </style>
 </head>
-<body <?php body_class('bg-gray-900 text-white min-h-screen'); ?>>
+<body <?php body_class('bg-black text-white min-h-screen'); ?>>
 <?php wp_body_open(); ?>
 
 <!-- Menu Bar -->
-<div class="menu-bar bg-gray-800 text-white px-4 py-1 flex items-center space-x-4">
+<div class="menu-bar bg-black border-b border-yellow-300 text-white px-4 py-1 flex items-center space-x-4">
     <div class="menu-item relative">
-        <button class="hover:bg-gray-700 px-3 py-1 rounded">File</button>
-        <div class="menu-dropdown bg-gray-800 rounded shadow-lg py-1">
+        <button class="hover:bg-yellow-300 px-3 py-1 rounded">File</button>
+        <div class="menu-dropdown bg-black rounded shadow-lg py-1">
             <button id="openJobBtn" class="w-full text-left px-4 py-2 hover:bg-yellow-300 hover:text-black flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path>
@@ -88,7 +88,7 @@
 
 <!-- Job Selection Modal -->
 <div id="jobModal" class="modal-overlay">
-    <div class="modal bg-gray-800 rounded-lg shadow-xl">
+    <div class="modal bg-black rounded-lg shadow-xl">
         <div class="flex justify-between items-center p-4 border-b border-gray-700">
             <h2 class="text-lg font-semibold">Open Job</h2>
             <button id="closeModal" class="text-gray-400 hover:text-white">
@@ -99,7 +99,7 @@
         </div>
         <div class="p-4">
             <div class="mb-4">
-                <input type="text" id="jobSearch" placeholder="Search jobs..." class="w-full bg-gray-700 text-white px-3 py-2 rounded border border-gray-600 focus:border-yellow-300 focus:outline-none">
+                <input type="text" id="jobSearch" placeholder="Search jobs..." class="w-full bg-black text-white px-3 py-2 border border-gray-600 focus:border-yellow-300 focus:outline-none">
             </div>
             <ul id="jobList" class="space-y-1 max-h-60 overflow-y-auto">
                 <!-- Jobs will be populated here -->

@@ -114,9 +114,9 @@ function initFolderTree() {
             $('#jobModal').fadeIn(200);
         });
 
-        // Close Modal
+        // Close Modal - update to handle both click on overlay and close button
         $('#closeModal, #jobModal').on('click', function(e) {
-            if (e.target === this) {
+            if (e.target === this || $(e.target).closest('#closeModal').length) {
                 $('#jobModal').fadeOut(200);
             }
         });
@@ -164,7 +164,7 @@ function initFolderTree() {
             if (response.success && response.data.length > 0) {
                 response.data.forEach(job => {
                     const $item = $('<li>', {
-                        'class': 'px-3 py-2 hover:bg-gray-700 rounded cursor-pointer flex items-center',
+                        'class': 'px-3 py-2 hover:bg-black/50 rounded cursor-pointer flex items-center',
                         'data-id': job.id,
                         'html': `
                             <svg class="w-6 h-6 mr-2 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,7 +310,7 @@ function createFolderItem(item) {
     });
 
     const $header = $('<div>', {
-        'class': 'flex items-center space-x-2 hover:bg-gray-700/50 rounded group relative'
+        'class': 'flex items-center space-x-2 hover:bg-black/50 rounded group relative'
     });
 
     // Add collapse arrow for all items (will be hidden if no children)
@@ -327,7 +327,7 @@ function createFolderItem(item) {
                     'movie';
 
     const $icon = $('<span>', {
-        'class': 'material-icons w-6 h-6 text-gray-400 flex-none',
+        'class': 'material-icons w-6 h-6 text-black/60 flex-none',
         'text': iconType
     });
     $header.append($icon);
@@ -343,7 +343,7 @@ function createFolderItem(item) {
     // Add action buttons based on type
     if (item.type === 'job') {
         const $addButton = $('<button>', {
-            'class': 'add-btn ml-2 flex items-center text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+            'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
             'title': 'Add Session'
         }).append(
             $('<span>', {
@@ -354,7 +354,7 @@ function createFolderItem(item) {
         $header.append($addButton);
     } else if (item.type === 'session') {
         const $addButton = $('<button>', {
-            'class': 'add-btn ml-2 flex items-center text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+            'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
             'title': 'Add Capture'
         }).append(
             $('<span>', {
@@ -445,41 +445,41 @@ async function loadPostContent(postId, postType) {
                 
                 // Create the take review layout
                 const takeContent = $(`
-                    <div class="take-review h-screen flex flex-col bg-gray-900">
+                    <div class="take-review h-screen flex flex-col bg-black">
                         <!-- Main container with resizable panes -->
                         <div class="flex-1 flex" id="takePanesContainer">
                             <!-- Main image pane -->
-                            <div class="flex-1 relative bg-gray-900 flex items-center justify-center overflow-hidden" id="mainImagePane">
+                            <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden" id="mainImagePane">
                                 <img src="${firstThumbnailUrl}" 
                                      alt="Main Image"
                                      class="w-full h-full object-contain">
                             </div>
                             
                             <!-- Vertical resize handle -->
-                            <div class="w-2 bg-gray-800 hover:bg-yellow-300 cursor-col-resize" id="verticalResizeHandle"></div>
+                            <div class="w-2 bg-black/80 hover:bg-yellow-300 cursor-col-resize" id="verticalResizeHandle"></div>
                             
                             <!-- Right sidebar -->
-                            <div class="w-64 bg-gray-800 p-4" id="rightSidebarPane">
+                            <div class="w-64 bg-black/80 p-4" id="rightSidebarPane">
                                 <div class="flex items-center justify-between mb-4 group relative">
                                     <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="${postId}">${takeTitle}</h3>
-                                    <input type="text" class="hidden absolute inset-0 bg-gray-700 text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="${takeTitle}">
+                                    <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="${takeTitle}">
                                     <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span class="material-icons text-sm">edit</span>
                                     </button>
                                 </div>
                                 <div class="space-y-4">
-                                    <div class="bg-gray-700 p-3 rounded">
+                                    <div class="bg-black/60 p-3 rounded">
                                         <h4 class="text-sm font-medium text-gray-300 mb-2">Details</h4>
                                         <p class="text-gray-400 text-sm">Created: ${response.data.date || 'Just now'}</p>
                                         <p class="text-gray-400 text-sm">Status: Active</p>
                                     </div>
-                                    <div class="bg-gray-700 p-3 rounded">
+                                    <div class="bg-black/60 p-3 rounded">
                                         <h4 class="text-sm font-medium text-gray-300 mb-2">Metadata</h4>
                                         <p class="text-gray-400 text-sm">Resolution: ${response.data.resolution || '1920x1080'}</p>
                                         <p class="text-gray-400 text-sm">Size: ${response.data.size || '2.4 MB'}</p>
                                         <p class="text-gray-400 text-sm">Format: ${response.data.format || 'PNG'}</p>
                                     </div>
-                                    <div class="bg-gray-700 p-3 rounded">
+                                    <div class="bg-black/60 p-3 rounded">
                                         <h4 class="text-sm font-medium text-gray-300 mb-2">Camera Settings</h4>
                                         <p class="text-gray-400 text-sm">Shutter: 1/125</p>
                                         <p class="text-gray-400 text-sm">Aperture: f/2.8</p>
@@ -490,22 +490,14 @@ async function loadPostContent(postId, postType) {
                         </div>
                         
                         <!-- Horizontal resize handle -->
-                        <div class="h-2 bg-gray-800 hover:bg-yellow-300 cursor-row-resize" id="horizontalResizeHandle"></div>
+                        <div class="h-2 bg-black/80 hover:bg-yellow-300 cursor-row-resize" id="horizontalResizeHandle"></div>
                         
                         <!-- Bottom thumbnails filmstrip -->
-                        <div class="h-32 bg-gray-800" id="thumbnailsPane">
+                        <div class="h-32 bg-black/80" id="thumbnailsPane">
                             <div class="h-full flex flex-col">
                                 <!-- Filmstrip toolbar -->
-                                <div class="bg-gray-900 px-4 py-1 flex items-center justify-between border-b border-gray-700">
+                                <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
                                     <span class="text-gray-400 text-sm">12 images</span>
-                                    <div class="flex items-center space-x-2">
-                                        <button class="text-gray-400 hover:text-yellow-300">
-                                            <span class="material-icons text-sm">filter_list</span>
-                                        </button>
-                                        <button class="text-gray-400 hover:text-yellow-300">
-                                            <span class="material-icons text-sm">sort</span>
-                                        </button>
-                                    </div>
                                 </div>
                                 <!-- Filmstrip content with custom scrollbar -->
                                 <div class="flex-1 overflow-x-auto filmstrip-scroll">
@@ -514,10 +506,10 @@ async function loadPostContent(postId, postType) {
                                             height: 6px;
                                         }
                                         .filmstrip-scroll::-webkit-scrollbar-track {
-                                            background: #1f2937;
+                                            background: #000000;
                                         }
                                         .filmstrip-scroll::-webkit-scrollbar-thumb {
-                                            background: #4b5563;
+                                            background: #333333;
                                             border-radius: 3px;
                                         }
                                         .filmstrip-scroll::-webkit-scrollbar-thumb:hover {
@@ -908,7 +900,7 @@ function initializeCaptureNameEditor(captureId) {
 function generatePlaceholderGallery() {
     const colors = ['4a5f6a', '6a4a5f', '5f6a4a', '4a6a5f', '5f4a6a', '6a5f4a'];
     let html = `
-        <div class="bg-gray-700 rounded-lg shadow-lg p-6 mt-6">
+        <div class="bg-black/60 rounded-lg shadow-lg p-6 mt-6">
             <h3 class="text-lg font-semibold text-white mb-4">Images</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
     `;
@@ -917,13 +909,13 @@ function generatePlaceholderGallery() {
     for (let i = 1; i <= 12; i++) {
         const color = colors[i % colors.length];
         html += `
-            <div class="bg-gray-800 rounded-lg overflow-hidden">
+            <div class="bg-black/80 rounded-lg overflow-hidden">
                 <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzRhNWY2YSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=" 
                      alt="Image ${i}"
                      class="w-full h-48 object-cover">
                 <div class="p-4">
                     <h4 class="text-white font-semibold">Image ${i}</h4>
-                    <p class="text-gray-400 text-sm">Placeholder</p>
+                    <p class="text-black/60 text-sm">Placeholder</p>
                 </div>
             </div>
         `;
@@ -1038,7 +1030,7 @@ function initializeResizeHandlers($takeCard) {
             $mainContainer.css('height', mainContainerHeight + 'px');
             
             // Calculate available height for thumbnails (subtract toolbar height)
-            const toolbarHeight = $thumbnailsPane.find('.bg-gray-900').outerHeight();
+            const toolbarHeight = $thumbnailsPane.find('.bg-black').outerHeight();
             const availableHeight = newHeight - toolbarHeight - 16; // 16px for padding
             
             // Update thumbnails container height
@@ -1117,12 +1109,12 @@ function generateFilmstripThumbnails() {
         const color = colors[i % colors.length];
         thumbnails += `
             <div class="flex-none group" style="aspect-ratio: 16/9; height: calc(100% - 8px);">
-                <div class="h-full bg-gray-700 rounded overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all duration-200 ${i === 1 ? 'ring-2 ring-yellow-300' : ''}">
+                <div class="h-full bg-black/60 rounded overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all duration-200 ${i === 1 ? 'ring-2 ring-yellow-300' : ''}">
                     <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=Take+${i}" 
                          alt="Thumbnail ${i}"
                          class="w-full h-full object-cover"
                          loading="lazy">
-                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         Take ${i}
                     </div>
                 </div>

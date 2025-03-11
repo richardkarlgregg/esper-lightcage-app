@@ -339,52 +339,58 @@ add_action('wp_ajax_esper_create_item', 'esper_create_item');
 function esper_get_job_template($post) {
     ob_start();
     ?>
-    <div class="job-template bg-gray-800 min-h-screen p-6">
-        <div class="max-w-5xl mx-auto space-y-6">
+    <div class="job-template bg-black min-h-screen p-6">
+        <div class="w-full space-y-6">
             <!-- Job Header -->
-            <div class="bg-gray-700 rounded-lg shadow-lg p-6">
+            <div class="bg-black/80 rounded-lg shadow-lg p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
                         <div class="flex items-center justify-between mb-2 group relative">
-                            <h2 class="text-2xl font-bold text-white job-title-display" data-job-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
-                            <input type="text" class="hidden absolute inset-0 bg-gray-700 text-white text-2xl font-bold px-2 py-1 rounded job-title-input" value="<?php echo esc_attr($post->post_title); ?>">
-                            <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="material-icons">edit</span>
+                            <h2 class="text-lg font-semibold text-white job-title-display" data-job-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
+                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded job-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span class="material-icons text-sm">edit</span>
                             </button>
                         </div>
-                        <div class="text-gray-400 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
+                        <div class="text-gray-500 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
                     </div>
                 </div>
                 
                 <!-- Tags -->
-                <div class="mt-4">
-                    <label class="text-gray-300 text-sm mb-2 block">Tags</label>
-                    <div class="flex flex-wrap gap-2 mb-2" id="tagContainer">
-                        <?php
-                        $tags = get_post_meta($post->ID, 'job_tags', true) ?: array();
-                        foreach ($tags as $tag) {
-                            echo '<span class="bg-gray-600 text-white px-2 py-1 rounded text-sm flex items-center">';
-                            echo esc_html($tag);
-                            echo '<button class="ml-2 text-gray-400 hover:text-white remove-tag" data-tag="' . esc_attr($tag) . '">&times;</button>';
-                            echo '</span>';
-                        }
-                        ?>
+                <div class="space-y-4">
+                    <div class="bg-black/80 p-4 rounded">
+                        <h3 class="text-sm font-medium text-gray-300 mb-2">Notes</h3>
+                        <textarea id="jobNotes" class="w-full h-32 bg-black text-white rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'job_notes', true)); ?></textarea>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <input type="text" 
-                               id="newTag" 
-                               class="bg-gray-600 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-yellow-300 text-sm"
-                               placeholder="Add new tag...">
-                        <button id="addTag" class="bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded text-sm">
-                            Add
-                        </button>
+
+                    <div class="bg-black/80 p-4 rounded">
+                        <h3 class="text-sm font-medium text-gray-300 mb-2">Tags</h3>
+                        <div class="flex flex-wrap gap-2 mb-2" id="tagContainer">
+                            <?php
+                            $tags = get_post_meta($post->ID, 'job_tags', true);
+                            if (is_array($tags)) {
+                                foreach ($tags as $tag) {
+                                    echo '<span class="bg-black text-white px-2 py-1 rounded text-sm flex items-center">' . 
+                                         esc_html($tag) . 
+                                         '<button class="ml-2 text-gray-500 hover:text-white remove-tag" data-tag="' . esc_attr($tag) . '">&times;</button>' .
+                                         '</span>';
+                                }
+                            }
+                            ?>
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="text" id="newTag" class="flex-1 bg-black text-white rounded px-2 py-1 text-sm" placeholder="Add a tag">
+                            <button id="addTag" class="bg-yellow-300 hover:bg-yellow-400 text-black px-3 py-1 rounded text-sm">
+                                Add
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-gray-700 rounded-lg shadow-lg p-6">
+                <div class="bg-black/80 rounded-lg shadow-lg p-6">
                     <h3 class="text-lg font-semibold text-white mb-4">Sessions</h3>
                     <?php 
                     $sessions = get_posts(array(
@@ -396,10 +402,10 @@ function esper_get_job_template($post) {
                     $session_count = count($sessions);
                     ?>
                     <div class="text-3xl font-bold text-yellow-300"><?php echo $session_count; ?></div>
-                    <p class="text-gray-400">Total Sessions</p>
+                    <p class="text-gray-500">Total Sessions</p>
                 </div>
 
-                <div class="bg-gray-700 rounded-lg shadow-lg p-6">
+                <div class="bg-black/80 rounded-lg shadow-lg p-6">
                     <h3 class="text-lg font-semibold text-white mb-4">Captures</h3>
                     <?php 
                     $captures = 0;
@@ -413,10 +419,10 @@ function esper_get_job_template($post) {
                     }
                     ?>
                     <div class="text-3xl font-bold text-yellow-300"><?php echo $captures; ?></div>
-                    <p class="text-gray-400">Total Captures</p>
+                    <p class="text-gray-500">Total Captures</p>
                 </div>
 
-                <div class="bg-gray-700 rounded-lg shadow-lg p-6">
+                <div class="bg-black/80 rounded-lg shadow-lg p-6">
                     <h3 class="text-lg font-semibold text-white mb-4">Takes</h3>
                     <?php 
                     $takes = 0;
@@ -438,16 +444,8 @@ function esper_get_job_template($post) {
                     }
                     ?>
                     <div class="text-3xl font-bold text-yellow-300"><?php echo $takes; ?></div>
-                    <p class="text-gray-400">Total Takes</p>
+                    <p class="text-gray-500">Total Takes</p>
                 </div>
-            </div>
-
-            <!-- Notes Section -->
-            <div class="bg-gray-700 rounded-lg shadow-lg p-6">
-                <h3 class="text-lg font-semibold text-white mb-4">Notes</h3>
-                <textarea id="jobNotes" 
-                          class="w-full h-32 bg-gray-600 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                          placeholder="Add notes about this job..."><?php echo esc_textarea(get_post_meta($post->ID, 'job_notes', true)); ?></textarea>
             </div>
         </div>
     </div>
@@ -499,15 +497,15 @@ function esper_get_session_template($post) {
 function esper_get_capture_template($post) {
     ob_start();
     ?>
-    <div class="capture-template bg-gray-800 min-h-screen p-6">
-        <div class="max-w-5xl mx-auto space-y-6">
+    <div class="capture-template bg-black min-h-screen p-6">
+        <div class="w-full space-y-6">
             <!-- Capture Header -->
-            <div class="bg-gray-700 rounded-lg shadow-lg p-6">
+            <div class="bg-black p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
                         <div class="flex items-center justify-between mb-2 group relative">
                             <h2 class="text-2xl font-bold text-white capture-title-display" data-capture-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
-                            <input type="text" class="hidden absolute inset-0 bg-gray-700 text-white text-2xl font-bold px-2 py-1 rounded capture-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-2xl font-bold px-2 py-1 capture-title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons">edit</span>
                             </button>
@@ -547,7 +545,7 @@ function esper_get_capture_template($post) {
             </div>
 
             <!-- Takes Gallery -->
-            <div class="bg-gray-700 rounded-lg shadow-lg p-6">
+            <div class="bg-black shadow-lg p-6">
                 <h3 class="text-lg font-semibold text-white mb-4">Takes</h3>
                 <div id="takesGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <?php 
@@ -566,7 +564,7 @@ function esper_get_capture_template($post) {
                             $thumbnail = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzRhNWY2YSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
                         }
                         ?>
-                        <div class="take-card bg-gray-800 rounded-lg overflow-hidden">
+                        <div class="take-card bg-black overflow-hidden">
                             <img src="<?php echo esc_url($thumbnail); ?>" 
                                  alt="<?php echo esc_attr($take->post_title); ?>"
                                  class="w-full h-48 object-cover">
@@ -589,15 +587,15 @@ function esper_get_capture_template($post) {
 function esper_get_take_template($post) {
     ob_start();
     ?>
-    <div class="take-template bg-gray-800 min-h-screen p-6 flex flex-col h-screen">
+    <div class="take-template bg-black min-h-screen p-6 flex flex-col h-screen">
         <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-6">
             <!-- Take Header -->
-            <div class="bg-gray-700 rounded-lg shadow-lg p-4">
+            <div class="bg-black p-4">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <div class="flex items-center justify-between mb-4 group relative">
                             <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?>4</h3>
-                            <input type="text" class="hidden absolute inset-0 bg-gray-700 text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 take-title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons text-sm">edit</span>
                             </button>
@@ -615,7 +613,7 @@ function esper_get_take_template($post) {
             </div>
 
             <!-- Main Image View -->
-            <div class="flex-1 bg-gray-700 rounded-lg shadow-lg flex items-center justify-center min-h-0">
+            <div class="flex-1 bg-black flex items-center justify-center min-h-0">
                 <div id="mainImageView" class="w-full h-full flex items-center justify-center p-4">
                     <img src="https://placehold.co/1200x800/1f2937/ffffff?text=Selected+Image" 
                          alt="Selected Image"
@@ -624,16 +622,16 @@ function esper_get_take_template($post) {
             </div>
 
             <!-- Filmstrip -->
-            <div class="bg-gray-900 rounded-lg shadow-lg p-4 h-48 relative">
+            <div class="bg-black rounded-lg shadow-lg p-4 h-48 relative">
                 <!-- Left Arrow -->
-                <button id="scrollLeft" class="absolute left-2 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 z-10 shadow-lg opacity-0 transition-opacity duration-200">
+                <button id="scrollLeft" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black hover:bg-gray-700 text-white rounded-full p-2 z-10 shadow-lg opacity-0 transition-opacity duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                     </svg>
                 </button>
 
                 <!-- Right Arrow -->
-                <button id="scrollRight" class="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-800 hover:bg-gray-700 text-white rounded-full p-2 z-10 shadow-lg opacity-0 transition-opacity duration-200">
+                <button id="scrollRight" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black hover:bg-gray-700 text-white rounded-full p-2 z-10 shadow-lg opacity-0 transition-opacity duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -648,7 +646,7 @@ function esper_get_take_template($post) {
                         $mainImageUrl = "https://placehold.co/1200x800/${color}/ffffff?text=Image+" . $i;
                         $thumbnailUrl = "https://placehold.co/400x300/${color}/ffffff?text=Image+" . $i;
                         ?>
-                        <div class="filmstrip-thumbnail flex-none w-40 h-full bg-gray-800 rounded cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-yellow-300" 
+                        <div class="filmstrip-thumbnail flex-none w-40 h-full bg-black rounded cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-yellow-300" 
                              data-image-url="<?php echo esc_url($mainImageUrl); ?>">
                             <img src="<?php echo esc_url($thumbnailUrl); ?>" 
                                  alt="Image <?php echo $i; ?>"
