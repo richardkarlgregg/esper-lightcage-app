@@ -443,7 +443,7 @@ async function loadPostContent(postId, postType) {
                 const takeTitle = response.data && response.data.title ? response.data.title : `Take ${postId}`;
                 
                 // Get the first thumbnail URL for the default main image
-                const firstThumbnailUrl = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=' + encodeURIComponent(takeTitle);
+                const firstThumbnailUrl = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=1';
                 
                 // Create the take review layout
                 const takeContent = $(`
@@ -1125,12 +1125,12 @@ function generateFilmstripThumbnails() {
         thumbnails += `
             <div class="flex-none group">
                 <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all duration-200 ${i === 1 ? 'ring-2 ring-yellow-300' : ''}">
-                    <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=Take+${i}" 
+                    <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${i}" 
                          alt="Thumbnail ${i}"
                          class="w-full h-full object-cover"
                          loading="lazy">
                     <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        Take ${i}
+                        ${i}
                     </div>
                 </div>
             </div>
@@ -1173,11 +1173,11 @@ function initializeThumbnailHandlers($takeCard) {
         
         // Get the thumbnail number and create a larger version URL
         const thumbnailSrc = $(this).find('img').attr('src');
-        const takeNumber = thumbnailSrc.match(/Take\+(\d+)/)[1];
+        const number = thumbnailSrc.match(/text=(\d+)/)[1];
         const color = thumbnailSrc.match(/\/([0-9a-f]{6})\//)[1];
         
         // Create high-res version URL
-        const mainImageSrc = `https://placehold.co/1920x1080/${color}/FFFFFF/png?text=Take+${takeNumber}`;
+        const mainImageSrc = `https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${number}`;
         
         // Update main image with loading state
         $mainImage.css('opacity', '0.5').css('transition', 'opacity 0.3s ease');
