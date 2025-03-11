@@ -62,7 +62,7 @@ function initFolderTree() {
             } else {
                 // Create children container if it doesn't exist
                 $childrenContainer = $('<div>', {
-                    'class': 'pl-6 mt-1 space-y-1 hidden'
+                    'class': 'pl-1 mt-1 space-y-1 hidden'
                 });
                 parentItem.append($childrenContainer);
             }
@@ -167,7 +167,7 @@ function initFolderTree() {
                         'class': 'px-3 py-2 hover:bg-gray-700 rounded cursor-pointer flex items-center',
                         'data-id': job.id,
                         'html': `
-                            <svg class="w-4 h-4 mr-2 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 mr-2 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                             </svg>
                             ${job.title}
@@ -327,7 +327,7 @@ function createFolderItem(item) {
                     'movie';
 
     const $icon = $('<span>', {
-        'class': 'material-icons w-4 h-4 text-gray-400 flex-none',
+        'class': 'material-icons w-6 h-6 text-gray-400 flex-none',
         'text': iconType
     });
     $header.append($icon);
@@ -343,7 +343,7 @@ function createFolderItem(item) {
     // Add action buttons based on type
     if (item.type === 'job') {
         const $addButton = $('<button>', {
-            'class': 'add-btn ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+            'class': 'add-btn ml-2 flex items-center text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
             'title': 'Add Session'
         }).append(
             $('<span>', {
@@ -354,7 +354,7 @@ function createFolderItem(item) {
         $header.append($addButton);
     } else if (item.type === 'session') {
         const $addButton = $('<button>', {
-            'class': 'add-btn ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+            'class': 'add-btn ml-2 flex items-center text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
             'title': 'Add Capture'
         }).append(
             $('<span>', {
@@ -370,7 +370,7 @@ function createFolderItem(item) {
     // Add children container if there are children
     if (item.children && item.children.length > 0) {
         const $children = $('<div>', {
-            'class': 'pl-6 mt-1 space-y-1 hidden'
+            'class': 'pl-1 mt-1 space-y-1 hidden'
         });
         
         item.children.forEach(child => {
@@ -574,23 +574,87 @@ function initJobContentHandlers() {
     let saveTimeout;
     const jobId = $('.job-title-display').data('job-id');
     
-    // Initialize job title editing
-    initializeJobTitleEditor(jobId);
-    
-    // Save changes button handler
-    $('#saveJob').on('click', async function() {
-        try {
-            $(this).prop('disabled', true).text('Saving...');
-            
-            await saveJobDetails();
-            
-            $(this).prop('disabled', false).text('Save Changes');
-        } catch (error) {
-            console.error('Error saving job:', error);
-            showError('Error saving changes');
-            $(this).prop('disabled', false).text('Save Changes');
+    // Initialize job title editor
+    const $titleDisplay = $('.job-title-display');
+    const $titleInput = $('.job-title-input');
+    const $editButton = $titleDisplay.siblings('button');
+
+    // Store original title for reverting if needed
+    $titleDisplay.data('original-title', $titleDisplay.text());
+
+    function startEditing() {
+        $titleDisplay.addClass('hidden');
+        $titleInput.removeClass('hidden').val($titleDisplay.text()).focus();
+    }
+
+    function stopEditing() {
+        const newTitle = $titleInput.val().trim();
+        if (!newTitle) {
+            $titleInput.val($titleDisplay.text());
+            $titleInput.addClass('hidden');
+            $titleDisplay.removeClass('hidden');
+            return;
         }
-    });
+
+        $titleInput.addClass('hidden');
+        $titleDisplay.removeClass('hidden').text('Saving...');
+
+        // Save the new title
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'esper_update_job',
+                nonce: esperApi.nonce,
+                job_id: jobId,
+                title: newTitle
+            }
+        }).then(response => {
+            if (response && response.success) {
+                // Update title display
+                $titleDisplay.text(newTitle);
+                $titleDisplay.data('original-title', newTitle);
+                
+                // Update folder tree item title
+                const $folderItem = $(`.folder-item[data-id="${jobId}"][data-type="job"]`);
+                $folderItem.find('> div > .text-white.truncate').text(newTitle);
+                
+                // Update current job title in header
+                $('#currentJobTitle').text(newTitle);
+                
+                showSuccess('Job name updated successfully');
+            } else {
+                const errorMsg = response && response.data ? response.data : 'Failed to update job name';
+                $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
+                showError(errorMsg);
+            }
+        }).catch(error => {
+            console.error('Error updating job name:', error);
+            $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
+            showError('Failed to update job name. Please try again.');
+        });
+    }
+
+    // Click on title or edit button to start editing
+    $titleDisplay.add($editButton).on('click', startEditing);
+
+    // Handle input blur and Enter key
+    $titleInput
+        .on('blur', stopEditing)
+        .on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                stopEditing();
+            }
+        })
+        .on('keyup', function(e) {
+            if (e.which === 27) { // Escape key
+                $titleInput.val($titleDisplay.text()); // Revert to current display value
+                $titleInput.addClass('hidden');
+                $titleDisplay.removeClass('hidden');
+            }
+        });
     
     // Auto-save notes when typing stops
     $('#jobNotes').on('input', function() {
@@ -645,7 +709,6 @@ function initJobContentHandlers() {
             action: 'esper_update_job',
             nonce: esperApi.nonce,
             job_id: jobId,
-            title: $('.job-title-display').text(),
             notes: $('#jobNotes').val(),
             tags: getTags()
         };
@@ -655,11 +718,6 @@ function initJobContentHandlers() {
         if (!response.success) {
             throw new Error(response.data || 'Error saving job details');
         }
-        
-        // Update the job title in the folder tree and current job title
-        const $folderItem = $(`.folder-item[data-id="${jobId}"][data-type="job"]`);
-        $folderItem.find('> div > .text-white.truncate').text(data.title);
-        $('#currentJobTitle').text(data.title);
     }
     
     // Get current tags
@@ -668,88 +726,6 @@ function initJobContentHandlers() {
             return $(this).contents().first().text().trim();
         }).get();
     }
-}
-
-// Add job title editor functionality
-function initializeJobTitleEditor(jobId) {
-    const $titleDisplay = $('.job-title-display');
-    const $titleInput = $('.job-title-input');
-    const $editButton = $titleDisplay.siblings('button');
-
-    // Store original title for reverting if needed
-    $titleDisplay.data('original-title', $titleDisplay.text());
-
-    function startEditing() {
-        $titleDisplay.addClass('hidden');
-        $titleInput.removeClass('hidden').val($titleDisplay.text()).focus();
-    }
-
-    function stopEditing() {
-        const newTitle = $titleInput.val().trim();
-        if (!newTitle) {
-            $titleInput.val($titleDisplay.text());
-            $titleInput.addClass('hidden');
-            $titleDisplay.removeClass('hidden');
-            return;
-        }
-
-        $titleInput.addClass('hidden');
-        $titleDisplay.removeClass('hidden').text('Saving...');
-
-        // Save the new title
-        $.ajax({
-            url: esperApi.ajaxurl,
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'esper_update_job',
-                nonce: esperApi.nonce,
-                job_id: jobId,
-                title: newTitle
-            }
-        }).then(response => {
-            if (response && response.success) {
-                // Update title display
-                $titleDisplay.text(newTitle);
-                $titleDisplay.data('original-title', newTitle);
-                
-                // Update folder tree item title
-                const $folderItem = $(`.folder-item[data-id="${jobId}"][data-type="job"]`);
-                $folderItem.find('> div > .text-white.truncate').text(newTitle);
-                $('#currentJobTitle').text(newTitle);
-                
-                showSuccess('Job name updated successfully');
-            } else {
-                const errorMsg = response && response.data ? response.data : 'Failed to update job name';
-                $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
-                showError(errorMsg);
-            }
-        }).catch(error => {
-            console.error('Error updating job name:', error);
-            $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
-            showError('Failed to update job name. Please try again.');
-        });
-    }
-
-    // Click on title or edit button to start editing
-    $titleDisplay.add($editButton).on('click', startEditing);
-
-    // Handle input blur and Enter key
-    $titleInput
-        .on('blur', stopEditing)
-        .on('keypress', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                stopEditing();
-            }
-        })
-        .on('keyup', function(e) {
-            if (e.which === 27) { // Escape key
-                $titleInput.val($titleDisplay.text()); // Revert to current display value
-                $titleInput.addClass('hidden');
-                $titleDisplay.removeClass('hidden');
-            }
-        });
 }
 
 // Initialize capture screen handlers
@@ -793,7 +769,7 @@ function initCaptureHandlers() {
                 let $captureChildren = $capture.children('div').last();
                 if (!$captureChildren.length || $captureChildren.hasClass('flex')) {
                     $captureChildren = $('<div>', {
-                        'class': 'pl-6 mt-1 space-y-1'
+                        'class': 'pl-1 mt-1 space-y-1'
                     });
                     $capture.append($captureChildren);
                 }

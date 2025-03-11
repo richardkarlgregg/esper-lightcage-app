@@ -1,6 +1,6 @@
 /* Tooltip styles */
 [title] {
-    position: relative;
+    position: absolute;
 }
 
 [title]:hover:after {
