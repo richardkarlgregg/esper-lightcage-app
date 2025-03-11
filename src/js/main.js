@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import 'jquery-ui/ui/widgets/datepicker';
 import * as THREE from 'three';
-import { initFolderTree } from './folder-tree';
+import { initFolderTree, loadPostContent } from './folder-tree';
 
 // Make jQuery available globally
 window.jQuery = window.$ = $;
@@ -15,4 +15,10 @@ const renderer = new THREE.WebGLRenderer();
 $(document).ready(function() {
     console.log('Document ready!');
     initFolderTree();
+
+    // Handle take card clicks
+    $(document).on('click', '.take-card', function() {
+        const takeId = $(this).data('take-id');
+        loadPostContent(takeId, 'take');
+    });
 }); 

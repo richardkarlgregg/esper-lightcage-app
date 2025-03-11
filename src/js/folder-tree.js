@@ -1,4 +1,6 @@
 // Folder Tree functionality
+export { initFolderTree, loadPostContent };
+
 function initFolderTree() {
     let currentJobId = null;
 
@@ -1267,5 +1269,3 @@ function initializeTakeNameEditor($takeCard, takeId, initialTitle) {
             }
         });
 }
-
-export { initFolderTree, createFolderItem };

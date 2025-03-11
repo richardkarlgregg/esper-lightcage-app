@@ -561,10 +561,11 @@ function esper_get_capture_template($post) {
                     foreach ($takes as $take) {
                         $thumbnail = get_the_post_thumbnail_url($take->ID, 'medium');
                         if (!$thumbnail) {
-                            $thumbnail = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzRhNWY2YSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiNmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+                            $thumbnail = 'https://placehold.co/600x400';
                         }
                         ?>
-                        <div class="take-card bg-black overflow-hidden">
+                        <div class="take-card bg-black overflow-hidden cursor-pointer hover:bg-gray-900 transition-colors" 
+                             data-take-id="<?php echo esc_attr($take->ID); ?>">
                             <img src="<?php echo esc_url($thumbnail); ?>" 
                                  alt="<?php echo esc_attr($take->post_title); ?>"
                                  class="w-full h-48 object-cover">
@@ -1090,4 +1091,32 @@ function esper_handle_update_capture() {
         wp_send_json_error('Failed to update capture name');
     }
 }
-add_action('wp_ajax_esper_update_capture', 'esper_handle_update_capture'); 
+add_action('wp_ajax_esper_update_capture', 'esper_handle_update_capture');
+
+// Add custom scrollbar styles
+function esper_add_scrollbar_styles() {
+    ?>
+    <style>
+    /* Custom scrollbar styles for the sidebar */
+    #sidebar::-webkit-scrollbar {
+        width: 8px;
+    }
+    #sidebar::-webkit-scrollbar-track {
+        background: #000000;
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+        background: #333333;
+        border-radius: 4px;
+    }
+    #sidebar::-webkit-scrollbar-thumb:hover {
+        background: #fcd34d;
+    }
+    /* For Firefox */
+    #sidebar {
+        scrollbar-width: thin;
+        scrollbar-color: #333333 #000000;
+    }
+    </style>
+    <?php
+}
+add_action('wp_head', 'esper_add_scrollbar_styles');
