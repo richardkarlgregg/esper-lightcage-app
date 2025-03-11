@@ -1038,10 +1038,23 @@ function initializeResizeHandlers($takeCard) {
             // Update thumbnails container height
             $thumbnailsContent.css('height', availableHeight + 'px');
             
-            // Update thumbnail widths based on height to maintain aspect ratio
+            // Update thumbnail dimensions based on available height while maintaining 11:7 aspect ratio
             $thumbnails.each(function() {
-                const thumbWidth = availableHeight * thumbRatio;
-                $(this).css('width', thumbWidth + 'px');
+                // Calculate width based on 11:7 aspect ratio using the container height
+                const thumbWidth = (availableHeight * 11) / 7;
+                
+                // Only set the width and flex basis
+                //$(this).css({
+                    //'width': thumbWidth + 'px',
+                   // 'flex': '0 0 ' + thumbWidth + 'px'
+               // });
+                
+                // Ensure the image inside maintains aspect ratio
+                $(this).find('img').css({
+                    'width': '100%',
+                    'height': '100%',
+                    'object-fit': 'cover'
+                });
             });
             
             // Update main image to fill the new available space
@@ -1090,7 +1103,7 @@ function initializeResizeHandlers($takeCard) {
         const availableHeight = $thumbnailsContent.height();
         $thumbnails.each(function() {
             const thumbWidth = availableHeight * thumbRatio;
-            $(this).css('width', thumbWidth + 'px');
+           // $(this).css('width', thumbWidth + 'px');
         });
     }
     
@@ -1110,8 +1123,8 @@ function generateFilmstripThumbnails() {
     for (let i = 1; i <= 12; i++) {
         const color = colors[i % colors.length];
         thumbnails += `
-            <div class="flex-none group" style="aspect-ratio: 16/9; height: calc(100% - 8px);">
-                <div class="h-full bg-black/60 rounded overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all duration-200 ${i === 1 ? 'ring-2 ring-yellow-300' : ''}">
+            <div class="flex-none group">
+                <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all duration-200 ${i === 1 ? 'ring-2 ring-yellow-300' : ''}">
                     <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=Take+${i}" 
                          alt="Thumbnail ${i}"
                          class="w-full h-full object-cover"
