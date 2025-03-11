@@ -306,7 +306,7 @@ async function loadHierarchy() {
 // Create a folder item element with its children
 function createFolderItem(item) {
     const $item = $('<div>', {
-        'class': 'folder-item cursor-pointer p-2 rounded relative',
+        'class': 'folder-item cursor-pointer pt-1 pb-1 rounded relative',
         'data-id': item.id,
         'data-type': item.type
     });
@@ -447,7 +447,7 @@ async function loadPostContent(postId, postType) {
                 
                 // Create the take review layout
                 const takeContent = $(`
-                    <div class="take-review h-screen flex flex-col bg-black">
+                    <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);">
                         <!-- Main container with resizable panes -->
                         <div class="flex-1 flex" id="takePanesContainer">
                             <!-- Main image pane -->
@@ -458,7 +458,7 @@ async function loadPostContent(postId, postType) {
                             </div>
                             
                             <!-- Vertical resize handle -->
-                            <div class="w-2 bg-black/80 hover:bg-yellow-300 cursor-col-resize" id="verticalResizeHandle"></div>
+                            <div class="w-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-col-resize" id="verticalResizeHandle"></div>
                             
                             <!-- Right sidebar -->
                             <div class="w-64 bg-black/80 p-4" id="rightSidebarPane">
@@ -492,7 +492,7 @@ async function loadPostContent(postId, postType) {
                         </div>
                         
                         <!-- Horizontal resize handle -->
-                        <div class="h-2 bg-black/80 hover:bg-yellow-300 cursor-row-resize" id="horizontalResizeHandle"></div>
+                        <div class="h-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-row-resize" id="horizontalResizeHandle"></div>
                         
                         <!-- Bottom thumbnails filmstrip -->
                         <div class="h-32 bg-black/80" id="thumbnailsPane">

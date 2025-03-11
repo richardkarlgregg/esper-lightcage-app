@@ -1,9 +1,9 @@
 <?php get_header(); ?>
 
-<div class="flex h-screen">
+<div class="flex" style="height: calc(100vh - 40px);">
     <!-- Left Pane: Folder Tree -->
     <div id="sidebar" class="resizable bg-black p-4" style="width: 250px;">
-        <ul id="folderTree" class="space-y-2">
+        <ul id="folderTree" class="text-sm text-yellow-300 space-y-2">
         </ul>
     </div>
 

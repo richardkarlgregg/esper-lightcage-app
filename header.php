@@ -55,7 +55,7 @@
         }
     </style>
 </head>
-<body <?php body_class('bg-black text-white min-h-screen'); ?>>
+<body <?php body_class('bg-black text-white h-screen overflow-hidden'); ?>>
 <?php wp_body_open(); ?>
 
 <!-- Menu Bar -->
