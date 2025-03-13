@@ -32,8 +32,8 @@ function initFolderTree() {
         const postId = $(this).data('id');
         const postType = $(this).data('type');
         loadPostContent(postId, postType);
-        $('.folder-item').removeClass('bg-yellow-300 bg-opacity-10');
-        $(this).addClass('bg-yellow-300 bg-opacity-10');
+        $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
+        $(this).addClass('bg-esper-yellow bg-opacity-10');
     });
 
     // Event delegation for add buttons
@@ -178,7 +178,7 @@ function initFolderTree() {
                         'class': 'px-3 py-2 hover:bg-black/50 rounded cursor-pointer flex items-center',
                         'data-id': job.id,
                         'html': `
-                            <svg class="w-6 h-6 mr-2 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 mr-2 text-esper-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                             </svg>
                             ${job.title}
@@ -247,7 +247,7 @@ function initFolderTree() {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                     </svg>
                     <p class="text-lg mb-4">No job open</p>
-                    <button id="welcomeOpenJob" class="bg-yellow-300 hover:bg-yellow-400 text-black px-4 py-2 rounded">
+                    <button id="welcomeOpenJob" class="bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
                         Open a Job
                     </button>
                 </div>
@@ -326,7 +326,7 @@ function createFolderItem(item) {
 
     // Add collapse arrow for all items (will be hidden if no children)
     const $arrow = $('<span>')
-        .addClass('material-icons w-4 flex-none text-yellow-300 transform transition-transform duration-200 ' + 
+        .addClass('material-icons w-4 flex-none text-esper-yellow transform transition-transform duration-200 ' + 
             ((!item.children || item.children.length === 0) ? 'invisible' : ''))
         .text('chevron_right');
     $header.append($arrow);
@@ -338,7 +338,7 @@ function createFolderItem(item) {
                     'movie';
 
     const $icon = $('<span>', {
-        'class': 'material-icons w-6 h-6 text-black/60 flex-none',
+        'class': 'material-icons w-6 h-6 text-esper-yellow flex-none',
         'text': iconType
     });
     $header.append($icon);
@@ -354,7 +354,7 @@ function createFolderItem(item) {
     // Add action buttons based on type
     if (item.type === 'job') {
         const $addButton = $('<button>', {
-            'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+            'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
             'title': 'Add Session'
         }).append(
             $('<span>', {
@@ -365,7 +365,7 @@ function createFolderItem(item) {
         $header.append($addButton);
     } else if (item.type === 'session') {
         const $addButton = $('<button>', {
-            'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+            'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
             'title': 'Add Capture'
         }).append(
             $('<span>', {
@@ -422,7 +422,7 @@ async function loadPostContent(postId, postType) {
         // Show loading state
         $('#content').html(`
             <div class="flex items-center justify-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-300"></div>
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-esper-yellow"></div>
             </div>
         `);
         
@@ -474,7 +474,7 @@ async function loadPostContent(postId, postType) {
                                 <div class="flex items-center justify-between mb-4 group relative">
                                     <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="${postId}">${takeTitle}</h3>
                                     <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="${takeTitle}">
-                                    <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
                                         <span class="material-icons text-sm">edit</span>
                                     </button>
                                 </div>
@@ -1127,7 +1127,7 @@ function generateFilmstripThumbnails() {
         const color = colors[i % colors.length];
         thumbnails += `
             <div class="flex-none group">
-                <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all duration-200 ${i === 1 ? 'ring-2 ring-yellow-300' : ''}">
+                <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-esper-yellow transition-all duration-200 ${i === 1 ? 'ring-2 ring-esper-yellow' : ''}">
                     <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${i}" 
                          alt="Thumbnail ${i}"
                          class="w-full h-full object-cover"
@@ -1151,7 +1151,7 @@ function initializeThumbnailHandlers($takeCard) {
     
     // Set first thumbnail as selected by default
     const $firstThumbnail = $thumbnails.first();
-    $firstThumbnail.find('div').first().addClass('ring-2 ring-yellow-300');
+    $firstThumbnail.find('div').first().addClass('ring-2 ring-esper-yellow');
     
     // Add horizontal scroll with mouse wheel
     $filmstripScroll.on('wheel', function(e) {
@@ -1169,10 +1169,10 @@ function initializeThumbnailHandlers($takeCard) {
     // Existing thumbnail click handler
     $thumbnails.on('click', function() {
         // Remove highlight from all thumbnails
-        $thumbnails.find('.ring-2').removeClass('ring-2 ring-yellow-300');
+        $thumbnails.find('.ring-2').removeClass('ring-2 ring-esper-yellow');
         
         // Add highlight to clicked thumbnail
-        $(this).find('div').first().addClass('ring-2 ring-yellow-300');
+        $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
         
         // Get the thumbnail number and create a larger version URL
         const thumbnailSrc = $(this).find('img').attr('src');

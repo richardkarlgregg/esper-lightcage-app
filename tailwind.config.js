@@ -5,7 +5,11 @@ module.exports = {
     ],
     darkMode: false,
     theme: {
-        extend: {},
+        extend: {
+            colors: {
+                'esper-yellow': '#FFC715',
+            },
+        },
     },
     variants: {
         extend: {},
