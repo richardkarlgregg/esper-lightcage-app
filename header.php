@@ -53,44 +53,65 @@
             max-height: 80vh;
             overflow-y: auto;
         }
+        /* Connection status indicator */
+        .connection-status {
+            width: 12px;
+            height: 12px;
+            background-color: green; /* Default to green */
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+
     </style>
 </head>
 <body <?php body_class('bg-black text-white h-screen overflow-hidden'); ?>>
 <?php wp_body_open(); ?>
 
 <!-- Menu Bar -->
-<div class="menu-bar bg-black border-b border-esper-yellow text-white px-4 py-1 flex items-center space-x-4">
-    <img src="<?php echo get_theme_file_uri('assets/images/esper-logo.svg'); ?>" alt="Esper Logo" class="h-4 mr-2">
-    <div class="menu-item relative">
-        <button class="hover:bg-esper-yellow px-3 py-0 rounded">File</button>
-        <div class="menu-dropdown bg-black roundedx border border-white border-opacity-10 shadow-lg py-1">
-            <button id="openJobBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path>
-                </svg>
-                Open Job...
-            </button>
-            <button id="newJobBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
-                New Job
-            </button>
-            <div class="border-t border-gray-700 my-1"></div>
-            <button id="closeJobBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-                Close Job
-            </button>
-            <div class="border-t border-gray-700 my-1"></div>
-            <button id="aboutBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                About
-            </button>
+<div class="menu-bar bg-black border-b border-esper-yellow text-white px-4 py-1 flex items-center justify-between space-x-4">
+    <div class="w-auto flex flex-wrap items-center">
+        <img src="<?php echo get_theme_file_uri('assets/images/esper-logo.svg'); ?>" alt="Esper Logo" class="h-4 mr-2">
+        <div class="menu-item relative">
+            <button class="hover:bg-esper-yellow px-3 py-0 rounded">File</button>
+            <div class="menu-dropdown bg-black roundedx border border-white border-opacity-10 shadow-lg py-1">
+                <button id="openJobBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Open Job...
+                </button>
+                <button id="newJobBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    New Job
+                </button>
+                <div class="border-t border-gray-700 my-1"></div>
+                <button id="closeJobBtn" class="w-full text-left px-4 py-2 hover:bg-esper-yellow hover:text-black flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Close Job
+                </button>
+                <div class="border-t border-gray-700 my-1"></div>
+                <button id="aboutBtn" class="w-full text-left px-3 py-0 hover:bg-esper-yellow hover:text-black flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    About
+                </button>
+            </div>
         </div>
+    </div>
+    
+    <!-- Connection Status Indicator -->
+    <div class="flex items-center space-x-4 ml-auto">
+        <!-- Simulated window icons -->
+         <div class="connection-status"></div>
+        <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="minimizeWindow">remove</span>
+        <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="maximizeWindow">crop_square</span>
+        <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="closeWindow">close</span>
     </div>
 </div>
 

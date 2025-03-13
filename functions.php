@@ -585,6 +585,9 @@ function esper_get_capture_template($post) {
                             ?>
                             <p>Session: <?php echo esc_html($parent_session->post_title); ?></p>
                             <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
+
+                            <p>Add camera settings icon</p>
+                            <p>Add Light settings icon</p>
                         </div>
                     </div>
                     <div class="flex space-x-2">
