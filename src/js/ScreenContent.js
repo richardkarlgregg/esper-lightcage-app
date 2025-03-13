@@ -278,10 +278,10 @@ initJobContentHandlers() {
         }
         
         const $newTag = $('<span>', {
-            'class': 'bg-gray-600 text-white px-2 py-1 rounded text-sm flex items-center',
+            'class': 'bg-esper-yellow text-black px-2 py-1 rounded text-sm flex items-center',
             'html': `
                 ${newTag}
-                <button class="ml-2 text-gray-400 hover:text-white remove-tag" data-tag="${newTag}">&times;</button>
+                <button class="ml-2 text-black hover:text-black remove-tag" data-tag="${newTag}">&times;</button>
             `
         });
         

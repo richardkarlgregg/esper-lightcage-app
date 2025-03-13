@@ -341,11 +341,12 @@ function esper_get_job_template($post) {
     ?>
     <div class="job-template bg-black min-h-screen p-6">
         <div class="w-full space-y-6">
+
             <!-- Job Header -->
             <div class="bg-black/80 rounded-lg shadow-lg p-6">
-                <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start justify-between">
                     <div class="flex-1">
-                        <div class="flex items-center justify-between mb-2 group relative">
+                        <div class="flex items-center justify-start mb-2 group relative">
                             <h2 class="text-lg font-semibold text-white job-title-display" data-job-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded job-title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -355,43 +356,12 @@ function esper_get_job_template($post) {
                         <div class="text-gray-500 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
                     </div>
                 </div>
-                
-                <!-- Tags -->
-                <div class="space-y-4">
-                    <div class="bg-black/80 p-4 rounded">
-                        <h3 class="text-sm font-medium text-gray-300 mb-2">Notes</h3>
-                        <textarea id="jobNotes" class="w-full h-32 bg-black text-white rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'job_notes', true)); ?></textarea>
-                    </div>
-
-                    <div class="bg-black/80 p-4 rounded">
-                        <h3 class="text-sm font-medium text-gray-300 mb-2">Tags</h3>
-                        <div class="flex flex-wrap gap-2 mb-2" id="tagContainer">
-                            <?php
-                            $tags = get_post_meta($post->ID, 'job_tags', true);
-                            if (is_array($tags)) {
-                                foreach ($tags as $tag) {
-                                    echo '<span class="bg-black text-white px-2 py-1 rounded text-sm flex items-center">' . 
-                                         esc_html($tag) . 
-                                         '<button class="ml-2 text-gray-500 hover:text-white remove-tag" data-tag="' . esc_attr($tag) . '">&times;</button>' .
-                                         '</span>';
-                                }
-                            }
-                            ?>
-                        </div>
-                        <div class="flex space-x-2">
-                            <input type="text" id="newTag" class="flex-1 bg-black text-white rounded px-2 py-1 text-sm" placeholder="Add a tag">
-                            <button id="addTag" class="bg-yellow-300 hover:bg-yellow-400 text-black px-3 py-1 rounded text-sm">
-                                Add
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Statistics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-black/80 rounded-lg shadow-lg p-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">Sessions</h3>
+                <div class="border border-white border-opacity-10 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-0">Sessions</h3>
                     <?php 
                     $sessions = get_posts(array(
                         'post_type' => 'session',
@@ -402,11 +372,11 @@ function esper_get_job_template($post) {
                     $session_count = count($sessions);
                     ?>
                     <div class="text-3xl font-bold text-yellow-300"><?php echo $session_count; ?></div>
-                    <p class="text-gray-500">Total Sessions</p>
+                    <p class="hidden text-gray-500">Sessions</p>
                 </div>
 
-                <div class="bg-black/80 rounded-lg shadow-lg p-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">Captures</h3>
+                <div class="border border-white border-opacity-10 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-0">Captures</h3>
                     <?php 
                     $captures = 0;
                     foreach ($sessions as $session) {
@@ -419,11 +389,11 @@ function esper_get_job_template($post) {
                     }
                     ?>
                     <div class="text-3xl font-bold text-yellow-300"><?php echo $captures; ?></div>
-                    <p class="text-gray-500">Total Captures</p>
+                    <p class="hidden text-gray-500">Captures</p>
                 </div>
 
-                <div class="bg-black/80 rounded-lg shadow-lg p-6">
-                    <h3 class="text-lg font-semibold text-white mb-4">Takes</h3>
+                <div class="border border-white border-opacity-10 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-white mb-0">Takes</h3>
                     <?php 
                     $takes = 0;
                     foreach ($sessions as $session) {
@@ -444,9 +414,46 @@ function esper_get_job_template($post) {
                     }
                     ?>
                     <div class="text-3xl font-bold text-yellow-300"><?php echo $takes; ?></div>
-                    <p class="text-gray-500">Total Takes</p>
+                    <p class="hidden text-gray-500">Takes</p>
                 </div>
             </div>
+
+            <!-- Job Details -->
+            <div class="border border-white border-opacity-10 rounded-lg p-6">
+                
+                <!-- Tags -->
+                <div class="space-y-4">
+                    <div class="p-4 rounded">
+                        <h3 class="text-sm font-medium text-gray-300 mb-2">Notes</h3>
+                        <textarea id="jobNotes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'job_notes', true)); ?></textarea>
+                    </div>
+
+                    <div class="bg-black/80 p-4 rounded">
+                        <h3 class="text-sm font-medium text-gray-300 mb-2">Tags</h3>
+                        <div class="flex flex-wrap gap-2 mb-2" id="tagContainer">
+                            <?php
+                            $tags = get_post_meta($post->ID, 'job_tags', true);
+                            if (is_array($tags)) {
+                                foreach ($tags as $tag) {
+                                    echo '<span class="bg-esper-yellow text-black px-2 py-1 rounded text-sm flex items-center">' . 
+                                         esc_html($tag) . 
+                                         '<button class="ml-2 text-gray-500 hover:text-black remove-tag" data-tag="' . esc_attr($tag) . '">&times;</button>' .
+                                         '</span>';
+                                }
+                            }
+                            ?>
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="text" id="newTag" class="flex-1 border border-white border-opacity-10 bg-black text-white rounded px-2 py-1 text-sm" placeholder="Add a tag">
+                            <button id="addTag" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
         </div>
     </div>
     <?php
