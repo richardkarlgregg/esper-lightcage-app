@@ -70,38 +70,36 @@ export default class CaptureManager {
                 $captureArrow.removeClass('invisible').addClass('rotate-90');
                 $captureChildren.removeClass('hidden');
 
-                // Add the new take item
-                const newTakeItem = store.uiManager.createFolderItem({
-                    id: response.data.id,
-                    title: response.data.title,
-                    type: 'take'
-                });
-                $captureChildren.append(newTakeItem);
-
                 // Simulate progress (you can replace this with real progress updates)
                 let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress += 2;
-                    $progressBar.css('width', `${progress}%`);
-                    $progressPercentage.text(`${progress}%`);
-                    
-                    if (progress >= 100) {
-                        clearInterval(progressInterval);
-                        // Load the new take content after progress reaches 100%
-                        store.screenContent.loadPostContent(response.data.id, 'take');
-                    }
-                }, 100);
-                
-                // Show success message
-                store.notificationManager.showSuccess('Take created successfully');
+                const interval = setInterval(() => {
+                    progress += 10;
+                    $progressBar.css('width', progress + '%');
+                    $progressPercentage.text(progress + '%');
 
-                // Clean up after progress completes
-                setTimeout(() => {
-                    $progress.css('opacity', '0');
-                    $progressBar.css('width', '0%');
-                    $progressPercentage.text('0%');
-                    $button.prop('disabled', false);
-                }, 5500); // Wait for progress animation to complete (slightly longer than the progress simulation)
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        $progress.css('opacity', '0');
+                        $progressBar.css('width', '0%');
+                        $progressPercentage.text('0%');
+                        $button.prop('disabled', false);
+                        
+                        // Show success notification and add new take to folder tree
+                        store.notificationManager.showSuccess('Take captured successfully');
+                        const newTakeItem = store.uiManager.createFolderItem({
+                            id: response.data.id,
+                            title: response.data.title,
+                            type: 'take',
+                            children: []
+                        });
+                        $captureChildren.append(newTakeItem);
+
+                        // Load the new take content
+                        store.screenContent.loadPostContent(response.data.id, 'take');
+                        $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
+                        $(`[data-id="${response.data.id}"]`).addClass('bg-esper-yellow bg-opacity-10');
+                    }
+                }, 300);
             }
         } catch (error) {
             console.error('Error creating take:', error);
