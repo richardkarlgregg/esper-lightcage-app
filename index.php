@@ -2,7 +2,7 @@
 
 <div class="flex" style="height: calc(100vh - 40px);">
     <!-- Left Pane: Folder Tree -->
-    <div id="sidebar" class="resizable bg-black border-r border-white border-opacity-10 p-4" style="width: 250px;">
+    <div id="sidebar" class="resizable bg-black border-r border-white border-opacity-10 p-2" style="width: 250px;">
         <ul id="folderTree" class="text-sm text-yellow-300 space-y-2">
         </ul>
     </div>

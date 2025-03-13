@@ -60,7 +60,7 @@ export default class CaptureManager {
                 let $captureChildren = $capture.children('div').last();
                 if (!$captureChildren.length || $captureChildren.hasClass('flex')) {
                     $captureChildren = $('<div>', {
-                        'class': 'pl-1 mt-1 space-y-1'
+                        'class': 'pl-3 mt-1 space-y-1'
                     });
                     $capture.append($captureChildren);
                 }
