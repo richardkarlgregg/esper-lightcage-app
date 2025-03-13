@@ -104,6 +104,11 @@ export default class UIManager {
                     });
                     $childrenContainer.append(newItem);
     
+                    // Load the new capture or session
+store.screenContent.loadPostContent(response.data.id, childType);
+$('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
+$(`[data-id="${response.data.id}"]`).addClass('bg-esper-yellow bg-opacity-10');
+
                     // If this is a new session or capture, expand all parent items
                     if (childType === 'session' || childType === 'capture') {
                         const $parents = parentItem.parents('.folder-item');
@@ -288,85 +293,84 @@ export default class UIManager {
     }
 
     // Create a folder item element with its children
-createFolderItem(item) {
-  const $item = $('<div>', {
-      'class': 'folder-item cursor-pointer pt-1 pb-1 rounded relative',
-      'data-id': item.id,
-      'data-type': item.type
-  });
+    createFolderItem(item) {
+        const $item = $('<div>', {
+            'class': 'folder-item cursor-pointer pt-1 pb-1 rounded relative',
+            'data-id': item.id,
+            'data-type': item.type
+        });
 
-  const $header = $('<div>', {
-      'class': 'flex items-center space-x-2 hover:bg-black/50 rounded group relative'
-  });
+        const $header = $('<div>', {
+            'class': 'flex items-center space-x-2 hover:bg-black/50 rounded group relative'
+        });
 
-  // Add collapse arrow for all items (will be hidden if no children)
-  const $arrow = $('<span>')
-      .addClass('material-icons w-4 flex-none text-esper-yellow transform transition-transform duration-200 ' + 
-          ((!item.children || item.children.length === 0) ? 'invisible' : ''))
-      .text('chevron_right');
-  $header.append($arrow);
+        // Add collapse arrow for all items (will be hidden if no children)
+        const $arrow = $('<span>')
+            .addClass('material-icons w-4 flex-none text-esper-yellow transform transition-transform duration-200 ' + 
+                ((!item.children || item.children.length === 0) ? 'invisible' : ''))
+            .text('chevron_right');
+        $header.append($arrow);
 
-  // Add icon based on type
-  const iconType = item.type === 'job' ? 'folder' :
-                  item.type === 'session' ? 'calendar_today' :
-                  item.type === 'capture' ? 'camera_alt' :
-                  'movie';
+        // Add icon based on type
+        const iconType = item.type === 'job' ? 'folder' :
+                        item.type === 'session' ? 'calendar_today' :
+                        item.type === 'capture' ? 'camera_alt' :
+                        'movie';
 
-  const $icon = $('<span>', {
-      'class': 'material-icons w-6 h-6 text-esper-yellow flex-none',
-      'text': iconType
-  });
-  $header.append($icon);
+        const $icon = $('<span>', {
+            'class': 'material-icons w-6 h-6 text-esper-yellow flex-none',
+            'text': iconType
+        });
+        $header.append($icon);
 
-  // Add title
-  $header.append(
-      $('<span>', {
-          'class': 'flex-1 text-white truncate ml-2',
-          'text': item.title
-      })
-  );
+        // Add title
+        $header.append(
+            $('<span>', {
+                'class': 'flex-1 text-white truncate ml-2',
+                'text': item.title
+            })
+        );
 
-  // Add action buttons based on type
-  if (item.type === 'job') {
-      const $addButton = $('<button>', {
-          'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
-          'title': 'Add Session'
-      }).append(
-          $('<span>', {
-              'class': 'material-icons',
-              'text': 'add_circle'
-          })
-      );
-      $header.append($addButton);
-  } else if (item.type === 'session') {
-      const $addButton = $('<button>', {
-          'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
-          'title': 'Add Capture'
-      }).append(
-          $('<span>', {
-              'class': 'material-icons',
-              'text': 'add_circle'
-          })
-      );
-      $header.append($addButton);
-  }
+        // Add action buttons based on type
+        if (item.type === 'job') {
+            const $addButton = $('<button>', {
+                'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+                'title': 'Add Session'
+            }).append(
+                $('<span>', {
+                    'class': 'material-icons',
+                    'text': 'add_circle'
+                })
+            );
+            $header.append($addButton);
+        } else if (item.type === 'session') {
+            const $addButton = $('<button>', {
+                'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
+                'title': 'Add Capture'
+            }).append(
+                $('<span>', {
+                    'class': 'material-icons',
+                    'text': 'add_circle'
+                })
+            );
+            $header.append($addButton);
+        }
 
-  $item.append($header);
+        $item.append($header);
 
-  // Add children container if there are children
-  if (item.children && item.children.length > 0) {
-      const $children = $('<div>', {
-          'class': 'pl-3 mt-1 space-y-1 hidden'
-      });
-      
-      item.children.forEach(child => {
-          $children.append(this.createFolderItem(child));
-      });
-      
-      $item.append($children);
-  }
+        // Add children container if there are children
+        if (item.children && item.children.length > 0) {
+            const $children = $('<div>', {
+                'class': 'pl-3 mt-1 space-y-1 hidden'
+            });
+            
+            item.children.forEach(child => {
+                $children.append(this.createFolderItem(child));
+            });
+            
+            $item.append($children);
+        }
 
-  return $item;
-}
-    
+        return $item;
+    }
 }
