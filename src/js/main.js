@@ -13,6 +13,7 @@ import CaptureManager from './CaptureManager.js';
 import TakeManager from './TakeManager.js';
 import NotificationManager from './NotificationManager.js';
 import PostManager from './PostManager.js';
+import SessionManager from './SessionManager.js';
 
 console.log(store);
 
@@ -24,6 +25,7 @@ $(document).ready(function () {
     const takeManager = new TakeManager();
     const notificationManager = new NotificationManager();
     const postManager = new PostManager();
+    const sessionManager = new SessionManager();
 
     // Put the instance on the store
     store.uiManager = uiManager;
@@ -32,6 +34,9 @@ $(document).ready(function () {
     store.takeManager = takeManager;
     store.notificationManager = notificationManager;
     store.postManager = postManager;
+    store.sessionManager = sessionManager;
+
+    store.activePostID = null;
     
     store.uiManager.initFolderTree();
     store.captureManager.setupEventListeners();

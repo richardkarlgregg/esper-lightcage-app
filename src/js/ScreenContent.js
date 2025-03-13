@@ -160,6 +160,8 @@ export default class ScreenContent {
                 } else if (postType === 'capture') {
                     store.captureManager.initCaptureHandlers();
                 }
+
+                store.activePostID = postId;
             } else {
                 const errorMessage = response.data || 'Error loading content';
                 console.error('Server returned error:', errorMessage);

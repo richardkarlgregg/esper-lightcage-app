@@ -470,8 +470,8 @@ function esper_get_session_template($post) {
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <div class="flex items-center justify-start mb-2 group relative">
-                            <h2 class="text-lg font-semibold text-white session-title-display" data-session-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
-                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded session-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <h2 class="text-lg font-semibold text-white title-display" data-session-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
+                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons text-sm">edit</span>
                             </button>
@@ -1188,3 +1188,41 @@ function esper_add_scrollbar_styles() {
     <?php
 }
 add_action('wp_head', 'esper_add_scrollbar_styles');
+
+// Handle session update
+add_action('wp_ajax_esper_update_session', 'esper_update_session');
+function esper_update_session() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+
+    $session_id = intval($_POST['session_id']);
+    $title = sanitize_text_field($_POST['title']);
+
+    // Update session logic here
+    // For example, update the session title in the database
+    // $result = update_session_title($session_id, $title);
+
+    if (/* $result */ true) { // Replace with actual condition
+        wp_send_json_success(array('message' => 'Session updated successfully'));
+    } else {
+        wp_send_json_error(array('message' => 'Failed to update session'));
+    }
+}
+
+// Handle session notes update
+add_action('wp_ajax_esper_update_session_notes', 'esper_update_session_notes');
+function esper_update_session_notes() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+
+    $session_id = intval($_POST['session_id']);
+    $notes = sanitize_textarea_field($_POST['notes']);
+
+    // Update session notes logic here
+    // For example, update the session notes in the database
+    // $result = update_session_notes($session_id, $notes);
+
+    if (/* $result */ true) { // Replace with actual condition
+        wp_send_json_success(array('message' => 'Session notes updated successfully'));
+    } else {
+        wp_send_json_error(array('message' => 'Failed to update session notes'));
+    }
+}
