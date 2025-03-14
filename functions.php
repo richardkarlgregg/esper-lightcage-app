@@ -158,8 +158,71 @@ function esper_register_post_types() {
         'supports' => array('title', 'editor', 'thumbnail', 'custom-fields', 'page-attributes', 'author'),
         'menu_icon' => 'dashicons-video-alt3'
     ));
+
+    // Camera Settings Post Type
+    register_post_type('camera_settings', array(
+        'labels' => array(
+            'name' => 'Camera Settings',
+            'singular_name' => 'Camera Setting',
+            'add_new' => 'Add New Camera Setting',
+            'add_new_item' => 'Add New Camera Setting',
+            'edit_item' => 'Edit Camera Setting',
+            'new_item' => 'New Camera Setting',
+            'view_item' => 'View Camera Setting',
+            'search_items' => 'Search Camera Settings',
+            'not_found' => 'No camera settings found',
+            'not_found_in_trash' => 'No camera settings found in Trash',
+            'parent_item_colon' => ''
+        ),
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'camera_settings',
+        'rest_controller_class' => 'WP_REST_Posts_Controller',
+        'query_var' => true,
+        'rewrite' => array('slug' => 'camera-setting'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 6,
+        'supports' => array('title', 'editor', 'thumbnail', 'custom-fields', 'author'),
+        'menu_icon' => 'dashicons-admin-settings'
+    ));
+
+    // Light Settings Post Type
+    register_post_type('light_settings', array(
+        'labels' => array(
+            'name' => 'Light Settings',
+            'singular_name' => 'Light Setting',
+            'add_new' => 'Add New Light Setting',
+            'add_new_item' => 'Add New Light Setting',
+            'edit_item' => 'Edit Light Setting',
+            'new_item' => 'New Light Setting',
+            'view_item' => 'View Light Setting',
+            'search_items' => 'Search Light Settings',
+            'not_found' => 'No light settings found',
+            'not_found_in_trash' => 'No light settings found in Trash',
+            'parent_item_colon' => ''
+        ),
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'light_settings',
+        'rest_controller_class' => 'WP_REST_Posts_Controller',
+        'query_var' => true,
+        'rewrite' => array('slug' => 'light-setting'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 7,
+        'supports' => array('title', 'editor', 'thumbnail', 'custom-fields', 'author'),
+        'menu_icon' => 'dashicons-lightbulb'
+    ));
 }
 add_action('init', 'esper_register_post_types');
+
 
 // Register REST API fields for relationships
 function esper_register_rest_fields() {
