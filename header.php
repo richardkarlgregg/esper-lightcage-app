@@ -107,8 +107,10 @@
     
     <!-- Connection Status Indicator -->
     <div class="flex items-center space-x-4 ml-auto">
-        <!-- Simulated window icons -->
+        <div class="uppercase text-white">Jobs</div>
+        <div data-id="" data-type="export" data-action="export" class="uppercase text-white">Export</div>
          <div class="connection-status"></div>
+         <!-- Simulated window icons -->
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="minimizeWindow">remove</span>
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="maximizeWindow">crop_square</span>
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="closeWindow">close</span>

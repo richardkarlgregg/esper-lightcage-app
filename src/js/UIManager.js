@@ -27,6 +27,9 @@ export default class UIManager {
                     // Handle action2
                     store.navigationManager.popScreen();
                     break;
+                case 'export':
+                    console.log('Show export manager');
+                break;
                 // Add more cases as needed
                 default:
                     console.log('Unknown action:', action);
