@@ -586,8 +586,9 @@ function esper_get_capture_template($post) {
                             <p>Session: <?php echo esc_html($parent_session->post_title); ?></p>
                             <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
 
-                            <p data-action="go back">Add camera settings icon</p>
-                            <p>Add Light settings icon</p>
+                            <p data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings">Add camera settings icon</p>
+                            <p data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings">Add Light settings icon</p>
+
                         </div>
                     </div>
                     <div class="flex space-x-2">
@@ -815,6 +816,12 @@ function esper_get_content() {
         return;
     }
 
+    // Retrieve and decode the navigation array sent from the client
+    $context = array();
+    if (!empty($_POST['context'])) {
+        $context = json_decode(wp_unslash($_POST['context']), true);
+    }
+
     // For other types, return the template
     $content = '';
     switch ($post_type) {
@@ -825,7 +832,19 @@ function esper_get_content() {
             $content = esper_get_session_template($post);
             break;
         case 'capture':
-            $content = esper_get_capture_template($post);
+
+            switch( $context) {
+                case 'camera_settings':
+                    $content = 'camera settings';
+                break;
+                case 'light_settings':
+                    $content = 'light settings';
+                break;
+                default:
+                    $content = esper_get_capture_template($post);
+                break;
+            }
+            
             break;
         case 'take':
             $content = esper_get_take_template($post);
@@ -833,7 +852,8 @@ function esper_get_content() {
     }
     
     wp_send_json_success(array(
-        'content' => $content
+        'content' => $content,
+        '$context' => $context
     ));
     
 }

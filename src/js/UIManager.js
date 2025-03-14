@@ -17,10 +17,11 @@ export default class UIManager {
 
             const action = $(this).data('action');
             switch (action) {
-                case 'go back':
-                    // Handle action1
-                    console.log('go back');
-                    store.navigationManager.popScreen();
+                case 'openScreen':
+                    const postId = $(this).data('id');
+                    const postType = $(this).data('type');
+                    const context = $(this).data('context');
+                    store.navigationManager.pushScreen( postId, postType, context );
                     break;
                 case 'action2':
                     // Handle action2

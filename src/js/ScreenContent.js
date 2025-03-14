@@ -16,7 +16,7 @@ export default class ScreenContent {
     }
 
     // Load post content
-async loadPostContent(postId, postType) {
+async loadPostContent(postId, postType, context) {
     try {
         // Show loading state
         $('#content').html(`
@@ -31,7 +31,8 @@ async loadPostContent(postId, postType) {
             action: 'esper_get_content',
             nonce: esperApi.nonce,
             post_id: postId,
-            post_type: postType
+            post_type: postType,
+            context : JSON.stringify(context)
         });
 
         console.log('Server response:', response);
@@ -77,7 +78,9 @@ async loadPostContent(postId, postType) {
                     break;
             }
 
+            // Set Active
             store.activePostID = postId;
+            store.postType = postType;
         } else {
             const errorMessage = response.data || 'Error loading content';
             console.error('Server returned error:', errorMessage);

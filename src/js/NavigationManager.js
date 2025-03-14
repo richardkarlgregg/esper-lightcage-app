@@ -20,21 +20,26 @@ export default class NavigationManager {
         this.stack = hierarchy;
     }
 
-    // Push a new screen onto the stack.
-    // First updates the hierarchy from the clicked folder item, then adds the new screen
-    // if it doesn't already exist (e.g. the current top's postId doesn't match).
-    pushScreen( postId, postType, context = {} )  {
+    pushScreen(postId, postType, context = {}) {
         // Update the navigation stack based on the folder tree.
-        this.updateHierarchyFromFolderItem($('.folder-item[data-id="'+postId+'"]'));
-
-        // Check if the current screen (top of the stack) matches the new post.
+        this.updateHierarchyFromFolderItem($('.folder-item[data-id="' + postId + '"]'));
+    
+        // Get the current screen (top of the stack)
         const currentScreen = this.getCurrentScreen();
-        if (!currentScreen || currentScreen.postId !== postId) {
+        
+        // Check if the current screen matches the new screen by postId and context.
+        if (
+            !currentScreen ||
+            currentScreen.postId !== postId ||
+            JSON.stringify(currentScreen.context) !== JSON.stringify(context)
+        ) {
             this.stack.push({ postId, postType, context });
         }
+        
         this.loadCurrentScreen();
         console.log('Navigation stack:', this.stack);
     }
+    
 
     // Pop the current screen from the stack.
     popScreen() {
@@ -49,7 +54,7 @@ export default class NavigationManager {
         const currentScreen = this.getCurrentScreen();
         if (currentScreen) {
             // Load the screen using postId and postType.
-            store.screenContent.loadPostContent(currentScreen.postId, currentScreen.postType);
+            store.screenContent.loadPostContent(currentScreen.postId, currentScreen.postType, currentScreen.context );
         }
     }
 
