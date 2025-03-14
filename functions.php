@@ -658,160 +658,133 @@ function esper_get_capture_template($post) {
 
 function esper_get_take_template($post) {
     ob_start();
+
+    // Retrieve values from the post or meta data
+    $takeTitle         = $post->post_title ? $post->post_title : "Take {$post->ID}";
+    $firstThumbnailUrl = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=1';
+    $createdDate       = get_the_date('F j, Y', $post) ? get_the_date('F j, Y', $post) : 'Just now';
+    $resolution        = get_post_meta($post->ID, 'resolution', true) ?: '1920x1080';
+    $size              = get_post_meta($post->ID, 'size', true) ?: '2.4 MB';
+    $format            = get_post_meta($post->ID, 'format', true) ?: 'PNG';
+
+    // Optionally, get the filmstrip thumbnails via a helper function.
+    // If you don't have this function, you can replace it with your own markup.
+    $filmstripThumbnails = function_exists('store_take_generate_filmstrip_thumbnails') 
+        ? store_take_generate_filmstrip_thumbnails() 
+        : '<!-- Filmstrip thumbnails placeholder -->';
     ?>
-    <div class="take-template bg-black min-h-screen p-6 flex flex-col h-screen">
-        <div class="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-6">
-            <!-- Take Header -->
-            <div class="bg-black p-4">
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between mb-4 group relative">
-                            <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?>4</h3>
-                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 take-title-input" value="<?php echo esc_attr($post->post_title); ?>">
-                            <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="material-icons text-sm">edit</span>
-                            </button>
-                        </div>
-                        <div class="text-gray-400 text-sm">
-                            <?php 
-                            $parent_capture_id = get_post_meta($post->ID, 'parent_capture', true);
-                            $parent_capture = get_post($parent_capture_id);
-                            ?>
-                            <p>Capture: <?php echo esc_html($parent_capture->post_title); ?></p>
-                            <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
-                        </div>
+    <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);">
+        <!-- Main container with resizable panes -->
+        <div class="flex-1 flex" id="takePanesContainer">
+            <!-- Main image pane -->
+            <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden" id="mainImagePane">
+                <img src="<?php echo esc_url($firstThumbnailUrl); ?>" 
+                     alt="Main Image"
+                     class="w-full h-full object-contain">
+            </div>
+            
+            <!-- Vertical resize handle -->
+            <div class="w-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-col-resize" id="verticalResizeHandle"></div>
+            
+            <!-- Right sidebar -->
+            <div class="w-64 bg-black/80 p-4" id="rightSidebarPane">
+                <div class="flex items-center justify-between mb-4 group relative">
+                    <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="<?php echo esc_attr($post->ID); ?>">
+                        <?php echo esc_html($takeTitle); ?>
+                    </h3>
+                    <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="<?php echo esc_attr($takeTitle); ?>">
+                    <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span class="material-icons text-sm">edit</span>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-black/60 p-3 rounded">
+                        <h4 class="text-sm font-medium text-gray-300 mb-2">Details</h4>
+                        <p class="text-gray-400 text-sm">Created: <?php echo esc_html($createdDate); ?></p>
+                        <p class="text-gray-400 text-sm">Status: Active</p>
+                    </div>
+                    <div class="bg-black/60 p-3 rounded">
+                        <h4 class="text-sm font-medium text-gray-300 mb-2">Metadata</h4>
+                        <p class="text-gray-400 text-sm">Resolution: <?php echo esc_html($resolution); ?></p>
+                        <p class="text-gray-400 text-sm">Size: <?php echo esc_html($size); ?></p>
+                        <p class="text-gray-400 text-sm">Format: <?php echo esc_html($format); ?></p>
+                    </div>
+                    <div class="bg-black/60 p-3 rounded">
+                        <h4 class="text-sm font-medium text-gray-300 mb-2">Camera Settings</h4>
+                        <p class="text-gray-400 text-sm">Shutter: 1/125</p>
+                        <p class="text-gray-400 text-sm">Aperture: f/2.8</p>
+                        <p class="text-gray-400 text-sm">ISO: 100</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Main Image View -->
-            <div class="flex-1 bg-black flex items-center justify-center min-h-0">
-                <div id="mainImageView" class="w-full h-full flex items-center justify-center p-4">
-                    <img src="https://placehold.co/1200x800/1f2937/ffffff?text=Selected+Image" 
-                         alt="Selected Image"
-                         class="max-h-full max-w-full object-contain">
+        </div>
+        
+        <!-- Horizontal resize handle -->
+        <div class="h-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-row-resize" id="horizontalResizeHandle"></div>
+        
+        <!-- Bottom thumbnails filmstrip -->
+        <div class="h-32 bg-black/80" id="thumbnailsPane">
+            <div class="h-full flex flex-col">
+                <!-- Filmstrip toolbar -->
+                <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
+                    <span class="text-gray-400 text-sm">12 images</span>
                 </div>
-            </div>
-
-            <!-- Filmstrip -->
-            <div class="bg-black rounded-lg shadow-lg p-4 h-48 relative">
-                <!-- Left Arrow -->
-                <button id="scrollLeft" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black hover:bg-gray-700 text-white rounded-full p-2 z-10 shadow-lg opacity-0 transition-opacity duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
-
-                <!-- Right Arrow -->
-                <button id="scrollRight" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black hover:bg-gray-700 text-white rounded-full p-2 z-10 shadow-lg opacity-0 transition-opacity duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
-
-                <div class="h-full flex space-x-4 overflow-x-auto pb-2 px-10 scroll-smooth filmstrip-scroll" id="filmstrip">
-                    <?php
-                    // Generate 12 filmstrip thumbnails with different background colors
-                    $colors = array('1f2937', '374151', '4b5563', '6b7280', '9ca3af', 'd1d5db');
-                    for ($i = 1; $i <= 12; $i++) {
-                        $color = $colors[$i % count($colors)];
-                        $mainImageUrl = "https://placehold.co/1200x800/${color}/ffffff?text=Image+" . $i;
-                        $thumbnailUrl = "https://placehold.co/400x300/${color}/ffffff?text=Image+" . $i;
-                        ?>
-                        <div class="filmstrip-thumbnail flex-none w-40 h-full bg-black rounded cursor-pointer transition-all duration-200 hover:ring-2 hover:ring-yellow-300" 
-                             data-image-url="<?php echo esc_url($mainImageUrl); ?>">
-                            <img src="<?php echo esc_url($thumbnailUrl); ?>" 
-                                 alt="Image <?php echo $i; ?>"
-                                 class="w-full h-full object-cover rounded">
-                        </div>
-                        <?php
-                    }
-                    ?>
+                <!-- Filmstrip content with custom scrollbar -->
+                <div class="flex-1 overflow-x-auto filmstrip-scroll">
+                    <style>
+                        .filmstrip-scroll::-webkit-scrollbar {
+                            height: 6px;
+                        }
+                        .filmstrip-scroll::-webkit-scrollbar-track {
+                            background: #000000;
+                        }
+                        .filmstrip-scroll::-webkit-scrollbar-thumb {
+                            background: #333333;
+                            border-radius: 3px;
+                        }
+                        .filmstrip-scroll::-webkit-scrollbar-thumb:hover {
+                            background: #fcd34d;
+                        }
+                    </style>
+                    <div class="flex h-full p-2 space-x-2">
+                        <?php echo $filmstripThumbnails; ?>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <style>
-    /* Custom scrollbar styles */
-    .filmstrip-scroll::-webkit-scrollbar {
-        height: 8px;
-    }
-
-    .filmstrip-scroll::-webkit-scrollbar-track {
-        background: #1f2937;
-        border-radius: 4px;
-    }
-
-    .filmstrip-scroll::-webkit-scrollbar-thumb {
-        background: #4b5563;
-        border-radius: 4px;
-    }
-
-    .filmstrip-scroll::-webkit-scrollbar-thumb:hover {
-        background: #6b7280;
-    }
-
-    /* Hide scrollbar for Firefox */
-    .filmstrip-scroll {
-        scrollbar-width: thin;
-        scrollbar-color: #4b5563 #1f2937;
-    }
-    </style>
-
-    <script>
-    jQuery(document).ready(function($) {
-        // Initialize first thumbnail as selected
-        $('.filmstrip-thumbnail').first().addClass('ring-2 ring-yellow-300');
-
-        // Handle thumbnail clicks
-        $('.filmstrip-thumbnail').on('click', function() {
-            // Update selected state
-            $('.filmstrip-thumbnail').removeClass('ring-2 ring-yellow-300');
-            $(this).addClass('ring-2 ring-yellow-300');
-
-            // Update main image
-            const imageUrl = $(this).data('image-url');
-            $('#mainImageView img').attr('src', imageUrl);
-
-            // Smooth scroll thumbnail into view if needed
-            this.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        });
-
-        // Handle arrow clicks
-        $('#scrollLeft').on('click', function() {
-            const filmstrip = document.getElementById('filmstrip');
-            filmstrip.scrollBy({
-                left: -300,
-                behavior: 'smooth'
-            });
-        });
-
-        $('#scrollRight').on('click', function() {
-            const filmstrip = document.getElementById('filmstrip');
-            filmstrip.scrollBy({
-                left: 300,
-                behavior: 'smooth'
-            });
-        });
-
-        // Show/hide arrows based on scroll position
-        const filmstrip = document.getElementById('filmstrip');
-        filmstrip.addEventListener('scroll', function() {
-            const showLeft = filmstrip.scrollLeft > 0;
-            const showRight = filmstrip.scrollLeft < (filmstrip.scrollWidth - filmstrip.clientWidth);
-            
-            $('#scrollLeft').css('opacity', showLeft ? '1' : '0');
-            $('#scrollRight').css('opacity', showRight ? '1' : '0');
-        });
-
-        // Trigger initial scroll check
-        $(filmstrip).trigger('scroll');
-    });
-    </script>
     <?php
     return ob_get_clean();
 }
+
+function store_take_generate_filmstrip_thumbnails() {
+    $colors = array('333333', '444444', '555555', '666666', '777777', '888888');
+    $thumbnails = '';
+    $num_colors = count($colors);
+    
+    // Generate 12 placeholder thumbnails with proper aspect ratio
+    for ($i = 1; $i <= 12; $i++) {
+        $index = $i % $num_colors;
+        $color = $colors[$index];
+        $extra_class = ($i === 1) ? 'ring-2 ring-esper-yellow' : '';
+        
+        $thumbnails .= '
+            <div class="flex-none group">
+                <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-esper-yellow transition-all duration-200 ' . $extra_class . '">
+                    <img src="https://placehold.co/1920x1080/' . esc_attr($color) . '/FFFFFF/png?text=' . esc_attr($i) . '" 
+                         alt="Thumbnail ' . esc_attr($i) . '"
+                         class="w-full h-full object-cover"
+                         loading="lazy">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        ' . esc_html($i) . '
+                    </div>
+                </div>
+            </div>';
+    }
+    
+    return $thumbnails;
+}
+
 
 // Update the get_content AJAX handler to use templates
 function esper_get_content() {
@@ -841,39 +814,28 @@ function esper_get_content() {
         wp_send_json_error('Access denied. Post author (' . $post->post_author . ') does not match current user (' . $current_user_id . ')');
         return;
     }
-    
-    if ($post_type === 'take') {
-        // For takes, return the post data instead of template
-        $parent_capture_id = get_post_meta($post->ID, 'parent_capture', true);
-        $parent_capture = get_post($parent_capture_id);
-        
-        wp_send_json_success(array(
-            'title' => $post->post_title,
-            'date' => get_the_date('F j, Y g:i a', $post),
-            'parent_capture' => array(
-                'id' => $parent_capture_id,
-                'title' => $parent_capture->post_title
-            )
-        ));
-    } else {
-        // For other types, return the template
-        $content = '';
-        switch ($post_type) {
-            case 'job':
-                $content = esper_get_job_template($post);
-                break;
-            case 'session':
-                $content = esper_get_session_template($post);
-                break;
-            case 'capture':
-                $content = esper_get_capture_template($post);
-                break;
-        }
-        
-        wp_send_json_success(array(
-            'content' => $content
-        ));
+
+    // For other types, return the template
+    $content = '';
+    switch ($post_type) {
+        case 'job':
+            $content = esper_get_job_template($post);
+            break;
+        case 'session':
+            $content = esper_get_session_template($post);
+            break;
+        case 'capture':
+            $content = esper_get_capture_template($post);
+            break;
+        case 'take':
+            $content = esper_get_take_template($post);
+            break;
     }
+    
+    wp_send_json_success(array(
+        'content' => $content
+    ));
+    
 }
 add_action('wp_ajax_esper_get_content', 'esper_get_content');
 

@@ -16,162 +16,80 @@ export default class ScreenContent {
     }
 
     // Load post content
-    async loadPostContent(postId, postType) {
-        try {
-            // Show loading state
-            $('#content').html(`
-                <div class="flex items-center justify-center h-64">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-esper-yellow"></div>
-                </div>
-            `);
-            
-            console.log('Loading post content:', { postId, postType, nonce: esperApi.nonce });
-            
-            const response = await $.post(esperApi.ajaxurl, {
-                action: 'esper_get_content',
-                nonce: esperApi.nonce,
-                post_id: postId,
-                post_type: postType
-            });
-            
-            console.log('Server response:', response);
-            
-            if (response.success) {
-                if (postType === 'capture') {
-                    // Use the server's capture template
+async loadPostContent(postId, postType) {
+    try {
+        // Show loading state
+        $('#content').html(`
+            <div class="flex items-center justify-center h-64">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-esper-yellow"></div>
+            </div>
+        `);
+
+        console.log('Loading post content:', { postId, postType, nonce: esperApi.nonce });
+
+        const response = await $.post(esperApi.ajaxurl, {
+            action: 'esper_get_content',
+            nonce: esperApi.nonce,
+            post_id: postId,
+            post_type: postType
+        });
+
+        console.log('Server response:', response);
+
+        if (response.success) {
+            switch (postType) {
+                case 'capture':
                     $('#content')
                         .hide()
                         .html(response.data.content)
                         .fadeIn(300);
-                    
                     // Initialize capture handlers
                     store.captureManager.initCaptureHandlers();
-                } else if (postType === 'take') {
-                    // Ensure we have a title
-                    const takeTitle = response.data && response.data.title ? response.data.title : `Take ${postId}`;
-                    
-                    // Get the first thumbnail URL for the default main image
-                    const firstThumbnailUrl = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=1';
-                    
-                    // Create the take review layout
-                    const takeContent = $(`
-                        <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);">
-                            <!-- Main container with resizable panes -->
-                            <div class="flex-1 flex" id="takePanesContainer">
-                                <!-- Main image pane -->
-                                <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden" id="mainImagePane">
-                                    <img src="${firstThumbnailUrl}" 
-                                        alt="Main Image"
-                                        class="w-full h-full object-contain">
-                                </div>
-                                
-                                <!-- Vertical resize handle -->
-                                <div class="w-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-col-resize" id="verticalResizeHandle"></div>
-                                
-                                <!-- Right sidebar -->
-                                <div class="w-64 bg-black/80 p-4" id="rightSidebarPane">
-                                    <div class="flex items-center justify-between mb-4 group relative">
-                                        <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="${postId}">${takeTitle}</h3>
-                                        <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="${takeTitle}">
-                                        <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <span class="material-icons text-sm">edit</span>
-                                        </button>
-                                    </div>
-                                    <div class="space-y-4">
-                                        <div class="bg-black/60 p-3 rounded">
-                                            <h4 class="text-sm font-medium text-gray-300 mb-2">Details</h4>
-                                            <p class="text-gray-400 text-sm">Created: ${response.data.date || 'Just now'}</p>
-                                            <p class="text-gray-400 text-sm">Status: Active</p>
-                                        </div>
-                                        <div class="bg-black/60 p-3 rounded">
-                                            <h4 class="text-sm font-medium text-gray-300 mb-2">Metadata</h4>
-                                            <p class="text-gray-400 text-sm">Resolution: ${response.data.resolution || '1920x1080'}</p>
-                                            <p class="text-gray-400 text-sm">Size: ${response.data.size || '2.4 MB'}</p>
-                                            <p class="text-gray-400 text-sm">Format: ${response.data.format || 'PNG'}</p>
-                                        </div>
-                                        <div class="bg-black/60 p-3 rounded">
-                                            <h4 class="text-sm font-medium text-gray-300 mb-2">Camera Settings</h4>
-                                            <p class="text-gray-400 text-sm">Shutter: 1/125</p>
-                                            <p class="text-gray-400 text-sm">Aperture: f/2.8</p>
-                                            <p class="text-gray-400 text-sm">ISO: 100</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Horizontal resize handle -->
-                            <div class="h-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-row-resize" id="horizontalResizeHandle"></div>
-                            
-                            <!-- Bottom thumbnails filmstrip -->
-                            <div class="h-32 bg-black/80" id="thumbnailsPane">
-                                <div class="h-full flex flex-col">
-                                    <!-- Filmstrip toolbar -->
-                                    <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
-                                        <span class="text-gray-400 text-sm">12 images</span>
-                                    </div>
-                                    <!-- Filmstrip content with custom scrollbar -->
-                                    <div class="flex-1 overflow-x-auto filmstrip-scroll">
-                                        <style>
-                                            .filmstrip-scroll::-webkit-scrollbar {
-                                                height: 6px;
-                                            }
-                                            .filmstrip-scroll::-webkit-scrollbar-track {
-                                                background: #000000;
-                                            }
-                                            .filmstrip-scroll::-webkit-scrollbar-thumb {
-                                                background: #333333;
-                                                border-radius: 3px;
-                                            }
-                                            .filmstrip-scroll::-webkit-scrollbar-thumb:hover {
-                                                background: #fcd34d;
-                                            }
-                                        </style>
-                                        <div class="flex h-full p-2 space-x-2">
-                                            ${store.takeManager.generateFilmstripThumbnails()}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `);
+                    break;
 
-                    // Add the content to the page
-                    $('#content')
-                        .hide()
-                        .empty()
-                        .append(takeContent)
-                        .fadeIn(300);
-
-                    // Initialize all handlers
-                    store.takeManager.initializeResizeHandlers(takeContent);
-                    store.takeManager.initializeThumbnailHandlers(takeContent);
-                    store.takeManager.initializeTakeNameEditor(takeContent, postId, takeTitle);
-                } else {
-                    // Handle other post types normally
+                case 'take': {
                     $('#content')
                         .hide()
                         .html(response.data.content)
                         .fadeIn(300);
-                }
-                
-                // Initialize handlers based on post type
-                if (postType === 'job') {
-                    this.initJobContentHandlers();
-                } else if (postType === 'capture') {
-                    store.captureManager.initCaptureHandlers();
+                    const takeTitle = response.data.title ? response.data.title : `Take ${postId}`;
+                    // Initialize take-specific handlers
+                    store.takeManager.initializeResizeHandlers($('#content'));
+                    store.takeManager.initializeThumbnailHandlers($('#content'));
+                    store.takeManager.initializeTakeNameEditor($('#content'), postId, takeTitle);
+                    break;
                 }
 
-                store.activePostID = postId;
-            } else {
-                const errorMessage = response.data || 'Error loading content';
-                console.error('Server returned error:', errorMessage);
-                store.notificationManager.showError(errorMessage);
+                case 'job':
+                    $('#content')
+                        .hide()
+                        .html(response.data.content)
+                        .fadeIn(300);
+                    // Initialize job-specific handlers
+                    this.initJobContentHandlers();
+                    break;
+
+                default:
+                    $('#content')
+                        .hide()
+                        .html(response.data.content)
+                        .fadeIn(300);
+                    break;
             }
-        } catch (error) {
-            console.error('Error loading post content:', error);
-            store.notificationManager.showError('Error loading content: ' + error.message);
+
+            store.activePostID = postId;
+        } else {
+            const errorMessage = response.data || 'Error loading content';
+            console.error('Server returned error:', errorMessage);
+            store.notificationManager.showError(errorMessage);
         }
+    } catch (error) {
+        console.error('Error loading post content:', error);
+        store.notificationManager.showError('Error loading content: ' + error.message);
     }
+}
+
+
 
     // Initialize job content interaction handlers
 initJobContentHandlers() {
