@@ -45,7 +45,7 @@ export default class UIManager {
             e.stopPropagation();
             const postId = $(this).data('id');
             const postType = $(this).data('type');
-            store.screenContent.loadPostContent(postId, postType);
+            store.navigationManager.pushScreen(postId, postType);
             $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
             $(this).addClass('bg-esper-yellow bg-opacity-10');
         });
@@ -105,9 +105,9 @@ export default class UIManager {
                     $childrenContainer.append(newItem);
     
                     // Load the new capture or session
-store.screenContent.loadPostContent(response.data.id, childType);
-$('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
-$(`[data-id="${response.data.id}"]`).addClass('bg-esper-yellow bg-opacity-10');
+                    store.navigationManager.pushScreen(response.data.id, childType);
+                    $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
+                    $(`[data-id="${response.data.id}"]`).addClass('bg-esper-yellow bg-opacity-10');
 
                     // If this is a new session or capture, expand all parent items
                     if (childType === 'session' || childType === 'capture') {
@@ -225,7 +225,7 @@ $(`[data-id="${response.data.id}"]`).addClass('bg-esper-yellow bg-opacity-10');
             
             try {
                 // First load the job content
-                await store.screenContent.loadPostContent(jobId, 'job');
+                await store.navigationManager.pushScreen(jobId, 'job');
                 
                 // Then load the hierarchy for the folder tree
                 const response = await $.post(esperApi.ajaxurl, {

@@ -15,7 +15,7 @@ export default class CaptureManager {
         // Handle take card clicks
         $(document).on('click', '.take-card', function() {
             const takeId = $(this).data('take-id');
-            store.screenContent.loadPostContent(takeId, 'take');
+            store.navigationManager.pushScreen(takeId, 'take');
         });
     }
 
@@ -95,7 +95,7 @@ export default class CaptureManager {
                         $captureChildren.append(newTakeItem);
 
                         // Load the new take content
-                        store.screenContent.loadPostContent(response.data.id, 'take');
+                        store.navigationManager.pushScreen(response.data.id, 'take');
                         $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
                         $(`[data-id="${response.data.id}"]`).addClass('bg-esper-yellow bg-opacity-10');
                     }

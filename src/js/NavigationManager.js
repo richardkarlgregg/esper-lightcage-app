@@ -9,6 +9,8 @@ export default class NavigationManager {
     pushScreen(postId, postType, context = {}) {
         this.stack.push({ postId, postType, context });
         this.loadCurrentScreen();
+        console.log('this.stack');
+        console.log(this.stack);
     }
 
     // Pop the current screen from the stack
