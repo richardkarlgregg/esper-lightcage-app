@@ -17,6 +17,29 @@ export default class CaptureManager {
             const takeId = $(this).data('take-id');
             store.navigationManager.pushScreen(takeId, 'take');
         });
+
+
+        jQuery(document).on('keyup change', 'input[name="camera_name"]', function() {
+            var $this = jQuery(this);
+            // Clear any existing timer.
+            clearTimeout($this.data('typingTimer'));
+            
+            // Set a new timer to run 500ms after the last keyup/change.
+            $this.data('typingTimer', setTimeout(function() {
+                var value = jQuery.trim($this.val());
+                if (value.length > 0) {
+                    // Show all hidden inputs and selects in the same row.
+                    $this.closest('tr').find('input, select').filter(':hidden').fadeIn(300);
+                } else {
+                    // Hide all fields except the camera_name field.
+                    $this.closest('tr').find('input, select').not('input[name="camera_name"]').fadeOut(300);
+                }
+            }, 500));
+        });
+        
+        
+      
+        
     }
 
     // Initialize capture screen handlers

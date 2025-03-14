@@ -398,6 +398,16 @@ function esper_create_item() {
 }
 add_action('wp_ajax_esper_create_item', 'esper_create_item');
 
+// Helper function to generate a random serial number.
+function generate_random_serial( $length = 8 ) {
+    $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $serial = '';
+    for ( $i = 0; $i < $length; $i++ ) {
+        $serial .= $characters[ rand( 0, strlen( $characters ) - 1 ) ];
+    }
+    return $serial;
+}
+
 function create_light_and_camera_settings_for_capture( $post_id, $post, $update ) {
     // Only run for capture post type.
     if ( 'capture' !== $post->post_type ) {
@@ -434,6 +444,43 @@ function create_light_and_camera_settings_for_capture( $post_id, $post, $update 
         // Link the camera settings to the capture by updating meta.
         update_post_meta( $camera_settings_id, 'parent_capture', $post_id );
         update_post_meta( $post_id, 'capture_camera_settings', $camera_settings_id );
+
+        // Define camera brands and models.
+        $camera_names  = array( "Canon", "Sony", "Nikon", "Fujifilm", "Panasonic", "Olympus" );
+        $camera_models = array(
+            "Canon"     => array( "Canon EOS 5D Mark IV", "Canon EOS Rebel T7i", "Canon EOS 90D" ),
+            "Sony"      => array( "Sony Alpha a7 III", "Sony Alpha a6500", "Sony Alpha a7R IV" ),
+            "Nikon"     => array( "Nikon D850", "Nikon Z6", "Nikon D750" ),
+            "Fujifilm"  => array( "Fujifilm X-T3", "Fujifilm X-T30" ),
+            "Panasonic" => array( "Panasonic Lumix GH5", "Panasonic Lumix S1" ),
+            "Olympus"   => array( "Olympus OM-D E-M1 Mark III", "Olympus PEN-F" ),
+        );
+
+        // Generate a random number (between 2 and 5) of rows for the ACF repeater field.
+        $num_rows = rand( 2, 5 );
+        $rows     = array();
+        for ( $i = 0; $i < $num_rows; $i++ ) {
+            $brand  = $camera_names[ array_rand( $camera_names ) ];
+            $model  = $camera_models[ $brand ][ array_rand( $camera_models[ $brand ] ) ];
+            $serial = generate_random_serial();
+            $rows[] = array(
+                'camera_name'   => '',
+                'serial_number' => $serial,
+                'camera_model'  => $model,
+                'iso'           => '',
+                'aperture'      => '',
+                'white_balance' => '',
+                'colour_temp'   => '',
+                'shutter_speed' => '',
+                'file_type'     => '',
+                'jpeg_quality'  => '',
+                'drive_mode'    => '',
+                'focus_mode'    => '',
+            );
+        }
+        // Use ACF's update_field() to set the repeater field.
+        update_field( 'camera_settings_repeater', $rows, $camera_settings_id );
+    
     }
 
     // Create Light Settings post.
@@ -451,6 +498,8 @@ function create_light_and_camera_settings_for_capture( $post_id, $post, $update 
     }
 }
 add_action( 'save_post_capture', 'create_light_and_camera_settings_for_capture', 10, 3 );
+
+
 
 
 // Template functions for different post types
@@ -810,183 +859,225 @@ add_filter('acf/load_field/name=focus_mode', function($field) {
 function esper_get_camera_settings_template($post) {
     ob_start();
 
+    // Get the Camera Settings post ID from the parent capture.
+    $camera_settings_id = get_post_meta($post->ID, 'capture_camera_settings', true);
+    if ( ! $camera_settings_id ) {
+        echo '<p>No camera settings found.</p>';
+        return ob_get_clean();
+    }
 
-// Your existing input set definition.
-$camera_settings_fields = array(
-    'set_name'   => 'Camera Settings',
-    'set_slug'   => 'camera_settings',
-    // We'll override these values dynamically.
-    'beforeHTML' => '',
-    'afterHTML'  => '',
-    'fieldSets'  => array(
-        array(
-            'field_name' => 'Camera Name',
-            'field_slug' => 'camera_name',
-            'type'       => 'text',
-            'value'      => '',
-            'hide_label' => true,
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Serial Number',
-            'field_slug' => 'serial_number',
-            'type'       => 'text',
-            'value'      => '',
-            'hide_label' => true,
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Camera Model',
-            'field_slug' => 'camera_model',
-            'type'       => 'text',
-            'value'      => '',
-            'hide_label' => true,
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'ISO',
-            'field_slug' => 'iso',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_iso_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Aperture',
-            'field_slug' => 'aperture',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_aperture_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'White Balance',
-            'field_slug' => 'white_balance',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_white_balance_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Colour Temp',
-            'field_slug' => 'colour_temp',
-            'type'       => 'range',
-            'hide_label' => true,
-            'value'      => '3000',
-            'attributes' => array(
-                'min'  => '1000',
-                'max'  => '5000',
-                'step' => '100',
+    // Get the saved repeater rows from ACF.
+    $rows = get_field('camera_settings_repeater', $camera_settings_id);
+    if ( ! is_array($rows) ) {
+        $rows = array();
+    }
+
+    // Define the base input set (without table wrappers).
+    $camera_settings_fields = array(
+        'set_name'   => 'Camera Settings',
+        'set_slug'   => 'camera_settings',
+        'fieldSets'  => array(
+            array(
+                'field_name' => 'Camera Name',
+                'field_slug' => 'camera_name',
+                'type'       => 'text',
+                'display'   => true,
+                'value'      => '',
+                'hide_label' => true,
+                'placeholder'=> 'Enter camera name',
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
             ),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Shutter Speed',
-            'field_slug' => 'shutter_speed',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_shutter_speed_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'File Type',
-            'field_slug' => 'file_type',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_file_type_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'JPEG Quality',
-            'field_slug' => 'jpeg_quality',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_jpeg_quality_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Drive Mode',
-            'field_slug' => 'drive_mode',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_drive_mode_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-        array(
-            'field_name' => 'Focus Mode',
-            'field_slug' => 'focus_mode',
-            'type'       => 'select',
-            'value'      => '',
-            'hide_label' => true,
-            'options'    => get_focus_mode_options(),
-            'beforeHTML' => '<td class="border-r border-esper-yellow">',
-            'afterHTML'  => '</td>',
-        ),
-    )
-);
+            array(
+                'field_name' => 'Serial Number',
+                'field_slug' => 'serial_number',
+                'type'       => 'text',
+                'display'   => true,
+                'value'      => '',
+                'hide_label' => true,
+                'placeholder'=> 'Enter serial number',
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'Camera Model',
+                'field_slug' => 'camera_model',
+                'type'       => 'text',
+                'display'   => true,
+                'value'      => '',
+                'hide_label' => true,
+                'placeholder'=> 'Enter camera model',
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'ISO',
+                'field_slug' => 'iso',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_iso_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'Aperture',
+                'field_slug' => 'aperture',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_aperture_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'White Balance',
+                'field_slug' => 'white_balance',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_white_balance_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'Colour Temp',
+                'field_slug' => 'colour_temp',
+                'type'       => 'range',
+                'hide_label' => true,
+                'value'      => '3000',
+                'display'   => true,
+                'attributes' => array(
+                    'min'  => '1000',
+                    'max'  => '5000',
+                    'step' => '100',
+                ),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'Shutter Speed',
+                'field_slug' => 'shutter_speed',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_shutter_speed_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'File Type',
+                'field_slug' => 'file_type',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_file_type_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'JPEG Quality',
+                'field_slug' => 'jpeg_quality',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_jpeg_quality_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'Drive Mode',
+                'field_slug' => 'drive_mode',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_drive_mode_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+            array(
+                'field_name' => 'Focus Mode',
+                'field_slug' => 'focus_mode',
+                'type'       => 'select',
+                'value'      => '',
+                'display'   => true,
+                'hide_label' => true,
+                'options'    => get_focus_mode_options(),
+                'beforeHTML' => '<td class="border-r border-esper-yellow">',
+                'afterHTML'  => '</td>',
+            ),
+        )
+    );
+ echo  '<div class="capture-template bg-black min-h-screen p-6">';
+    echo  '<div class="w-full space-y-6">';
+    // Output the "Back" and "Save Settings" buttons above the table.
+    echo '<div class="w-full flex justify-between flex-wrap mb-4">
+            <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
+            <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="save_camera_settings">Save Settings</div>
+          </div>';
 
-// Dynamically build the table header based on field names.
-if ( isset( $camera_settings_fields['fieldSets'] ) && is_array( $camera_settings_fields['fieldSets'] ) ) {
+    // Build the table header dynamically from the field names.
     $thead = '<table class="input-set-table w-full border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
     $thead .= '<thead><tr class="bg-esper-yellow">';
     foreach ( $camera_settings_fields['fieldSets'] as $field ) {
-        // Each header cell gets the field_name.
         $thead .= '<th class="font-normal text-black text-left">' . esc_html( $field['field_name'] ) . '</th>';
     }
-    $thead .= '</tr></thead>';
-    // Start the table body with a row.
-    $thead .= '<tbody><tr>';
+    $thead .= '</tr></thead><tbody>';
     
-    // Set the beforeHTML and afterHTML for the set.
-    $camera_settings_fields['beforeHTML'] = $thead;
-    $camera_settings_fields['afterHTML'] = '</tr></tbody></table>';
+  
+    // Output the header.
+    echo $thead;
+
+    // For each saved repeater row, update the base field definitions and render the row.
+if ( ! empty( $rows ) ) {
+    foreach ( $rows as $row ) {
+        // Create a copy of the base input set.
+        $fields_copy = $camera_settings_fields;
+        // Override the overall beforeHTML/afterHTML for this row.
+        $fields_copy['beforeHTML'] = '<tr class="border-b border-esper-yellow">';
+        $fields_copy['afterHTML']  = '</tr>';
+
+        // Loop through each field in the fieldSets and update its value.
+        if ( isset( $fields_copy['fieldSets'] ) && is_array( $fields_copy['fieldSets'] ) ) {
+            foreach ( $fields_copy['fieldSets'] as $key => $field ) {
+                $slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
+                $fields_copy['fieldSets'][$key]['value'] = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
+                // If camera_name is empty and this field isn't camera_name, hide the field.
+                if ( empty( $row['camera_name'] ) && $slug !== 'camera_name' ) {
+                    // Ensure attributes array exists.
+                    if ( ! isset( $fields_copy['fieldSets'][$key]['attributes'] ) || ! is_array( $fields_copy['fieldSets'][$key]['attributes'] ) ) {
+                        $fields_copy['fieldSets'][$key]['attributes'] = array();
+                    }
+                    $fields_copy['fieldSets'][$key]['attributes']['style'] = 'display:none;';
+                }
+            }
+        }
+
+        // Render the row.
+        render_input_sets( array( $fields_copy ) );
+    }
+} else {
+    // If no rows exist, output a single empty row.
+    $empty_set = $camera_settings_fields;
+    $empty_set['beforeHTML'] = '<tr>';
+    $empty_set['afterHTML']  = '</tr>';
+    render_input_sets( array( $empty_set ) );
 }
 
-?>
 
-<div class="capture-template bg-black min-h-screen p-6">
-    <div class="w-full space-y-6">
+    // Close the table.
+    echo '</tbody></table></div></div>';
 
-    
-<div class="w-full flex justify-between flex-wrap">
-    <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
-    <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="save_camera_settings">Save Settings</div> 
-</div>
-
-<?php
-
-// Render the input set (using your existing render_input_sets function).
-render_input_sets( array( $camera_settings_fields ) );
-
-    
-    
-?>
-</div>
-</div>
-    
-    
-
-<?php
     return ob_get_clean();
 }
+
 
 
 function esper_get_capture_template($post) {
@@ -1700,6 +1791,9 @@ function render_input_sets( array $sets ) {
                 $attr_string = '';
                 if ( ! empty( $placeholder ) ) {
                     $attr_string .= ' placeholder="' . esc_attr( $placeholder ) . '"';
+                }
+                if ( isset( $field['display']) && $field['display'] == false ) {
+                    $attr_string .= ' style="display:none;" ' ;
                 }
                 if ( isset( $field['attributes'] ) && is_array( $field['attributes'] ) ) {
                     foreach ( $field['attributes'] as $attr_key => $attr_val ) {
