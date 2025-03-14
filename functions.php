@@ -398,6 +398,61 @@ function esper_create_item() {
 }
 add_action('wp_ajax_esper_create_item', 'esper_create_item');
 
+function create_light_and_camera_settings_for_capture( $post_id, $post, $update ) {
+    // Only run for capture post type.
+    if ( 'capture' !== $post->post_type ) {
+        return;
+    }
+
+    // Only run on new posts (not on update).
+    if ( $update ) {
+        return;
+    }
+
+    // Bail out if this is an autosave or a revision.
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        return;
+    }
+    if ( wp_is_post_revision( $post_id ) ) {
+        return;
+    }
+
+    // If our meta already exists, do nothing.
+    if ( get_post_meta( $post_id, 'capture_camera_settings', true ) || get_post_meta( $post_id, 'capture_light_settings', true ) ) {
+        return;
+    }
+
+    // Create Camera Settings post.
+    $camera_settings_post = array(
+        'post_title'  => 'Camera Settings for Capture ' . $post_id,
+        'post_type'   => 'camera_settings',
+        'post_status' => 'publish',
+        'post_author' => $post->post_author,
+    );
+    $camera_settings_id = wp_insert_post( $camera_settings_post );
+    if ( ! is_wp_error( $camera_settings_id ) ) {
+        // Link the camera settings to the capture by updating meta.
+        update_post_meta( $camera_settings_id, 'parent_capture', $post_id );
+        update_post_meta( $post_id, 'capture_camera_settings', $camera_settings_id );
+    }
+
+    // Create Light Settings post.
+    $light_settings_post = array(
+        'post_title'  => 'Light Settings for Capture ' . $post_id,
+        'post_type'   => 'light_settings',
+        'post_status' => 'publish',
+        'post_author' => $post->post_author,
+    );
+    $light_settings_id = wp_insert_post( $light_settings_post );
+    if ( ! is_wp_error( $light_settings_id ) ) {
+        // Link the light settings to the capture by updating meta.
+        update_post_meta( $light_settings_id, 'parent_capture', $post_id );
+        update_post_meta( $post_id, 'capture_light_settings', $light_settings_id );
+    }
+}
+add_action( 'save_post_capture', 'create_light_and_camera_settings_for_capture', 10, 3 );
+
+
 // Template functions for different post types
 function esper_get_job_template($post) {
     ob_start();
