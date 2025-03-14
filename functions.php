@@ -679,6 +679,315 @@ function esper_get_session_template($post) {
     return ob_get_clean();
 }
 
+// Helper Functions (make sure these are defined and available)
+function get_iso_options() {
+    return array(
+        '100'   => '100',
+        '200'   => '200',
+        '400'   => '400',
+        '800'   => '800',
+        '1600'  => '1600',
+        '3200'  => '3200',
+        '6400'  => '6400',
+    );
+}
+
+function get_aperture_options() {
+    return array(
+        'f/1.4' => 'f/1.4',
+        'f/2.0' => 'f/2.0',
+        'f/2.8' => 'f/2.8',
+        'f/4.0' => 'f/4.0',
+        'f/5.6' => 'f/5.6',
+        'f/8'   => 'f/8',
+        'f/11'  => 'f/11',
+        'f/16'  => 'f/16',
+    );
+}
+
+function get_white_balance_options() {
+    return array(
+        'auto'        => 'Auto',
+        'daylight'    => 'Daylight',
+        'cloudy'      => 'Cloudy',
+        'tungsten'    => 'Tungsten',
+        'fluorescent' => 'Fluorescent',
+    );
+}
+
+function get_shutter_speed_options() {
+    return array(
+        '1/1000' => '1/1000',
+        '1/500'  => '1/500',
+        '1/250'  => '1/250',
+        '1/125'  => '1/125',
+        '1/60'   => '1/60',
+        '1/30'   => '1/30',
+        '1/15'   => '1/15',
+    );
+}
+
+function get_file_type_options() {
+    return array(
+        'JPEG' => 'JPEG',
+        'PNG'  => 'PNG',
+        'RAW'  => 'RAW',
+    );
+}
+
+function get_jpeg_quality_options() {
+    return array(
+        'ExFine'   => 'ExFine',
+        'Fine'     => 'Fine',
+        'Standard' => 'Standard',
+    );
+}
+
+function get_drive_mode_options() {
+    return array(
+        'Single' => 'Single',
+        'Burst'  => 'Burst',
+    );
+}
+
+function get_focus_mode_options() {
+    return array(
+        'MF' => 'MF',
+        'AF' => 'AF',
+    );
+}
+
+// Populate ISO options
+add_filter('acf/load_field/name=iso', function($field) {
+    $field['choices'] = get_iso_options();
+    return $field;
+});
+
+// Populate Aperture options
+add_filter('acf/load_field/name=aperture', function($field) {
+    $field['choices'] = get_aperture_options();
+    return $field;
+});
+
+// Populate White Balance options
+add_filter('acf/load_field/name=white_balance', function($field) {
+    $field['choices'] = get_white_balance_options();
+    return $field;
+});
+
+// Populate Shutter Speed options
+add_filter('acf/load_field/name=shutter_speed', function($field) {
+    $field['choices'] = get_shutter_speed_options();
+    return $field;
+});
+
+// Populate File Type options
+add_filter('acf/load_field/name=file_type', function($field) {
+    $field['choices'] = get_file_type_options();
+    return $field;
+});
+
+// Populate JPEG Quality options
+add_filter('acf/load_field/name=jpeg_quality', function($field) {
+    $field['choices'] = get_jpeg_quality_options();
+    return $field;
+});
+
+// Populate Drive Mode options
+add_filter('acf/load_field/name=drive_mode', function($field) {
+    $field['choices'] = get_drive_mode_options();
+    return $field;
+});
+
+// Populate Focus Mode options
+add_filter('acf/load_field/name=focus_mode', function($field) {
+    $field['choices'] = get_focus_mode_options();
+    return $field;
+});
+
+
+
+function esper_get_camera_settings_template($post) {
+    ob_start();
+
+
+// Your existing input set definition.
+$camera_settings_fields = array(
+    'set_name'   => 'Camera Settings',
+    'set_slug'   => 'camera_settings',
+    // We'll override these values dynamically.
+    'beforeHTML' => '',
+    'afterHTML'  => '',
+    'fieldSets'  => array(
+        array(
+            'field_name' => 'Camera Name',
+            'field_slug' => 'camera_name',
+            'type'       => 'text',
+            'value'      => '',
+            'hide_label' => true,
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Serial Number',
+            'field_slug' => 'serial_number',
+            'type'       => 'text',
+            'value'      => '',
+            'hide_label' => true,
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Camera Model',
+            'field_slug' => 'camera_model',
+            'type'       => 'text',
+            'value'      => '',
+            'hide_label' => true,
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'ISO',
+            'field_slug' => 'iso',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_iso_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Aperture',
+            'field_slug' => 'aperture',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_aperture_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'White Balance',
+            'field_slug' => 'white_balance',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_white_balance_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Colour Temp',
+            'field_slug' => 'colour_temp',
+            'type'       => 'range',
+            'hide_label' => true,
+            'value'      => '3000',
+            'attributes' => array(
+                'min'  => '1000',
+                'max'  => '5000',
+                'step' => '100',
+            ),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Shutter Speed',
+            'field_slug' => 'shutter_speed',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_shutter_speed_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'File Type',
+            'field_slug' => 'file_type',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_file_type_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'JPEG Quality',
+            'field_slug' => 'jpeg_quality',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_jpeg_quality_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Drive Mode',
+            'field_slug' => 'drive_mode',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_drive_mode_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+        array(
+            'field_name' => 'Focus Mode',
+            'field_slug' => 'focus_mode',
+            'type'       => 'select',
+            'value'      => '',
+            'hide_label' => true,
+            'options'    => get_focus_mode_options(),
+            'beforeHTML' => '<td class="border-r border-esper-yellow">',
+            'afterHTML'  => '</td>',
+        ),
+    )
+);
+
+// Dynamically build the table header based on field names.
+if ( isset( $camera_settings_fields['fieldSets'] ) && is_array( $camera_settings_fields['fieldSets'] ) ) {
+    $thead = '<table class="input-set-table w-full border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
+    $thead .= '<thead><tr class="bg-esper-yellow">';
+    foreach ( $camera_settings_fields['fieldSets'] as $field ) {
+        // Each header cell gets the field_name.
+        $thead .= '<th class="font-normal text-black text-left">' . esc_html( $field['field_name'] ) . '</th>';
+    }
+    $thead .= '</tr></thead>';
+    // Start the table body with a row.
+    $thead .= '<tbody><tr>';
+    
+    // Set the beforeHTML and afterHTML for the set.
+    $camera_settings_fields['beforeHTML'] = $thead;
+    $camera_settings_fields['afterHTML'] = '</tr></tbody></table>';
+}
+
+?>
+
+<div class="capture-template bg-black min-h-screen p-6">
+    <div class="w-full space-y-6">
+
+    
+<div class="w-full flex justify-between flex-wrap">
+    <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
+    <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="save_camera_settings">Save Settings</div> 
+</div>
+
+<?php
+
+// Render the input set (using your existing render_input_sets function).
+render_input_sets( array( $camera_settings_fields ) );
+
+    
+    
+?>
+</div>
+</div>
+    
+    
+
+<?php
+    return ob_get_clean();
+}
+
 
 function esper_get_capture_template($post) {
     ob_start();
@@ -953,7 +1262,9 @@ function esper_get_content() {
 
             switch( $context) {
                 case 'camera_settings':
-                    $content = 'camera settings';
+                    $content = esper_get_camera_settings_template($post);
+
+
                 break;
                 case 'light_settings':
                     $content = 'light settings';
@@ -1327,5 +1638,139 @@ function esper_update_session_notes() {
         wp_send_json_success(array('message' => 'Session notes updated successfully'));
     } else {
         wp_send_json_error(array('message' => 'Failed to update session notes'));
+    }
+}
+
+/**
+ * Renders input sets from an associative array.
+ *
+ * Each set can include:
+ *  - beforeHTML, afterHTML: wrapper markup for the whole set.
+ *  - set_name: an optional title.
+ *  - fieldSets: an array of field definitions. Each field can include:
+ *      - field_name: Label text.
+ *      - field_slug: Used for the name and id attributes.
+ *      - type: Input type (text, number, select, checkbox, radio, range, etc.).
+ *      - value: Default value.
+ *      - placeholder: Optional placeholder attribute.
+ *      - hide_label: If set to true, the label will not be output.
+ *      - options: For select or radio types.
+ *      - attributes: An associative array of additional attributes.
+ *      - beforeHTML, afterHTML: Wrapper markup for the field.
+ *
+ * @param array $sets Array of input set definitions.
+ */
+function render_input_sets( array $sets ) {
+    foreach ( $sets as $set ) {
+
+                // Get top-level styling classes if provided.
+                $global_label_class = isset( $set['label_class'] ) ? $set['label_class'] : '';
+                $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'bg-black border border-white border-opacity-25 text-white';
+
+                
+        // Output set wrapper (beforeHTML).
+        if ( ! empty( $set['beforeHTML'] ) ) {
+            echo $set['beforeHTML'];
+        }
+
+        // Optional set title.
+        if ( ! empty( $set['set_name'] ) ) {
+            //echo '<h3>' . esc_html( $set['set_name'] ) . '</h3>';
+        }
+
+        // Loop through each field in the set.
+        if ( ! empty( $set['fieldSets'] ) && is_array( $set['fieldSets'] ) ) {
+            foreach ( $set['fieldSets'] as $field ) {
+
+                // Get field-specific classes; fall back to global ones.
+                $label_class = isset( $field['label_class'] ) ? $field['label_class'] : $global_label_class;
+                $input_class = isset( $field['input_class'] ) ? $field['input_class'] : $global_input_class;
+                
+                // Output any field beforeHTML.
+                if ( ! empty( $field['beforeHTML'] ) ) {
+                    echo $field['beforeHTML'];
+                }
+
+                // Check if we should hide the label.
+                $hide_label = isset( $field['hide_label'] ) ? $field['hide_label'] : false;
+                // Retrieve placeholder if provided.
+                $placeholder = isset( $field['placeholder'] ) ? $field['placeholder'] : '';
+
+                // Build additional attribute string.
+                $attr_string = '';
+                if ( ! empty( $placeholder ) ) {
+                    $attr_string .= ' placeholder="' . esc_attr( $placeholder ) . '"';
+                }
+                if ( isset( $field['attributes'] ) && is_array( $field['attributes'] ) ) {
+                    foreach ( $field['attributes'] as $attr_key => $attr_val ) {
+                        $attr_string .= ' ' . esc_attr( $attr_key ) . '="' . esc_attr( $attr_val ) . '"';
+                    }
+                }
+
+                // Render the label unless hidden.
+                if ( ! $hide_label ) {
+                    echo '<label for="' . esc_attr( $field['field_slug'] ) . '" class="' . esc_attr( $label_class ) . '">' . esc_html( $field_name ) . '</label>';
+                }
+
+                // Render the input based on type.
+                $type       = isset( $field['type'] ) ? $field['type'] : 'text';
+                $field_slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
+                $value      = isset( $field['value'] ) ? $field['value'] : '';
+
+                switch ( $type ) {
+                    case 'text':
+                    case 'number':
+                        echo '<input type="' . esc_attr( $type ) . '" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '" class="' . esc_attr( $input_class ) . '"' . $attr_string . '>';
+                        break;
+
+                    case 'select':
+                        echo '<select name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" class="' . esc_attr( $input_class ) . '"' . $attr_string . '>';
+                        if ( isset( $field['options'] ) && is_array( $field['options'] ) ) {
+                            foreach ( $field['options'] as $option_value => $option_label ) {
+                                echo '<option value="' . esc_attr( $option_value ) . '" ' . selected( $option_value, $value, false ) . '>' . esc_html( $option_label ) . '</option>';
+                            }
+                        }
+                        echo '</select>';
+                        break;
+
+                    case 'checkbox':
+                        echo '<label for="' . esc_attr( $field_slug ) . '">';
+                        echo '<input type="checkbox" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="1" ' . checked( 1, $value, false ) . $attr_string . '>';
+                        echo esc_html( $field['field_name'] );
+                        echo '</label>';
+                        break;
+
+                    case 'radio':
+                        echo '<span>' . esc_html( $field['field_name'] ) . '</span>';
+                        if ( isset( $field['options'] ) && is_array( $field['options'] ) ) {
+                            foreach ( $field['options'] as $option_value => $option_label ) {
+                                echo '<label>';
+                                echo '<input type="radio" name="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $option_value ) . '" ' . checked( $option_value, $value, false ) . $attr_string . '>';
+                                echo esc_html( $option_label );
+                                echo '</label>';
+                            }
+                        }
+                        break;
+
+                    case 'range':
+                        echo '<input type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
+                        break;
+
+                    default:
+                        echo '<input type="text" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
+                        break;
+                }
+
+                // Output any field afterHTML.
+                if ( ! empty( $field['afterHTML'] ) ) {
+                    echo $field['afterHTML'];
+                }
+            }
+        }
+
+        // Output set wrapper closing markup.
+        if ( ! empty( $set['afterHTML'] ) ) {
+            echo $set['afterHTML'];
+        }
     }
 }

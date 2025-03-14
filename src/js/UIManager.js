@@ -23,9 +23,9 @@ export default class UIManager {
                     const context = $(this).data('context');
                     store.navigationManager.pushScreen( postId, postType, context );
                     break;
-                case 'action2':
+                case 'back':
                     // Handle action2
-                    console.log('Action 2 triggered');
+                    store.navigationManager.popScreen();
                     break;
                 // Add more cases as needed
                 default:

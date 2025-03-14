@@ -45,4 +45,7 @@ $(document).ready(function () {
     store.uiManager.setupEventListeners();
     store.captureManager.setupEventListeners();
 
+    // Debug
+    //store.screenContent.loadPostContent(155, 'capture', 'camera_settings');
+
 });
