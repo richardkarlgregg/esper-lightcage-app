@@ -11,7 +11,26 @@ export default class UIManager {
     }
 
     setupEventListeners() {
+        $(document).on('click', '[data-action]', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
+            const action = $(this).data('action');
+            switch (action) {
+                case 'go back':
+                    // Handle action1
+                    console.log('go back');
+                    store.navigationManager.popScreen();
+                    break;
+                case 'action2':
+                    // Handle action2
+                    console.log('Action 2 triggered');
+                    break;
+                // Add more cases as needed
+                default:
+                    console.log('Unknown action:', action);
+            }
+        });
     }
 
     initFolderTree() {

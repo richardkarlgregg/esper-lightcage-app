@@ -8,7 +8,7 @@
     </div>
 
     <!-- Draggable Divider -->
-    <div id="divider" class="divider w-1 hover:w-4 bg-black transition hover:bg-yellow-300"></div>
+    <div id="divider" class="divider w-1 hover:w-4 bg-black transition hover:bg-esper-yellow"></div>
 
     <!-- Right Pane: Content Area -->
     <div id="content" class="flex-1 bg-black overflow-auto">

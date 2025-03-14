@@ -42,6 +42,7 @@ $(document).ready(function () {
     store.activePostID = null;
     
     store.uiManager.initFolderTree();
+    store.uiManager.setupEventListeners();
     store.captureManager.setupEventListeners();
 
 });
