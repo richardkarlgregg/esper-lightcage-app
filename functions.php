@@ -1020,11 +1020,11 @@ function esper_get_camera_settings_template($post) {
     // Output the "Back" and "Save Settings" buttons above the table.
     echo '<div class="w-full flex justify-between flex-wrap mb-4">
             <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
-            <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="save_camera_settings">Save Settings</div>
+            <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-id="'.$camera_settings_id.'" data-action="save_camera_settings">Save Settings</div>
           </div>';
 
     // Build the table header dynamically from the field names.
-    $thead = '<table class="input-set-table w-full border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
+    $thead = '<table class="input-set-table w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
     $thead .= '<thead><tr class="bg-esper-yellow">';
     foreach ( $camera_settings_fields['fieldSets'] as $field ) {
         $thead .= '<th class="font-normal text-black text-left">' . esc_html( $field['field_name'] ) . '</th>';
@@ -1756,7 +1756,7 @@ function render_input_sets( array $sets ) {
 
                 // Get top-level styling classes if provided.
                 $global_label_class = isset( $set['label_class'] ) ? $set['label_class'] : '';
-                $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'bg-black border border-white border-opacity-25 text-white';
+                $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'bg-black border p-2 border-white border-opacity-25 text-white';
 
                 
         // Output set wrapper (beforeHTML).
@@ -1868,3 +1868,26 @@ function render_input_sets( array $sets ) {
         }
     }
 }
+
+function update_camera_settings_repeater_ajax() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+
+    $post_id = intval($_POST['post_id']);
+    if (!$post_id) {
+        wp_send_json_error('Invalid post ID');
+    }
+
+    $rows_json = wp_unslash($_POST['rows']);
+    $rows = json_decode($rows_json, true);
+    if (!is_array($rows)) {
+        wp_send_json_error('Invalid rows data');
+    }
+
+    // Update the ACF repeater field named "camera_settings_repeater" for the given post.
+    if (update_field('camera_settings_repeater', $rows, $post_id)) {
+        wp_send_json_success('Repeater updated');
+    } else {
+        wp_send_json_error('Failed to update repeater');
+    }
+}
+add_action('wp_ajax_update_camera_settings_repeater', 'update_camera_settings_repeater_ajax');
