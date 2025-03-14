@@ -14,6 +14,7 @@ import TakeManager from './TakeManager.js';
 import NotificationManager from './NotificationManager.js';
 import PostManager from './PostManager.js';
 import SessionManager from './SessionManager.js';
+import NavigationManager from './NavigationManager.js';
 
 console.log(store);
 
@@ -26,6 +27,7 @@ $(document).ready(function () {
     const notificationManager = new NotificationManager();
     const postManager = new PostManager();
     const sessionManager = new SessionManager();
+    const navigationManager = new NavigationManager();
 
     // Put the instance on the store
     store.uiManager = uiManager;
@@ -35,6 +37,7 @@ $(document).ready(function () {
     store.notificationManager = notificationManager;
     store.postManager = postManager;
     store.sessionManager = sessionManager;
+    store.navigationManager = navigationManager;
 
     store.activePostID = null;
     
