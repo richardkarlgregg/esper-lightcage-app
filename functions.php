@@ -220,6 +220,37 @@ function esper_register_post_types() {
         'supports' => array('title', 'editor', 'thumbnail', 'custom-fields', 'author'),
         'menu_icon' => 'dashicons-lightbulb'
     ));
+
+    // Export Post Type
+    register_post_type('export', array(
+        'labels' => array(
+            'name' => 'Exports',
+            'singular_name' => 'Export',
+            'add_new' => 'Add New Export',
+            'add_new_item' => 'Add New Export',
+            'edit_item' => 'Edit Export',
+            'new_item' => 'New Export',
+            'view_item' => 'View Export',
+            'search_items' => 'Search Exports',
+            'not_found' => 'No exports found',
+            'not_found_in_trash' => 'No exports found in Trash',
+            'parent_item_colon' => ''
+        ),
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'export',
+        'rest_controller_class' => 'WP_REST_Posts_Controller',
+        'query_var' => true,
+        'rewrite' => array('slug' => 'export'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 5,
+        'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
+        'menu_icon' => 'dashicons-download'
+    ));
 }
 add_action('init', 'esper_register_post_types');
 
@@ -1946,3 +1977,5 @@ function register_export_post_type() {
 }
 
 add_action('init', 'register_export_post_type', 0);
+
+require_once get_template_directory() . '/functions/custom-post-types.php';
