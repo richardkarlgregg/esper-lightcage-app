@@ -38,6 +38,9 @@ initializeResizeHandlers($takeCard) {
     // Store initial aspect ratios
     const mainImageRatio = 16/9; // 1920x1080 aspect ratio
     const thumbRatio = 16/9; // Same as main image
+
+    // Ensure handle maintains its height
+    $horizontalHandle.css('height', '4px').css('min-height', '4px');
     
     // Vertical resize
     $verticalHandle.on('mousedown', function(e) {
@@ -77,8 +80,7 @@ initializeResizeHandlers($takeCard) {
             const handleHeight = $horizontalHandle.height();
             const newHeight = Math.max(100, Math.min(300, startHeight + (startY - e.clientY)));
             
-            // Ensure handle maintains its height
-            $horizontalHandle.css('height', '4px').css('min-height', '4px');
+            
             
             // Update thumbnails pane height
             $thumbnailsPane.css('height', newHeight + 'px');
@@ -241,92 +243,6 @@ initializeThumbnailHandlers($takeCard) {
         };
         newImage.src = mainImageSrc;
     });
-}
-
-// Replace the initializeTakeNameEditor function
-initializeTakeNameEditor($takeCard, takeId, initialTitle) {
-    const $titleDisplay = $takeCard.find('.take-title-display');
-    const $titleInput = $takeCard.find('.take-title-input');
-    const $editButton = $titleDisplay.siblings('button');
-
-    // Ensure initial values are set
-    $titleDisplay.text(initialTitle);
-    $titleInput.val(initialTitle);
-
-    function startEditing() {
-        $titleDisplay.addClass('hidden');
-        $titleInput.removeClass('hidden').val($titleDisplay.text()).focus();
-    }
-
-    function stopEditing() {
-        const newTitle = $titleInput.val().trim();
-        if (!newTitle) {
-            $titleInput.val($titleDisplay.text());
-            $titleInput.addClass('hidden');
-            $titleDisplay.removeClass('hidden');
-            return;
-        }
-
-        $titleInput.addClass('hidden');
-        $titleDisplay.removeClass('hidden').text('Saving...');
-
-        // Save the new title with proper data formatting
-        $.ajax({
-            url: esperApi.ajaxurl,
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'esper_update_take',
-                nonce: esperApi.nonce,
-                take_id: takeId,
-                title: newTitle,
-                post_type: 'take'
-            }
-        }).then(response => {
-            if (response && response.success) {
-                // Update title display
-                $titleDisplay.text(newTitle);
-                
-                // Update folder tree item title
-                const $folderItem = $(`.folder-item[data-id="${takeId}"]`);
-                $folderItem.find('.text-white.truncate').text(newTitle);
-                
-                // Update main image text
-                const mainImageUrl = `https://placehold.co/1920x1080/333333/FFFFFF/png?text=${encodeURIComponent(newTitle)}`;
-                $('#mainImagePane img').attr('src', mainImageUrl);
-                
-                store.notificationManager.showSuccess('Take name updated successfully');
-            } else {
-                const errorMsg = response && response.data ? response.data : 'Failed to update take name';
-                $titleDisplay.text($titleDisplay.data('original-title') || initialTitle); // Revert to original
-                store.notificationManager.showError(errorMsg);
-            }
-        }).catch(error => {
-            console.error('Error updating take name:', error);
-            $titleDisplay.text($titleDisplay.data('original-title') || initialTitle); // Revert to original
-            store.notificationManager.showError('Failed to update take name. Please try again.');
-        });
-    }
-
-    // Click on title or edit button to start editing
-    $titleDisplay.add($editButton).on('click', startEditing);
-
-    // Handle input blur and Enter key
-    $titleInput
-        .on('blur', stopEditing)
-        .on('keypress', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                stopEditing();
-            }
-        })
-        .on('keyup', function(e) {
-            if (e.which === 27) { // Escape key
-                $titleInput.val($titleDisplay.text()); // Revert to current display value
-                $titleInput.addClass('hidden');
-                $titleDisplay.removeClass('hidden');
-            }
-        });
 }
 
 }

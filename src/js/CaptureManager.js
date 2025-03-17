@@ -97,9 +97,6 @@ export default class CaptureManager {
  initCaptureHandlers() {
     const captureId = $('#triggerTake').data('capture-id');
     
-    // Initialize capture name editor with the capture ID
-    this.initializeCaptureNameEditor(captureId);
-    
     // Remove any existing click handlers before adding new one
     $('#triggerTake').off('click').on('click', async function() {
         const $button = $(this);
@@ -186,84 +183,4 @@ export default class CaptureManager {
     });
 }
 
-// Add capture name editor functionality
-initializeCaptureNameEditor(captureId) {
-    const $titleDisplay = $('.capture-title-display');
-    const $titleInput = $('.capture-title-input');
-    const $editButton = $titleDisplay.siblings('button');
-
-    // Store original title for reverting if needed
-    $titleDisplay.data('original-title', $titleDisplay.text());
-
-    function startEditing() {
-        $titleDisplay.addClass('hidden');
-        $titleInput.removeClass('hidden').val($titleDisplay.text()).focus();
-    }
-
-    function stopEditing() {
-        const newTitle = $titleInput.val().trim();
-        if (!newTitle) {
-            $titleInput.val($titleDisplay.text());
-            $titleInput.addClass('hidden');
-            $titleDisplay.removeClass('hidden');
-            return;
-        }
-
-        $titleInput.addClass('hidden');
-        $titleDisplay.removeClass('hidden').text('Saving...');
-
-        // Save the new title
-        $.ajax({
-            url: esperApi.ajaxurl,
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'esper_update_capture',
-                nonce: esperApi.nonce,
-                capture_id: captureId,
-                title: newTitle
-            }
-        }).then(response => {
-            if (response && response.success) {
-                // Update title display
-                $titleDisplay.text(newTitle);
-                $titleDisplay.data('original-title', newTitle);
-                
-                // Update folder tree item title
-                const $folderItem = $(`.folder-item[data-id="${captureId}"][data-type="capture"]`);
-                $folderItem.find('> div > .text-white.truncate').text(newTitle);
-                
-                store.notificationManager.showSuccess('Capture name updated successfully');
-            } else {
-                const errorMsg = response && response.data ? response.data : 'Failed to update capture name';
-                $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
-                store.notificationManager.showError(errorMsg);
-            }
-        }).catch(error => {
-            console.error('Error updating capture name:', error);
-            $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original
-            store.notificationManager.showError('Failed to update capture name. Please try again.');
-        });
-    }
-
-    // Click on title or edit button to start editing
-    $titleDisplay.add($editButton).on('click', startEditing);
-
-    // Handle input blur and Enter key
-    $titleInput
-        .on('blur', stopEditing)
-        .on('keypress', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                stopEditing();
-            }
-        })
-        .on('keyup', function(e) {
-            if (e.which === 27) { // Escape key
-                $titleInput.val($titleDisplay.text()); // Revert to current display value
-                $titleInput.addClass('hidden');
-                $titleDisplay.removeClass('hidden');
-            }
-        });
-}
 }

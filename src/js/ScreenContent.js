@@ -46,6 +46,7 @@ async loadPostContent(postId, postType, context) {
                         .fadeIn(300);
                     // Initialize capture handlers
                     store.captureManager.initCaptureHandlers();
+                    this.initMainContentHandlers();
                     break;
 
                 case 'take': {
@@ -53,21 +54,23 @@ async loadPostContent(postId, postType, context) {
                         .hide()
                         .html(response.data.content)
                         .fadeIn(300);
-                    const takeTitle = response.data.title ? response.data.title : `Take ${postId}`;
+                    
+                    //store.takeManager.initializeTakeNameEditor($('#content'), postId, takeTitle);
+                    this.initMainContentHandlers();
                     // Initialize take-specific handlers
                     store.takeManager.initializeResizeHandlers($('#content'));
                     store.takeManager.initializeThumbnailHandlers($('#content'));
-                    store.takeManager.initializeTakeNameEditor($('#content'), postId, takeTitle);
                     break;
                 }
 
                 case 'job':
+                case 'session':
                     $('#content')
                         .hide()
                         .html(response.data.content)
                         .fadeIn(300);
                     // Initialize job-specific handlers
-                    this.initJobContentHandlers();
+                    this.initMainContentHandlers();
                     break;
 
                 default:
@@ -95,13 +98,14 @@ async loadPostContent(postId, postType, context) {
 
 
     // Initialize job content interaction handlers
-initJobContentHandlers() {
+initMainContentHandlers() {
     let saveTimeout;
-    const jobId = $('.job-title-display').data('job-id');
+    const postId = $('.title-display').data('id');
+    const postType = $('.title-display').data('type'); 
     
     // Initialize job title editor
-    const $titleDisplay = $('.job-title-display');
-    const $titleInput = $('.job-title-input');
+    const $titleDisplay = $('.title-display');
+    const $titleInput = $('.title-input');
     const $editButton = $titleDisplay.siblings('button');
 
     // Store original title for reverting if needed
@@ -132,7 +136,7 @@ initJobContentHandlers() {
             data: {
                 action: 'esper_update_job',
                 nonce: esperApi.nonce,
-                job_id: jobId,
+                id: postId,
                 title: newTitle
             }
         }).then(response => {
@@ -142,13 +146,14 @@ initJobContentHandlers() {
                 $titleDisplay.data('original-title', newTitle);
                 
                 // Update folder tree item title
-                const $folderItem = $(`.folder-item[data-id="${jobId}"][data-type="job"]`);
+                const $folderItem = $(`.folder-item[data-id="${postId}"][data-type="${postType}"]`);
                 $folderItem.find('> div > .text-white.truncate').text(newTitle);
                 
                 // Update current job title in header
                 $('#currentJobTitle').text(newTitle);
                 
-                store.notificationManager.showSuccess('Job name updated successfully');
+                store.notificationManager.showSuccess(`${postType} name updated successfully`);
+
             } else {
                 const errorMsg = response && response.data ? response.data : 'Failed to update job name';
                 $titleDisplay.text($titleDisplay.data('original-title')); // Revert to original

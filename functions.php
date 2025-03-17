@@ -327,8 +327,8 @@ function esper_get_job_template($post) {
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <div class="flex items-center justify-start mb-2 group relative">
-                            <h2 class="text-lg font-semibold text-white job-title-display" data-job-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
-                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded job-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <h2 class="text-lg font-semibold text-white title-display" data-type="job" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
+                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons text-sm">edit</span>
                             </button>
@@ -405,7 +405,7 @@ function esper_get_job_template($post) {
                 <div class="space-y-4">
                     <div class="p-4 rounded">
                         <h3 class="text-sm font-medium text-gray-300 mb-2">Notes</h3>
-                        <textarea id="jobNotes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'job_notes', true)); ?></textarea>
+                        <textarea id="jobNotes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'notes', true)); ?></textarea>
                     </div>
 
                     <div class="bg-black/80 p-4 rounded">
@@ -443,6 +443,7 @@ function esper_get_job_template($post) {
 function esper_get_session_template($post) {
     ob_start();
     ?>
+
     <div class="session-template bg-black min-h-screen p-6">
         <div class="w-full space-y-6">
             <!-- Session Header -->
@@ -450,7 +451,7 @@ function esper_get_session_template($post) {
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
                         <div class="flex items-center justify-start mb-2 group relative">
-                            <h2 class="text-lg font-semibold text-white title-display" data-session-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
+                            <h2 class="text-lg font-semibold text-white title-display" data-type="session" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons text-sm">edit</span>
@@ -1019,8 +1020,8 @@ function esper_get_capture_template($post) {
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
                         <div class="flex items-center justify-between mb-2 group relative">
-                            <h2 class="text-2xl font-bold text-white capture-title-display" data-capture-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
-                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-2xl font-bold px-2 py-1 capture-title-input" value="<?php echo esc_attr($post->post_title); ?>">
+                            <h2 class="text-2xl font-bold text-white title-display" data-type="capture" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
+                            <input type="text" class="hidden absolute inset-0 bg-black text-white text-2xl font-bold px-2 py-1 title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons">edit</span>
                             </button>
@@ -1137,10 +1138,10 @@ function esper_get_take_template($post) {
             <!-- Right sidebar -->
             <div class="w-64 bg-black/80 p-4" id="rightSidebarPane">
                 <div class="flex items-center justify-between mb-4 group relative">
-                    <h3 class="text-lg font-semibold text-white take-title-display" data-take-id="<?php echo esc_attr($post->ID); ?>">
+                    <h3 class="text-lg font-semibold text-white title-display" data-type="take" data-id="<?php echo esc_attr($post->ID); ?>">
                         <?php echo esc_html($takeTitle); ?>
                     </h3>
-                    <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded take-title-input" value="<?php echo esc_attr($takeTitle); ?>">
+                    <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($takeTitle); ?>">
                     <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="material-icons text-sm">edit</span>
                     </button>
@@ -1524,10 +1525,10 @@ add_action('wp_enqueue_scripts', 'esper_lightcage_scripts');
 function esper_update_job() {
     check_ajax_referer('esper_ajax_nonce', 'nonce');
     
-    $job_id = intval($_POST['job_id']);
-    $job = get_post($job_id);
+    $post_id = intval($_POST['id']);
+    $post = get_post($post_id);
     
-    if (!$job || $job->post_author != get_current_user_id()) {
+    if (!$post || $post->post_author != get_current_user_id()) {
         wp_send_json_error('Access denied');
         return;
     }
@@ -1541,18 +1542,18 @@ function esper_update_job() {
     
     // Update notes if provided
     if (isset($_POST['notes'])) {
-        update_post_meta($job_id, 'job_notes', sanitize_textarea_field($_POST['notes']));
+        update_post_meta($post_id, 'notes', sanitize_textarea_field($_POST['notes']));
     }
     
     // Update tags if provided
     if (isset($_POST['tags'])) {
         $tags = array_map('sanitize_text_field', $_POST['tags']);
-        update_post_meta($job_id, 'job_tags', $tags);
+        update_post_meta($post_id, 'job_tags', $tags);
     }
     
     // If we have post updates, apply them
     if (!empty($updates)) {
-        $updates['ID'] = $job_id;
+        $updates['ID'] = $post_id;
         wp_update_post($updates);
     }
     
