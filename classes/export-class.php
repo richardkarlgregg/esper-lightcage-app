@@ -34,5 +34,3 @@ class ExportHandler {
         return $exports;
     }
 }
-
-?> 

@@ -541,6 +541,122 @@ function esper_get_session_template($post) {
     return ob_get_clean();
 }
 
+
+function esper_get_export_template($post) {
+    ob_start();
+    ?>
+    <div class="export-template bg-black min-h-screen p-6">
+        <div class="w-full space-y-6">
+            <h2 class="text-2xl font-bold text-white mb-4">Export Controls</h2>
+
+            <div class="w-full flex justify-between flex-wrap mb-4">
+                <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
+            </div>
+            
+            <!-- File Name Items Section -->
+            <div class="bg-black p-6 border border-esper-yellow">
+                <h3 class="text-lg font-semibold text-white mb-4">File Name Items</h3>
+                <ul class="list-disc pl-6 text-white">
+                    <li>job</li>
+                    <li>session</li>
+                    <li>take</li>
+                    <li>camera_serial</li>
+                    <li>camera_name</li>
+                    <li>angle (for turntable captures)</li>
+                    <li>Image Name Will End_FrameIndex</li>
+                </ul>
+            </div>
+            
+            <!-- First HTML Table: Export Summary -->
+            <div class="bg-black p-6 border border-esper-yellow">
+                <h3 class="text-lg font-semibold text-white mb-4">Export Summary</h3>
+                <p>Would be all the exports for the current open job.</p>
+                <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
+                    <thead>
+                        <tr class="bg-esper-yellow">
+                            <th class="font-normal text-black text-left">Job</th>
+                            <th class="font-normal text-black text-left">Session</th>
+                            <th class="font-normal text-black text-left">Take</th>
+                            <th class="font-normal text-black text-left">Cameras</th>
+                            <th class="font-normal text-black text-left">Images</th>
+                            <th class="font-normal text-black text-left">Jpegs</th>
+                            <th class="font-normal text-black text-left">Raws</th>
+                            <th class="font-normal text-black text-left">Queue Take</th>
+                            <th class="font-normal text-black text-left">Read-back Check</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example row (dynamically generate rows as needed) -->
+                        <tr class="border-b border-esper-yellow">
+                            <td>Job 1</td>
+                            <td>Session 1</td>
+                            <td>Take 1</td>
+                            <td>2</td>
+                            <td>10</td>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>
+                                <button data-action="add-to-queue" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                                    Add to Queue
+                                </button>
+                            </td>
+                            <td>OK</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Queue Controls Section -->
+            <div class="bg-black p-6 border border-esper-yellow">
+                <h3 class="text-lg font-semibold text-white mb-4">Queue</h3>
+                <div class="flex space-x-4 mb-4">
+                    <button data-action="process-queue" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">
+                        Process
+                    </button>
+                    <button data-action="clear-queued" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">
+                        Clear Queued
+                    </button>
+                    <button data-action="clear-completed" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">
+                        Clear Completed
+                    </button>
+                </div>
+                <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
+                    <thead>
+                        <tr class="bg-esper-yellow">
+                            <th class="font-normal text-black text-left">Job</th>
+                            <th class="font-normal text-black text-left">Session</th>
+                            <th class="font-normal text-black text-left">Take</th>
+                            <th class="font-normal text-black text-left">Jpegs</th>
+                            <th class="font-normal text-black text-left">Raws</th>
+                            <th class="font-normal text-black text-left">ReadBackCheck</th>
+                            <th class="font-normal text-black text-left">Images To Export</th>
+                            <th class="font-normal text-black text-left">Remaining</th>
+                            <th class="font-normal text-black text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example row (dynamically generate rows as needed) -->
+                        <tr class="border-b border-esper-yellow">
+                            <td>Job 1</td>
+                            <td>Session 1</td>
+                            <td>Take 1</td>
+                            <td>5</td>
+                            <td>5</td>
+                            <td>OK</td>
+                            <td>10</td>
+                            <td>0</td>
+                            <td>Completed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php
+    return ob_get_clean();
+}
+
+
 // Helper Functions (make sure these are defined and available)
 function get_iso_options() {
     return array(
@@ -1047,6 +1163,18 @@ function esper_get_take_template($post) {
                         <p class="text-gray-400 text-sm">Aperture: f/2.8</p>
                         <p class="text-gray-400 text-sm">ISO: 100</p>
                     </div>
+
+                    <div class="bg-black/60 p-3 rounded">
+                        <h4 class="text-sm font-medium text-gray-300 mb-2">Export Settings</h4>
+                        <p class="text-gray-400 text-sm">Include sets</p>
+                        <p class="text-gray-400 text-sm">Ability to exclude images</p>
+                        <p class="text-gray-400 text-sm">Re-order images?</p>
+                        <label for="include_export">
+                            <input type="checkbox" id="include_export" name="include_export" value="1" checked>
+                            Include in Export
+                        </label>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -1129,23 +1257,56 @@ function esper_get_content() {
     $post_id = intval($_POST['post_id']);
     $post_type = sanitize_text_field($_POST['post_type']);
     
-    if (!in_array($post_type, array('job', 'session', 'capture', 'take'))) {
+    if (!in_array($post_type, array('job', 'session', 'capture', 'take', 'export'))) {
         wp_send_json_error('Invalid post type: ' . $post_type);
         return;
     }
-    
-    $post = get_post($post_id);
     $current_user_id = get_current_user_id();
+    if ($post_type == 'export') {
+        
+        $exportHandler = new ExportHandler();
     
-    if (!$post) {
-        wp_send_json_error('Post not found with ID: ' . $post_id);
-        return;
-    }
+        // Retrieve export posts for the current user.
+        $exports = $exportHandler->getExportsByUser($current_user_id);
     
-    if ($post->post_author != $current_user_id) {
-        wp_send_json_error('Access denied. Post author (' . $post->post_author . ') does not match current user (' . $current_user_id . ')');
-        return;
+        // If there is at least one export, get the first (most recent) one.
+        if (!empty($exports)) {
+            $post = $exports[0];
+        } else {
+            // No export found; create a new export post.
+            $new_post_id = $exportHandler->createExport('New Export Title', $current_user_id);
+            if (!$new_post_id) {
+                wp_send_json_error('Failed to create export post.');
+                return;
+            }
+            $post = get_post($new_post_id);
+        }
+    
+        // Ensure the post exists.
+        if (!$post) {
+            wp_send_json_error('Post not found with ID: ' . (isset($post->ID) ? $post->ID : 'Unknown'));
+            return;
+        }
+    
+        // Verify that the post author matches the current user.
+        if ($post->post_author != $current_user_id) {
+            wp_send_json_error('Access denied. Post author (' . $post->post_author . ') does not match current user (' . $current_user_id . ')');
+            return;
+        }
+    
+    } else {
+        $post = get_post($post_id);
     }
+        
+        if (!$post) {
+            wp_send_json_error('Post not found with ID: ' . $post_id);
+            return;
+        }
+        if ($post->post_author != $current_user_id) {
+            wp_send_json_error('Access denied. Post author (' . $post->post_author . ') does not match current user (' . $current_user_id . ')');
+            return;
+        }
+    
 
     // Retrieve and decode the navigation array sent from the client
     $context = array();
@@ -1181,6 +1342,9 @@ function esper_get_content() {
             break;
         case 'take':
             $content = esper_get_take_template($post);
+            break;
+        case 'export':
+            $content = esper_get_export_template($post);
             break;
     }
     

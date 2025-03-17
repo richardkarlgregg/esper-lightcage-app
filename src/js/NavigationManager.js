@@ -21,8 +21,11 @@ export default class NavigationManager {
     }
 
     pushScreen(postId, postType, context = {}) {
-        // Update the navigation stack based on the folder tree.
-        this.updateHierarchyFromFolderItem($('.folder-item[data-id="' + postId + '"]'));
+
+        if ( postType !== 'export') {
+            // Update the navigation stack based on the folder tree.
+            this.updateHierarchyFromFolderItem($('.folder-item[data-id="' + postId + '"]'));
+        }
     
         // Get the current screen (top of the stack)
         const currentScreen = this.getCurrentScreen();

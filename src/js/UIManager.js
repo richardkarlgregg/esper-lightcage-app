@@ -25,10 +25,12 @@ export default class UIManager {
                     break;
                 case 'back':
                     // Handle action2
+                    console.log('back');
                     store.navigationManager.popScreen();
                     break;
                 case 'export':
                     console.log('Show export manager');
+                    store.navigationManager.pushScreen( $(this).data('id'), 'export', null );
                 break;
                 // Add more cases as needed
                 default:

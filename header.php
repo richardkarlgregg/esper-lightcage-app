@@ -104,11 +104,37 @@
             </div>
         </div>
     </div>
+
+    <?php
+        $current_user_id = get_current_user_id();
+        $exportID = null;
+        $exportHandler = new ExportHandler();
     
+        // Retrieve export posts for the current user.
+        $exports = $exportHandler->getExportsByUser($current_user_id);
+
+        //echo '<pre>';
+        //print_r($exports);
+        //echo '</pre>';
+
+        
+    
+        // If there is at least one export, get the first (most recent) one.
+        if (!empty($exports)) {
+            $exportID = $exports[0]->ID;
+        } else {
+            // No export found; create a new export post.
+            $new_post_id = $exportHandler->createExport('New Export Title', $current_user_id);
+            if ($new_post_id) {
+                $exportID = $new_post_id;
+            }
+            
+        }
+    ?>
     <!-- Connection Status Indicator -->
     <div class="flex items-center space-x-4 ml-auto">
         <div class="uppercase text-white">Jobs</div>
-        <div data-id="" data-type="export" data-action="export" class="uppercase text-white">Export</div>
+        <div data-type="export" data-id="<?php echo $exportID;?>" data-action="export" class="uppercase text-white">Export</div>
          <div class="connection-status"></div>
          <!-- Simulated window icons -->
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="minimizeWindow">remove</span>
