@@ -200,6 +200,22 @@ function esper_create_item() {
             $parent_type = sanitize_text_field($_POST['parent_type']);
             $parent_id = intval($_POST['parent_id']);
             update_post_meta($post_id, 'parent_' . $parent_type, $parent_id);
+
+            // If the new item is a take, copy the repeater field from the parent capture.
+            if ($type === 'take') {
+                // We assume the parent_type is 'capture'.
+                $capture_id = $parent_id;
+                // Get the camera settings post linked to this capture.
+                $cameraSettingsPostID = get_post_meta($capture_id, 'capture_camera_settings', true);
+                if ($cameraSettingsPostID) {
+                    // Retrieve the repeater field rows from the camera settings post.
+                    $rows = get_field('camera_settings_repeater', $cameraSettingsPostID);
+                    if ($rows) {
+                        // Copy the repeater data to the new take.
+                        update_field('camera_settings_repeater', $rows, $post_id);
+                    }
+                }
+            }
         }
         
         wp_send_json_success(array(
@@ -792,8 +808,8 @@ function esper_get_camera_settings_template($post) {
 
     $cameraSettings = new CameraSettings( $post );
     echo $cameraSettings->renderSettings();
-    //echo $cameraSettings->renderCards();
 
+   
     return ob_get_clean();
 }
 
@@ -803,7 +819,7 @@ function esper_get_capture_template($post) {
     ob_start();
     ?>
     <div class="capture-template bg-black min-h-screen p-6">
-        <div class="w-full space-y-6">
+        <div class="w-full">
             <!-- Capture Header -->
             <div class="bg-black p-6">
                 <div class="flex items-start justify-between mb-4">
@@ -824,8 +840,8 @@ function esper_get_capture_template($post) {
                             <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
 
                             <div class="flex flex-wrap mt-3">
-                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Camera Settings</div>
-                                <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">light_mode</span> Light Settings</div>
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
+                                <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
                             </div>
                             
 
@@ -855,41 +871,89 @@ function esper_get_capture_template($post) {
                 </div>
             </div>
 
-            <!-- Takes Gallery -->
-            <div class="bg-black shadow-lg p-6">
-                <h3 class="text-lg font-semibold text-white mb-4">Takes</h3>
-                <div id="takesGallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <?php 
-                    $takes = get_posts(array(
-                        'post_type' => 'take',
-                        'meta_key' => 'parent_capture',
-                        'meta_value' => $post->ID,
-                        'posts_per_page' => -1,
-                        'orderby' => 'date',
-                        'order' => 'DESC'
-                    ));
-
-                    foreach ($takes as $take) {
-                        $thumbnail = get_the_post_thumbnail_url($take->ID, 'medium');
-                        if (!$thumbnail) {
-                            $thumbnail = 'https://placehold.co/600x400';
-                        }
-                        ?>
-                        <div class="take-card bg-black overflow-hidden cursor-pointer hover:bg-white hover:bg-opacity-10 transition" 
-                             data-take-id="<?php echo esc_attr($take->ID); ?>">
-                            <img src="<?php echo esc_url($thumbnail); ?>" 
-                                 alt="<?php echo esc_attr($take->post_title); ?>"
-                                 class="w-full h-48 object-cover">
-                            <div class="p-4">
-                                <h4 class="text-white font-semibold"><?php echo esc_html($take->post_title); ?></h4>
-                                <p class="text-gray-400 text-sm"><?php echo get_the_date('g:i a', $take); ?></p>
-                            </div>
-                        </div>
-                        <?php
-                    }
-                    ?>
+            <div class="bg-black p-6">
+                <div class="w-full mb-4">
+                    <h3>Quick Camera Settings</h3>
                 </div>
+                <?php
+                    $cameraSettings = new CameraSettings( $post );
+                    //echo $cameraSettings->renderSettings();
+
+                    $common = $cameraSettings->findCommonFields($cameraSettings->rows);
+
+                    echo $cameraSettings->renderCommonFields( $common );
+                ?>
             </div>
+
+           <!-- Takes Gallery -->
+<div class="bg-black shadow-lg p-6">
+    <div class="mb-4">
+        <h3 id="toggleTakes" class="text-lg font-semibold text-white cursor-pointer inline-flex items-center">
+            Takes
+            <span id="toggleTakesIcon" class="material-icons transition-transform duration-300 ml-2">
+                keyboard_arrow_down
+            </span>
+        </h3>
+    </div>
+    <?php 
+        $takes = get_posts(array(
+            'post_type'      => 'take',
+            'meta_key'       => 'parent_capture',
+            'meta_value'     => $post->ID,
+            'posts_per_page' => -1,
+            'orderby'        => 'date',
+            'order'          => 'DESC'
+        ));
+        // Only add grid classes if takes exist.
+        $galleryClasses = !empty($takes) ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4" : "";
+    ?>
+    <div id="takesGallery" class="<?php echo esc_attr($galleryClasses); ?>">
+        <?php 
+        if ( empty( $takes ) ) {
+            echo '<p class="text-white">No takes found, please trigger some.</p>';
+        } else {
+            foreach ( $takes as $take ) {
+                $thumbnail = get_the_post_thumbnail_url( $take->ID, 'medium' );
+                if ( ! $thumbnail ) {
+                    $thumbnail = 'https://placehold.co/600x400';
+                }
+                ?>
+                <div class="take-card bg-black overflow-hidden cursor-pointer border border-white border-opacity-10 hover:bg-white hover:bg-opacity-10 transition" 
+                     data-take-id="<?php echo esc_attr( $take->ID ); ?>">
+                    <img src="<?php echo esc_url( $thumbnail ); ?>" 
+                         alt="<?php echo esc_attr( $take->post_title ); ?>"
+                         class="w-full aspect-w-16 aspect-h-9 object-cover">
+                    <div class="p-4">
+                        <h4 class="text-white font-semibold"><?php echo esc_html( $take->post_title ); ?></h4>
+                        <p class="text-gray-400 text-sm">
+                            <?php echo get_the_date( 'F j, Y g:i a', $take ); ?>
+                        </p>
+                    </div>
+                </div>
+                <?php
+            }
+        }
+        ?>
+    </div>
+</div>
+
+<style>
+/* Class to rotate the icon */
+.rotate-180 {
+    transform: rotate(180deg);
+}
+</style>
+
+<script>
+jQuery(document).ready(function($) {
+    $('#toggleTakes').on('click', function() {
+        $('#takesGallery').slideToggle(300);
+        $('#toggleTakesIcon').toggleClass('rotate-180');
+    });
+});
+</script>
+
+
         </div>
     </div>
     <?php
@@ -1583,7 +1647,11 @@ function render_input_sets( array $sets ) {
                 switch ( $type ) {
                     case 'text':
                     case 'number':
-                        echo '<input type="' . esc_attr( $type ) . '" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '" class="' . esc_attr( $input_class ) . '"' . $attr_string . '>';
+                    case 'readOnly':
+                        // If the type is readOnly, add the readonly attribute and change type to text.
+                        $readonly = ( $type === 'readOnly' ) ? ' readonly="readonly"' : '';
+                        $inputType = ( $type === 'readOnly' ) ? 'text' : $type;
+                        echo '<input type="' . esc_attr( $inputType ) . '" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '" class="' . esc_attr( $input_class ) . '"' . $attr_string . $readonly . '>';
                         break;
 
                     case 'select':
@@ -1616,10 +1684,7 @@ function render_input_sets( array $sets ) {
                         break;
 
                     case 'range':
-                        echo '<input class="w-full" type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
-                        break;
-                    case 'readOnly':
-                        echo $value;
+                        echo '<input  class="' . esc_attr( $input_class ) . '" type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
                         break;
 
                     default:

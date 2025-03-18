@@ -50,9 +50,10 @@ export default class CameraSettingsManager {
                 },
                 success: function(response) {
                     if(response.success) {
-                        alert('Camera settings updated successfully.');
+
+                        store.notificationManager.showSuccess('Camera settings updated successfully.');
                     } else {
-                        alert('Error: ' + response.data);
+                        store.notificationManager.showSuccess('Error: ' + response.data);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -61,7 +62,7 @@ export default class CameraSettingsManager {
             });
         });
 
-        jQuery(document).on('change input', 'table input, table select, table textarea', function() {
+        jQuery(document).on('change input', '.cameraSettingsContent input, .cameraSettingsContent select, .cameraSettingsContent textarea', function() {
             // Only sync if the checkbox is checked.
             if (jQuery('#syncSettings').is(':checked')) {
                 var $elem = jQuery(this);
@@ -80,19 +81,19 @@ export default class CameraSettingsManager {
                 // Handle radio buttons.
                 if (type === 'radio') {
                     var newVal = $elem.val();
-                    jQuery('table input[type="radio"][name="' + name + '"]').each(function() {
+                    jQuery('.cameraSettingsContent input[type="radio"][name="' + name + '"]').each(function() {
                         jQuery(this).prop('checked', jQuery(this).val() === newVal);
                     });
                 }
                 // Handle checkboxes.
                 else if (type === 'checkbox') {
                     var isChecked = $elem.is(':checked');
-                    jQuery('table input[type="checkbox"][name="' + name + '"]').prop('checked', isChecked);
+                    jQuery('.cameraSettingsContent input[type="checkbox"][name="' + name + '"]').prop('checked', isChecked);
                 }
                 // Handle other input types, selects, and textareas.
                 else {
                     var newVal = $elem.val();
-                    jQuery('table [name="' + name + '"]').not(this).val(newVal);
+                    jQuery('.cameraSettingsContent [name="' + name + '"]').not(this).val(newVal);
                 }
             }
         });
@@ -118,9 +119,9 @@ export default class CameraSettingsManager {
                 console.log(view);
                 
                 // Toggle an active state (optional)
-                $('#tableViewIcon, #cardViewIcon, #nodeViewIcon').removeClass('active-view');
+                $('#tableViewIcon, #cardViewIcon, #nodeViewIcon').find('.material-icons').addClass('opacity-25');
 
-                $(this).addClass('active-view');
+                $(this).find('.material-icons').removeClass('opacity-25');
         
                 // Use ajaxurl global variable provided by WordPress for AJAX calls.
                 $.ajax({
@@ -143,6 +144,38 @@ export default class CameraSettingsManager {
                 });
             });
         });
+
+        jQuery(document).on('change', '.camera-quick-settings input, .camera-quick-settings select, .camera-quick-settings textarea', function() {
+            var fieldName  = jQuery(this).attr('name');
+            var fieldValue = jQuery(this).val();
+            console.log("Field name:", fieldName, "Field value:", fieldValue);
+        
+            // Get the capture post ID from your store object.
+            const capturePostID = store.navigationManager.getPostIdByCriteria('capture');
+            console.log("Capture Post ID:", capturePostID);
+        
+            // Send the AJAX request to update the ACF field.
+            jQuery.ajax({
+                url: esperApi.ajaxurl, // Make sure ajaxurl is defined in your script localization.
+                method: 'POST',
+                data: {
+                    action: 'update_acf_field', // custom AJAX action.
+                    fieldName: fieldName,
+                    fieldValue: fieldValue,
+                    capturePostID: capturePostID
+                },
+                success: function(response) {
+                    console.log("ACF field updated", response);
+                    store.notificationManager.showSuccess(fieldName +' updated to '+fieldValue);
+                },
+                error: function(error) {
+                    console.error("Error updating ACF field", error);
+                }
+            });
+        });
+        
+        
+        
         
         
         
