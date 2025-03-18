@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 
 require_once get_template_directory() . '/functions/custom-post-types.php';
 require_once get_template_directory() . '/classes/export-class.php';
+require_once get_template_directory() . '/classes/camera-settings-class.php';
 
 // Theme Setup
 function esper_lightcage_setup() {
@@ -329,7 +330,7 @@ function esper_get_job_template($post) {
                         <div class="flex items-center justify-start mb-2 group relative">
                             <h2 class="text-lg font-semibold text-white title-display" data-type="job" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
-                            <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="ml-2 text-gray-500 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons text-sm">edit</span>
                             </button>
                         </div>
@@ -351,7 +352,7 @@ function esper_get_job_template($post) {
                     ));
                     $session_count = count($sessions);
                     ?>
-                    <div class="text-3xl font-bold text-yellow-300"><?php echo $session_count; ?></div>
+                    <div class="text-3xl font-bold text-esper-yellow"><?php echo $session_count; ?></div>
                     <p class="hidden text-gray-500">Sessions</p>
                 </div>
 
@@ -368,7 +369,7 @@ function esper_get_job_template($post) {
                         )));
                     }
                     ?>
-                    <div class="text-3xl font-bold text-yellow-300"><?php echo $captures; ?></div>
+                    <div class="text-3xl font-bold text-esper-yellow"><?php echo $captures; ?></div>
                     <p class="hidden text-gray-500">Captures</p>
                 </div>
 
@@ -393,7 +394,7 @@ function esper_get_job_template($post) {
                         }
                     }
                     ?>
-                    <div class="text-3xl font-bold text-yellow-300"><?php echo $takes; ?></div>
+                    <div class="text-3xl font-bold text-esper-yellow"><?php echo $takes; ?></div>
                     <p class="hidden text-gray-500">Takes</p>
                 </div>
             </div>
@@ -453,7 +454,7 @@ function esper_get_session_template($post) {
                         <div class="flex items-center justify-start mb-2 group relative">
                             <h2 class="text-lg font-semibold text-white title-display" data-type="session" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
-                            <button class="ml-2 text-gray-500 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="ml-2 text-gray-500 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons text-sm">edit</span>
                             </button>
                         </div>
@@ -480,7 +481,7 @@ function esper_get_session_template($post) {
                     ));
                     $capture_count = count($captures);
                     ?>
-                    <div class="text-3xl font-bold text-yellow-300"><?php echo $capture_count; ?></div>
+                    <div class="text-3xl font-bold text-esper-yellow"><?php echo $capture_count; ?></div>
                     <p class="hidden text-gray-500">Captures</p>
                 </div>
                 <div class="border border-white border-opacity-10 rounded-lg p-6">
@@ -496,7 +497,7 @@ function esper_get_session_template($post) {
                         )));
                     }
                     ?>
-                    <div class="text-3xl font-bold text-yellow-300"><?php echo $takes; ?></div>
+                    <div class="text-3xl font-bold text-esper-yellow"><?php echo $takes; ?></div>
                     <p class="hidden text-gray-500">Takes</p>
                 </div>
             </div>
@@ -789,221 +790,8 @@ add_filter('acf/load_field/name=focus_mode', function($field) {
 function esper_get_camera_settings_template($post) {
     ob_start();
 
-    // Get the Camera Settings post ID from the parent capture.
-    $camera_settings_id = get_post_meta($post->ID, 'capture_camera_settings', true);
-    if ( ! $camera_settings_id ) {
-        echo '<p>No camera settings found.</p>';
-        return ob_get_clean();
-    }
-
-    // Get the saved repeater rows from ACF.
-    $rows = get_field('camera_settings_repeater', $camera_settings_id);
-    if ( ! is_array($rows) ) {
-        $rows = array();
-    }
-
-    // Define the base input set (without table wrappers).
-    $camera_settings_fields = array(
-        'set_name'   => 'Camera Settings',
-        'set_slug'   => 'camera_settings',
-        'fieldSets'  => array(
-            array(
-                'field_name' => 'Camera Name',
-                'field_slug' => 'camera_name',
-                'type'       => 'text',
-                'display'   => true,
-                'value'      => '',
-                'hide_label' => true,
-                'placeholder'=> 'Enter camera name',
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Serial Number',
-                'field_slug' => 'serial_number',
-                'type'       => 'text',
-                'display'   => true,
-                'value'      => '',
-                'hide_label' => true,
-                'placeholder'=> 'Enter serial number',
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Camera Model',
-                'field_slug' => 'camera_model',
-                'type'       => 'text',
-                'display'   => true,
-                'value'      => '',
-                'hide_label' => true,
-                'placeholder'=> 'Enter camera model',
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'ISO',
-                'field_slug' => 'iso',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_iso_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Aperture',
-                'field_slug' => 'aperture',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_aperture_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'White Balance',
-                'field_slug' => 'white_balance',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_white_balance_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Colour Temp',
-                'field_slug' => 'colour_temp',
-                'type'       => 'range',
-                'hide_label' => true,
-                'value'      => '3000',
-                'display'   => true,
-                'attributes' => array(
-                    'min'  => '1000',
-                    'max'  => '5000',
-                    'step' => '100',
-                ),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Shutter Speed',
-                'field_slug' => 'shutter_speed',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_shutter_speed_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'File Type',
-                'field_slug' => 'file_type',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_file_type_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'JPEG Quality',
-                'field_slug' => 'jpeg_quality',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_jpeg_quality_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Drive Mode',
-                'field_slug' => 'drive_mode',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_drive_mode_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-            array(
-                'field_name' => 'Focus Mode',
-                'field_slug' => 'focus_mode',
-                'type'       => 'select',
-                'value'      => '',
-                'display'   => true,
-                'hide_label' => true,
-                'options'    => get_focus_mode_options(),
-                'beforeHTML' => '<td class="border-r border-esper-yellow">',
-                'afterHTML'  => '</td>',
-            ),
-        )
-    );
- echo  '<div class="capture-template bg-black min-h-screen p-6">';
-    echo  '<div class="w-full space-y-6">';
-    // Output the "Back" and "Save Settings" buttons above the table.
-    echo '<div class="w-full flex justify-between flex-wrap mb-4">
-            <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
-            <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-id="'.$camera_settings_id.'" data-action="save_camera_settings">Save Settings</div>
-          </div>';
-
-    // Build the table header dynamically from the field names.
-    $thead = '<table class="input-set-table w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
-    $thead .= '<thead><tr class="bg-esper-yellow">';
-    foreach ( $camera_settings_fields['fieldSets'] as $field ) {
-        $thead .= '<th class="font-normal text-black text-left">' . esc_html( $field['field_name'] ) . '</th>';
-    }
-    $thead .= '</tr></thead><tbody>';
-    
-  
-    // Output the header.
-    echo $thead;
-
-    // For each saved repeater row, update the base field definitions and render the row.
-if ( ! empty( $rows ) ) {
-    foreach ( $rows as $row ) {
-        // Create a copy of the base input set.
-        $fields_copy = $camera_settings_fields;
-        // Override the overall beforeHTML/afterHTML for this row.
-        $fields_copy['beforeHTML'] = '<tr class="border-b border-esper-yellow">';
-        $fields_copy['afterHTML']  = '</tr>';
-
-        // Loop through each field in the fieldSets and update its value.
-        if ( isset( $fields_copy['fieldSets'] ) && is_array( $fields_copy['fieldSets'] ) ) {
-            foreach ( $fields_copy['fieldSets'] as $key => $field ) {
-                $slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
-                $fields_copy['fieldSets'][$key]['value'] = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
-                // If camera_name is empty and this field isn't camera_name, hide the field.
-                if ( empty( $row['camera_name'] ) && $slug !== 'camera_name' ) {
-                    // Ensure attributes array exists.
-                    if ( ! isset( $fields_copy['fieldSets'][$key]['attributes'] ) || ! is_array( $fields_copy['fieldSets'][$key]['attributes'] ) ) {
-                        $fields_copy['fieldSets'][$key]['attributes'] = array();
-                    }
-                    $fields_copy['fieldSets'][$key]['attributes']['style'] = 'display:none;';
-                }
-            }
-        }
-
-        // Render the row.
-        render_input_sets( array( $fields_copy ) );
-    }
-} else {
-    // If no rows exist, output a single empty row.
-    $empty_set = $camera_settings_fields;
-    $empty_set['beforeHTML'] = '<tr>';
-    $empty_set['afterHTML']  = '</tr>';
-    render_input_sets( array( $empty_set ) );
-}
-
-
-    // Close the table.
-    echo '</tbody></table></div></div>';
+    $cameraSettings = new CameraSettings( $post );
+    echo $cameraSettings->renderTable();
 
     return ob_get_clean();
 }
@@ -1019,10 +807,10 @@ function esper_get_capture_template($post) {
             <div class="bg-black p-6">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex-1">
-                        <div class="flex items-center justify-between mb-2 group relative">
+                        <div class="flex items-center mb-2 group relative">
                             <h2 class="text-2xl font-bold text-white title-display" data-type="capture" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-2xl font-bold px-2 py-1 title-input" value="<?php echo esc_attr($post->post_title); ?>">
-                            <button class="ml-2 text-gray-400 hover:text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="material-icons">edit</span>
                             </button>
                         </div>
@@ -1034,8 +822,11 @@ function esper_get_capture_template($post) {
                             <p>Session: <?php echo esc_html($parent_session->post_title); ?></p>
                             <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
 
-                            <p data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings">Add camera settings icon</p>
-                            <p data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings">Add Light settings icon</p>
+                            <div class="flex flex-wrap mt-3">
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Camera Settings</div>
+                                <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">light_mode</span> Light Settings</div>
+                            </div>
+                            
 
                         </div>
                     </div>
@@ -1043,10 +834,9 @@ function esper_get_capture_template($post) {
                         <button id="triggerTake" 
                                 class="bg-esper-yellow text-black px-6 py-3 rounded-lg font-semibold flex items-center"
                                 data-capture-id="<?php echo esc_attr($post->ID); ?>">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
+
+                                <span class="material-icons w-6 h-6 mr-2 text-black flex-none">camera</span>
+                                
                             Trigger Take
                         </button>
                     </div>
@@ -1084,7 +874,7 @@ function esper_get_capture_template($post) {
                             $thumbnail = 'https://placehold.co/600x400';
                         }
                         ?>
-                        <div class="take-card bg-black overflow-hidden cursor-pointer hover:bg-gray-900 transition-colors" 
+                        <div class="take-card bg-black overflow-hidden cursor-pointer hover:bg-white hover:bg-opacity-10 transition" 
                              data-take-id="<?php echo esc_attr($take->ID); ?>">
                             <img src="<?php echo esc_url($thumbnail); ?>" 
                                  alt="<?php echo esc_attr($take->post_title); ?>"
@@ -1136,7 +926,7 @@ function esper_get_take_template($post) {
             <div class="w-1 bg-white bg-opacity-10 hover:bg-opacity-100 cursor-col-resize" id="verticalResizeHandle"></div>
             
             <!-- Right sidebar -->
-            <div class="w-64 bg-black/80 p-4" id="rightSidebarPane">
+            <div class="w-64 bg-black/80 p-4 overflow-auto scrollbar" id="rightSidebarPane">
                 <div class="flex items-center justify-between mb-4 group relative">
                     <h3 class="text-lg font-semibold text-white title-display" data-type="take" data-id="<?php echo esc_attr($post->ID); ?>">
                         <?php echo esc_html($takeTitle); ?>
@@ -1649,21 +1439,21 @@ function esper_add_scrollbar_styles() {
     ?>
     <style>
     /* Custom scrollbar styles for the sidebar */
-    #sidebar::-webkit-scrollbar {
+    .scrollbar::-webkit-scrollbar {
         width: 8px;
     }
-    #sidebar::-webkit-scrollbar-track {
+    .scrollbar::-webkit-scrollbar-track {
         background: #000000;
     }
-    #sidebar::-webkit-scrollbar-thumb {
+    .scrollbar::-webkit-scrollbar-thumb {
         background: #333333;
         border-radius: 4px;
     }
-    #sidebar::-webkit-scrollbar-thumb:hover {
+    .scrollbar::-webkit-scrollbar-thumb:hover {
         background: #fcd34d;
     }
     /* For Firefox */
-    #sidebar {
+    .scrollbar {
         scrollbar-width: thin;
         scrollbar-color: #333333 #000000;
     }
@@ -1734,7 +1524,7 @@ function render_input_sets( array $sets ) {
 
                 // Get top-level styling classes if provided.
                 $global_label_class = isset( $set['label_class'] ) ? $set['label_class'] : '';
-                $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'bg-black border p-2 border-white border-opacity-25 text-white';
+                $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'w-full bg-black border p-2 border-white border-opacity-25 text-white';
 
                 
         // Output set wrapper (beforeHTML).
@@ -1825,7 +1615,7 @@ function render_input_sets( array $sets ) {
                         break;
 
                     case 'range':
-                        echo '<input type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
+                        echo '<input class="w-full" type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
                         break;
 
                     default:
