@@ -65,7 +65,7 @@ class CameraSettings {
                 array(
                     'field_name' => 'Serial Number',
                     'field_slug' => 'serial_number',
-                    'type'       => 'text',
+                    'type'       => 'readOnly',
                     'display'    => true,
                     'value'      => '',
                     'hide_label' => true,
@@ -76,7 +76,7 @@ class CameraSettings {
                 array(
                     'field_name' => 'Camera Model',
                     'field_slug' => 'camera_model',
-                    'type'       => 'text',
+                    'type'       => 'readOnly',
                     'display'    => true,
                     'value'      => '',
                     'hide_label' => true,
@@ -363,6 +363,8 @@ public function renderCards() {
                     $slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
                     // Set the value from the current row.
                     $fieldsCopy['fieldSets'][ $key ]['value'] = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
+
+                    $fieldsCopy['fieldSets'][ $key ]['hide_label'] = false;
 
                     // Optionally hide fields if the 'camera_name' is empty and this field is not camera_name.
                     if ( empty( $row['camera_name'] ) && $slug !== 'camera_name' ) {

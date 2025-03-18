@@ -1618,6 +1618,9 @@ function render_input_sets( array $sets ) {
                     case 'range':
                         echo '<input class="w-full" type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
                         break;
+                    case 'readOnly':
+                        echo $value;
+                        break;
 
                     default:
                         echo '<input type="text" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
