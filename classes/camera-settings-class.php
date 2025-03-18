@@ -349,6 +349,8 @@ public function renderCards() {
     // Start the card container with a 4-column grid layout.
     $html .= '<div class="settings-set card-view grid grid-cols-4 gap-4">';
 
+    $html .= 'Work out how to group the data, e.g file format, camera settings etc';
+
     // If there are rows, render each as a separate card.
     if ( ! empty( $this->rows ) ) {
         foreach ( $this->rows as $row ) {
