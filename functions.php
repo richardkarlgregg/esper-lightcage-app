@@ -791,7 +791,8 @@ function esper_get_camera_settings_template($post) {
     ob_start();
 
     $cameraSettings = new CameraSettings( $post );
-    echo $cameraSettings->renderTable();
+    echo $cameraSettings->renderSettings();
+    //echo $cameraSettings->renderCards();
 
     return ob_get_clean();
 }

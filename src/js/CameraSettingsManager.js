@@ -12,13 +12,13 @@ export default class CameraSettingsManager {
 
     setupEventListeners() {
         jQuery(document).on('click', '[data-action="save_camera_settings"]', function() {
-            var $table = jQuery('.input-set-table');
+            var $table = jQuery('.settings-set');
             // Assume the table has a data attribute "data-postid" with the Camera Settings post ID.
             var cameraSettingsId = jQuery(this).data('id');
             var rowsData = [];
             
             // Loop through each row in the table body.
-            $table.find('tbody tr').each(function() {
+            $table.find('.settings-row').each(function() {
                 var $row = jQuery(this);
                 var rowData = {
                     camera_name: $row.find('input[name="camera_name"]').val() || '',
@@ -97,6 +97,52 @@ export default class CameraSettingsManager {
             }
         });
         
+        jQuery(document).ready(function($) {
+            // Listen for clicks on either the table or card icon.
+
+            jQuery(document).on('click', '#tableViewIcon, #cardViewIcon, #nodeViewIcon', function(e) {
+                e.preventDefault();
+                // Determine the selected view based on the clicked element's id.
+                var id = $(this).attr('id');
+                var view;
+                
+                if (id === 'tableViewIcon') {
+                    view = 'table';
+                } else if (id === 'cardViewIcon') {
+                    view = 'card';
+                } else if (id === 'nodeViewIcon') {
+                    view = 'node';
+                }
+                
+                console.log('view');
+                console.log(view);
+                
+                // Toggle an active state (optional)
+                $('#tableViewIcon, #cardViewIcon, #nodeViewIcon').removeClass('active-view');
+
+                $(this).addClass('active-view');
+        
+                // Use ajaxurl global variable provided by WordPress for AJAX calls.
+                $.ajax({
+                    url: esperApi.ajaxurl, // global AJAX URL for WordPress admin-ajax.php
+                    type: 'POST',
+                    data: {
+                        action: 'get_camera_settings_view', // your AJAX action hook
+                        view: view,
+                        post_id: store.navigationManager.getPostIdByCriteria('capture') // Replace with your dynamic post ID, or pass it as a data attribute.
+                    },
+                    beforeSend: function() {
+                        $('.cameraSettingsContent').html('<p>Loading...</p>');
+                    },
+                    success: function(response) {
+                        $('.cameraSettingsContent').html(response);
+                    },
+                    error: function() {
+                        $('.cameraSettingsContent').html('<p>Error loading view.</p>');
+                    }
+                });
+            });
+        });
         
         
         

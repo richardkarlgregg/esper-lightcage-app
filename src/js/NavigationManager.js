@@ -22,7 +22,7 @@ export default class NavigationManager {
 
     pushScreen(postId, postType, context = {}) {
 
-        if ( postType !== 'export') {
+        if (postType !== 'export') {
             // Update the navigation stack based on the folder tree.
             this.updateHierarchyFromFolderItem($('.folder-item[data-id="' + postId + '"]'));
         }
@@ -43,7 +43,6 @@ export default class NavigationManager {
         console.log('Navigation stack:', this.stack);
     }
     
-
     // Pop the current screen from the stack.
     popScreen() {
         if (this.stack.length > 1) {
@@ -57,12 +56,34 @@ export default class NavigationManager {
         const currentScreen = this.getCurrentScreen();
         if (currentScreen) {
             // Load the screen using postId and postType.
-            store.screenContent.loadPostContent(currentScreen.postId, currentScreen.postType, currentScreen.context );
+            store.screenContent.loadPostContent(currentScreen.postId, currentScreen.postType, currentScreen.context);
         }
     }
 
     // Get the current screen.
     getCurrentScreen() {
         return this.stack[this.stack.length - 1];
+    }
+    
+    // New function: Get a postId from the stack by searching by postType and/or context.
+    // If both searchPostType and searchContext are provided, both must match.
+    // Returns the first matching postId or null if no match is found.
+    getPostIdByCriteria(searchPostType, searchContext) {
+        const match = this.stack.find(screen => {
+            let typeMatches = true;
+            let contextMatches = true;
+            
+            if (searchPostType !== undefined && searchPostType !== null) {
+                typeMatches = screen.postType === searchPostType;
+            }
+            
+            if (searchContext !== undefined && searchContext !== null) {
+                // If screen.context is undefined, treat it as an empty object.
+                contextMatches = JSON.stringify(screen.context || {}) === JSON.stringify(searchContext);
+            }
+            
+            return typeMatches && contextMatches;
+        });
+        return match ? match.postId : null;
     }
 }

@@ -200,28 +200,45 @@ class CameraSettings {
         if ( ! $this->cameraSettingsId ) {
             return '<p>No camera settings found.</p>';
         }
-        $html  = '<div class="capture-template bg-black min-h-screen p-6">';
-        $html .= '<div class="w-full space-y-6">';
-        $html .= '<div class="w-full flex justify-between flex-wrap mb-4">';
-        $html .= '<div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>';
-        $html .= '<div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-id="' . esc_attr( $this->cameraSettingsId ) . '" data-action="save_camera_settings">Save Settings</div>';
+        $html = '<div class="w-full space-y-6">';
+            $html .= '<div class="w-full flex justify-between flex-wrap mb-4">';
+            $html .= '<div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>';
+            $html .= '<div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-id="' . esc_attr( $this->cameraSettingsId ) . '" data-action="save_camera_settings">Save Settings</div>';
         $html .= '</div>';
 
-        $html .= '<label for="syncSettings">';
-        $html .= '<input type="checkbox" id="syncSettings" name="syncSettings" value="1">';
-        $html .= 'Sync Settings';
-        $html .= '</label>';
+        $html .= '<div class="flex items-center space-x-4">';
+            $html .= '<label for="syncSettings">';
+                $html .= '<input type="checkbox" id="syncSettings" name="syncSettings" value="1"> Sync Settings';
+            $html .= '</label>';
+
+            $html .= 'First screen needs to be option to choose sync settings or individual controls';
+
+            $html .= 'For sync control need ability to add controls to capture screen for quick control?';
+
+            // Add view switcher icons using Google Material Icons.
+            $html .= '<div class="view-switcher flex items-center space-x-2">';
+                $html .= '<div id="tableViewIcon" class="w-auto flex flex-wrap">';
+                    $html .= '<div class="w-5 h-5 material-icons text-white cursor-pointer">table_chart</div>';
+                $html .= '</div>';
+                $html .= '<div id="cardViewIcon" class="w-auto flex flex-wrap">';
+                    $html .= '<div class="w-5 h-5 material-icons text-white cursor-pointer">view_module</div>';
+                $html .= '</div>';
+                $html .= '<div id="nodeViewIcon" class="w-auto flex flex-wrap">';
+                $html .= '<div class="w-5 h-5 material-icons text-white cursor-pointer">account_tree</div>';
+            $html .= '</div>';
+            $html .= '</div>';
+        $html .= '</div>';
 
         return $html;
-    }
-
+    }    
+    
     /**
      * Renders the table header based on the base field configuration.
      *
      * @return string
      */
     public function renderTableHeader() {
-        $html  = '<table class="table-fixed input-set-table w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
+        $html  = '<table class="table-fixed settings-set w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
         $html .= '<thead><tr class="bg-esper-yellow">';
         foreach ( $this->baseFields['fieldSets'] as $field ) {
             $html .= '<th class="break-words font-normal text-black text-left">' . esc_html( $field['field_name'] ) . '</th>';
@@ -240,7 +257,7 @@ class CameraSettings {
         if ( ! empty( $this->rows ) ) {
             foreach ( $this->rows as $row ) {
                 $fieldsCopy = $this->baseFields;
-                $fieldsCopy['beforeHTML'] = '<tr class="border-b border-esper-yellow">';
+                $fieldsCopy['beforeHTML'] = '<tr class="settings-row border-b border-esper-yellow">';
                 $fieldsCopy['afterHTML']  = '</tr>';
 
                 if ( isset( $fieldsCopy['fieldSets'] ) && is_array( $fieldsCopy['fieldSets'] ) ) {
@@ -288,10 +305,139 @@ class CameraSettings {
         if ( ! $this->cameraSettingsId ) {
             return '<p>No camera settings found.</p>';
         }
-        $html  = $this->renderHeader();
-        $html .= $this->renderTableHeader();
+        $html = $this->renderTableHeader();
         $html .= $this->renderTableBody();
         $html .= $this->renderTableFooter();
         return $html;
     }
+
+    /**
+     * Renders the settings.
+     *
+     * @return string
+     */
+    public function renderSettings() {
+        if ( ! $this->cameraSettingsId ) {
+            return '<p>No camera settings found.</p>';
+        }
+
+        $html  = '<div class="capture-template bg-black min-h-screen p-6">';
+
+            $html  .= $this->renderHeader();
+
+            $html .= '<div class="w-full cameraSettingsContent">';
+                $html .= $this->renderTable();
+            $html .= '</div>';
+            
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+ * Renders the carded view of camera settings with actual input fields.
+ *
+ * @return string
+ */
+public function renderCards() {
+    if ( ! $this->cameraSettingsId ) {
+        return '<p>No camera settings found.</p>';
+    }
+
+    $html = '';
+
+    // Start the card container with a 4-column grid layout.
+    $html .= '<div class="settings-set card-view grid grid-cols-4 gap-4">';
+
+    // If there are rows, render each as a separate card.
+    if ( ! empty( $this->rows ) ) {
+        foreach ( $this->rows as $row ) {
+            // Copy the base configuration.
+            $fieldsCopy = $this->baseFields;
+
+            // Update each field's configuration for card view.
+            if ( isset( $fieldsCopy['fieldSets'] ) && is_array( $fieldsCopy['fieldSets'] ) ) {
+                foreach ( $fieldsCopy['fieldSets'] as $key => $field ) {
+                    $slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
+                    // Set the value from the current row.
+                    $fieldsCopy['fieldSets'][ $key ]['value'] = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
+
+                    // Optionally hide fields if the 'camera_name' is empty and this field is not camera_name.
+                    if ( empty( $row['camera_name'] ) && $slug !== 'camera_name' ) {
+                        if ( ! isset( $fieldsCopy['fieldSets'][ $key ]['attributes'] ) || ! is_array( $fieldsCopy['fieldSets'][ $key ]['attributes'] ) ) {
+                            $fieldsCopy['fieldSets'][ $key ]['attributes'] = array();
+                        }
+                        $fieldsCopy['fieldSets'][ $key ]['attributes']['style'] = 'display:none;';
+                    }
+
+                    // Change the HTML wrappers to use divs for card view.
+                    $fieldsCopy['fieldSets'][ $key ]['beforeHTML'] = '<div class="field mb-2">';
+                    $fieldsCopy['fieldSets'][ $key ]['afterHTML']  = '</div>';
+                }
+            }
+
+            // Wrap the rendered input set within a card container.
+            $html .= '<div class="settings-row card border p-4">';
+            ob_start();
+            render_input_sets( array( $fieldsCopy ) );
+            $html .= ob_get_clean();
+            $html .= '</div>'; // end single card
+        }
+    } else {
+        // If there are no rows, render a single card with empty inputs.
+        $fieldsCopy = $this->baseFields;
+        if ( isset( $fieldsCopy['fieldSets'] ) && is_array( $fieldsCopy['fieldSets'] ) ) {
+            foreach ( $fieldsCopy['fieldSets'] as $key => $field ) {
+                $fieldsCopy['fieldSets'][ $key ]['beforeHTML'] = '<div class="field mb-2">';
+                $fieldsCopy['fieldSets'][ $key ]['afterHTML']  = '</div>';
+            }
+        }
+        $html .= '<div class="card border p-4">';
+        ob_start();
+        render_input_sets( array( $fieldsCopy ) );
+        $html .= ob_get_clean();
+        $html .= '</div>';
+    }
+
+    $html .= '</div>'; // end card view grid
+
+  
+
+    return $html;
 }
+
+
+}
+
+add_action( 'wp_ajax_get_camera_settings_view', 'handle_get_camera_settings_view' );
+add_action( 'wp_ajax_nopriv_get_camera_settings_view', 'handle_get_camera_settings_view' );
+
+function handle_get_camera_settings_view() {
+    // Sanitize input.
+    $view = isset( $_POST['view'] ) ? sanitize_text_field( $_POST['view'] ) : 'table';
+    $post_id = isset( $_POST['post_id'] ) ? intval( $_POST['post_id'] ) : 0;
+
+    $post = get_post( $post_id );
+    if ( ! $post ) {
+        wp_send_json_error( 'Invalid post.' );
+    }
+
+    // Instantiate your CameraSettings class.
+    $cameraSettings = new CameraSettings( $post );
+
+    switch ( $view ) {
+        case 'card':
+echo $cameraSettings->renderCards();
+        break;
+        case 'node':
+            echo 'node view?';
+        break;
+        default:
+echo $cameraSettings->renderTable();
+        break;
+    }
+
+
+    wp_die();
+}
+
