@@ -150,13 +150,18 @@ export default class CameraSettingsManager {
             var fieldValue = jQuery(this).val();
             console.log("Field name:", fieldName, "Field value:", fieldValue);
         
+            // Get the field label using the input's id and the matching label's "for" attribute.
+            var fieldId = jQuery(this).attr('id');
+            var fieldLabel = jQuery("label[for='" + fieldId + "']").text().trim();
+            console.log("Field label:", fieldLabel);
+        
             // Get the capture post ID from your store object.
             const capturePostID = store.navigationManager.getPostIdByCriteria('capture');
             console.log("Capture Post ID:", capturePostID);
         
             // Send the AJAX request to update the ACF field.
             jQuery.ajax({
-                url: esperApi.ajaxurl, // Make sure ajaxurl is defined in your script localization.
+                url: esperApi.ajaxurl, // ajaxurl is localized.
                 method: 'POST',
                 data: {
                     action: 'update_acf_field', // custom AJAX action.
@@ -166,18 +171,14 @@ export default class CameraSettingsManager {
                 },
                 success: function(response) {
                     console.log("ACF field updated", response);
-                    store.notificationManager.showSuccess(fieldName +' updated to '+fieldValue);
+                    // Use the label in the success message.
+                    store.notificationManager.showSuccess(fieldLabel + ' updated to ' + fieldValue);
                 },
                 error: function(error) {
                     console.error("Error updating ACF field", error);
                 }
             });
         });
-        
-        
-        
-        
-        
         
     }
 }
