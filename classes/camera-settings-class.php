@@ -226,13 +226,37 @@ class CameraSettings {
         if ( ! $this->cameraSettingsId ) {
             return '<p>No camera settings found.</p>';
         }
-        $html = '<div class="w-full space-y-6">';
-            $html .= '<div class="w-full flex justify-between flex-wrap mb-4">';
-            $html .= '<div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>';
-            $html .= '<div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-id="' . esc_attr( $this->cameraSettingsId ) . '" data-action="save_camera_settings">Save Settings</div>';
-        $html .= '</div>';
 
-        $html .= '<div class="flex items-center justify-between text-xs">';
+
+            $html = '
+
+            <!-- Capture Header -->
+            <div class="bg-black">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-2 group relative">
+                            <h2 class="text-2xl font-bold text-white">Advanced Camera Settings</h2>
+    
+                        </div>
+                        <div class="text-gray-400 text-sm">
+
+                            <div class="flex flex-wrap mt-3">
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="back"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">arrow_back_ios</span> Back</div>
+                               
+                            </div>
+                            
+
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-id="' . esc_attr( $this->cameraSettingsId ) . '" data-action="save_camera_settings">Save Settings</div>
+                    </div>
+                </div>
+
+               
+            </div>';
+
+            $html .= '<div class="mb-3 flex items-center justify-between text-xs">';
 
            
 
@@ -247,14 +271,12 @@ class CameraSettings {
 </style>';
 
             $html .= '<div class="custom-checkbox flex items-center justify-between text-xs">';
-            $html .= '  <label for="syncSettings" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
+            $html .= '  <label data-tooltip="Toggle Sync All Settings" for="syncSettings" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
             $html .= '    <input type="checkbox" id="syncSettings" name="syncSettings" value="1" class="appearance-none h-5 w-5 bg-black border border-esper-yellow focus:outline-none">';
             $html .= ' <div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-icons cursor-pointer">check</div>';
-            $html .= '    <span class="ml-2">Sync Settings</span>';
+            $html .= '    <span class="ml-2">Select All</span>';
             $html .= '  </label>';
             $html .= '</div>';
-
-
             //$html .= 'First screen needs to be option to choose sync settings or individual controls';
 
             //$html .= 'For sync control need ability to add controls to capture screen for quick control?';
@@ -263,11 +285,11 @@ class CameraSettings {
             $html .= '<div class="view-switcher flex items-center space-x-2">';
                
                 $html .= '<div id="cardViewIcon" class="w-auto flex flex-wrap">';
-                    $html .= '<div class="w-5 h-5 material-icons text-esper-yellow cursor-pointer">view_module</div>';
+                    $html .= '<div data-tooltip="Grid View" class="material-icons text-esper-yellow cursor-pointer text-3xl">view_module</div>';
                 $html .= '</div>';
 
                 $html .= '<div id="tableViewIcon" class="w-auto flex flex-wrap">';
-                    $html .= '<div class="w-5 h-5 material-icons text-esper-yellow cursor-pointer opacity-25">table_chart</div>';
+                    $html .= '<div data-tooltip="Table View" class="material-icons text-esper-yellow cursor-pointer opacity-25 text-3xl">table_chart</div>';
                 $html .= '</div>';
 
                 $html .= '<div id="nodeViewIcon" class="hidden w-auto flex flex-wrap">';
@@ -288,6 +310,7 @@ class CameraSettings {
     public function renderTableHeader() {
         $html  = '<table class="table-fixed settings-set w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">';
         $html .= '<thead><tr class="bg-esper-yellow">';
+        $html .= '<th class="sync-col w-11 font-normal text-center text-black text-left">Sync</th>';
         foreach ( $this->baseFields['fieldSets'] as $field ) {
             $html .= '<th class="break-words font-normal text-black text-left">' . esc_html( $field['field_name'] ) . '</th>';
         }
@@ -302,38 +325,74 @@ class CameraSettings {
      */
     public function renderTableBody() {
         $html = '';
+        $i = 1;
         if ( ! empty( $this->rows ) ) {
             foreach ( $this->rows as $row ) {
+                // Copy the base configuration.
                 $fieldsCopy = $this->baseFields;
-                $fieldsCopy['beforeHTML'] = '<tr class="settings-row border-b border-esper-yellow">';
-                $fieldsCopy['afterHTML']  = '</tr>';
-
+                // Adjust the beforeHTML/afterHTML so that render_input_sets outputs only the field cells.
+                // (We will output our own <tr> and our first cell.)
+                $fieldsCopy['beforeHTML'] = ''; 
+                $fieldsCopy['afterHTML']  = '';
+    
+                // Update each field value as needed.
                 if ( isset( $fieldsCopy['fieldSets'] ) && is_array( $fieldsCopy['fieldSets'] ) ) {
                     foreach ( $fieldsCopy['fieldSets'] as $key => $field ) {
                         $slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
                         $fieldsCopy['fieldSets'][ $key ]['value'] = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
-                        if ( empty( $row['camera_name'] ) && $slug !== 'camera_name' ) {
-                            if ( ! isset( $fieldsCopy['fieldSets'][ $key ]['attributes'] ) || ! is_array( $fieldsCopy['fieldSets'][ $key ]['attributes'] ) ) {
-                                $fieldsCopy['fieldSets'][ $key ]['attributes'] = array();
-                            }
-                            $fieldsCopy['fieldSets'][ $key ]['attributes']['style'] = 'display:none;';
+                        // For example, set a default name if empty.
+                        if ( $slug == 'camera_name' && empty( $fieldsCopy['fieldSets'][ $key ]['value'] ) ) {
+                            $fieldsCopy['fieldSets'][ $key ]['value'] = 'Untitled Camera ' . $i;
                         }
+                        // Adjust the HTML wrappers for each field cell.
+                        $fieldsCopy['fieldSets'][ $key ]['beforeHTML'] = '<td class="break-words border-r border-esper-yellow">';
+                        $fieldsCopy['fieldSets'][ $key ]['afterHTML']  = '</td>';
                     }
                 }
+    
+                // Start the row.
+                $html .= '<tr class="settings-row border-b border-esper-yellow">';
+                
+                // Create a unique identifier for the sync checkbox for this row.
+                $uniqueSyncId = 'syncSetting_' . $i;
+                
+                // Output the sync checkbox cell.
+                $html .= '<td class="sync-col border-r border-esper-yellow">';
+                    $html .= '<div class="custom-checkbox flex items-center justify-center text-xs">';
+                        $html .= '<label for="' . $uniqueSyncId . '" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
+                            $html .= '<input type="checkbox" id="' . $uniqueSyncId . '" name="' . $uniqueSyncId . '" value="1" data-tooltip="Sync Setting" class="syncSetting appearance-none h-5 w-5 bg-black border border-esper-yellow focus:outline-none">';
+                            $html .= '<div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-icons cursor-pointer">check</div>';
+                        $html .= '</label>';
+                    $html .= '</div>';
+                $html .= '</td>';
+    
+                // Now output the rest of the fields.
                 ob_start();
-                render_input_sets( array( $fieldsCopy ) );
+                    render_input_sets( array( $fieldsCopy ) );
                 $html .= ob_get_clean();
+    
+                $html .= '</tr>';
+                $i++;
             }
         } else {
-            $emptySet = $this->baseFields;
-            $emptySet['beforeHTML'] = '<tr>';
-            $emptySet['afterHTML']  = '</tr>';
-            ob_start();
-            render_input_sets( array( $emptySet ) );
-            $html .= ob_get_clean();
+            // If there are no rows, render a single row with empty inputs and an empty sync cell.
+            $fieldsCopy = $this->baseFields;
+            if ( isset( $fieldsCopy['fieldSets'] ) && is_array( $fieldsCopy['fieldSets'] ) ) {
+                foreach ( $fieldsCopy['fieldSets'] as $key => $field ) {
+                    $fieldsCopy['fieldSets'][ $key ]['beforeHTML'] = '<td class="break-words border-r border-esper-yellow">';
+                    $fieldsCopy['fieldSets'][ $key ]['afterHTML']  = '</td>';
+                }
+            }
+            $html .= '<tr>';
+                $html .= '<td class="sync-col border-r border-esper-yellow"></td>';
+                ob_start();
+                    render_input_sets( array( $fieldsCopy ) );
+                $html .= ob_get_clean();
+            $html .= '</tr>';
         }
         return $html;
     }
+    
 
     /**
      * Renders the table footer (closing tags).
@@ -406,7 +465,10 @@ public function renderCards() {
     $html .= '<div class="settings-set card-view flex flex-wrap w-full">';
 
     // Define the array of field slugs to remove.
-    $fieldsToRemove = array('camera_name', 'serial_number', 'camera_model'); // Update with actual field names
+    //$fieldsToRemove = array('camera_name', 'serial_number', 'camera_model'); // Update with actual field names
+    $fieldsToRemove = array(); // Update with actual field names
+
+    $cameraName = '';
 
     // If there are rows, render each as a separate card.
     if ( ! empty( $this->rows ) ) {
@@ -414,6 +476,7 @@ public function renderCards() {
         //echo '<pre>';
         //print_r($this->rows);
         //echo '</pre>';
+        $i = 1;
         foreach ( $this->rows as $row ) {
             // Copy the base configuration.
             $fieldsCopy = $this->baseFields;
@@ -439,12 +502,18 @@ public function renderCards() {
                     $fieldsCopy['fieldSets'][ $key ]['label_class'] = 'text-white uppercase w-1/2';
                     $fieldsCopy['fieldSets'][ $key ]['input_class'] = 'w-1/2 bg-black border p-2 border-white border-opacity-25 text-white';
 
-                    // Optionally hide fields if the 'camera_name' is empty and this field is not camera_name.
-                    if ( empty( $row['camera_name'] ) && $slug !== 'camera_name' ) {
-                        if ( ! isset( $fieldsCopy['fieldSets'][ $key ]['attributes'] ) || ! is_array( $fieldsCopy['fieldSets'][ $key ]['attributes'] ) ) {
-                            $fieldsCopy['fieldSets'][ $key ]['attributes'] = array();
+                    if ( $field['field_slug'] == 'camera_name' ) {
+                        if ( !empty($fieldsCopy['fieldSets'][ $key ]['value'])) {
+                            $cameraName =  $fieldsCopy['fieldSets'][ $key ]['value'];
+                        } else {
+                            $cameraName =  'Untitled Camera '.$i;
                         }
-                        $fieldsCopy['fieldSets'][ $key ]['attributes']['style'] = 'display:none;';
+                        
+                    }
+                    
+
+                    if ( empty( $row['camera_name'] ) && $slug == 'camera_name' ) {
+                        $fieldsCopy['fieldSets'][ $key ]['value'] = 'Untitled Camera '.$i;    
                     }
 
                     // Change the HTML wrappers to use divs for card view.
@@ -454,21 +523,37 @@ public function renderCards() {
             }
 
             // Wrap the rendered input set within a card container.
-            $html .= '<div class="settings-row w-full flex flex-wrap card border border-white mb-6 border-opacity-10 p-4">';
+            $html .= '<div class="settings-row w-full flex flex-wrap card border border-white mb-6 border-opacity-10">';
+            $html .= '<div class="w-full bg-esper-yellow pl-4 pr-4 pt-2 pb-2 font-semibold text-black flex flex-wrap items-center">';
+
+// Create a unique identifier for the sync settings checkbox.
+$uniqueSyncId = 'syncSetting_' . $i;
+
+$html .= '<div class="custom-checkbox flex items-center justify-between text-xs">';
+    // The label's "for" attribute must match the input's id.
+    $html .= '<label for="' . $uniqueSyncId . '" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
+        // Set unique id and name attributes for the input.
+        $html .= '<input type="checkbox" id="' . $uniqueSyncId . '" name="' . $uniqueSyncId . '" value="1" data-tooltip="Sync Setting" class="syncSetting appearance-none h-5 w-5 bg-black border border-esper-yellow focus:outline-none mr-3">';
+        $html .= '<div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-icons cursor-pointer">check</div>';
+    $html .= '</label>';
+$html .= '</div>';
+                $html .= $cameraName;
+            $html .= '</div>';
             $html .= '<div class="w-2/3 flex flex-wrap">';
-                $html .= 'Camera image name etc';
-                $html .= '<div class="w-3/4">';
+                $html .= '<div class="w-full p-4">';
                     $html .= '<div class="aspect-w-16 aspect-h-9 w-full h-full border border-white border-opacity-10 flex items-center align-center">';
                         $html .= '<div class="uppercase opacity-25 w-full text-center">Camera Preview</div>';
                     $html .= '</div>';
                 $html .= '</div>';
             $html .= '</div>';
-                $html .= '<div class="w-1/3">';
+                $html .= '<div class="w-1/3 p-4">';
                     ob_start();
                         render_input_sets( array( $fieldsCopy ) );
                     $html .= ob_get_clean();
                 $html .= '</div>';
             $html .= '</div>'; // end single card
+
+            $i++;
         }
     } else {
         // If there are no rows, render a single card with empty inputs.
@@ -585,7 +670,7 @@ public function renderCommonFields( $common ) {
     
     // Render the input fields using the render_input_sets helper.
     ob_start();
-    echo '<div class="camera-quick-settings grid grid-cols-8 gap-4">';
+    echo '<div class="camera-quick-settings font-semibold grid grid-cols-8 gap-4">';
         render_input_sets( array( $fieldsCopy ) );
     echo '</div>';
     return ob_get_clean();

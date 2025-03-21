@@ -1194,7 +1194,22 @@ function esper_get_content() {
 
                 break;
                 case 'light_settings':
-                    $content = 'light settings';
+                    $content = '<div class="h-full grid grid-cols-4 gap-4">
+  <!-- Left column: Panels (2 rows) -->
+  <div class="col-span-3 grid grid-rows-2 gap-4">
+    <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+      <span class="opacity-25 uppercase">Light Settings Here</span>
+    </div>
+    <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+      <span class="opacity-25 uppercase">Light Settings Here</span>
+    </div>
+  </div>
+  <!-- Right column: Sidebar -->
+  <div class="col-span-1 bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+    <span class="opacity-25 uppercase">Light Settings Here</span>
+  </div>
+</div>
+';
                 break;
                 default:
                     $content = esper_get_capture_template($post);
@@ -1331,7 +1346,15 @@ function esper_get_hierarchy() {
 add_action('wp_ajax_esper_get_hierarchy', 'esper_get_hierarchy');
 
 // Enqueue scripts and styles
-function esper_lightcage_scripts() {
+function esper_lightcage_scripts() { 
+    
+    // Enqueue Google Material Icons
+    wp_enqueue_style(
+        'google-material-icons',
+        'https://fonts.googleapis.com/icon?family=Material+Icons',
+        array(),
+        null
+    );
     // Enqueue main styles
     wp_enqueue_style(
         'esper-lightcage-styles', 
@@ -1340,13 +1363,7 @@ function esper_lightcage_scripts() {
         wp_get_theme()->get('Version')
     );
 
-    // Enqueue Google Material Icons
-    wp_enqueue_style(
-        'google-material-icons',
-        'https://fonts.googleapis.com/icon?family=Material+Icons',
-        array(),
-        null
-    );
+   
 
     // Enqueue tooltip styles
     wp_enqueue_style(

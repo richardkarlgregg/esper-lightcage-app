@@ -63,40 +63,60 @@ export default class CameraSettingsManager {
         });
 
         jQuery(document).on('change input', '.cameraSettingsContent input, .cameraSettingsContent select, .cameraSettingsContent textarea', function() {
-            // Only sync if the checkbox is checked.
-            if (jQuery('#syncSettings').is(':checked')) {
-                var $elem = jQuery(this);
-                var name = $elem.attr('name');
+            var $elem = jQuery(this);
+            var name = $elem.attr('name');
         
-                // Define a list of field names to ignore for sync.
-                var ignoredFields = ['camera_name', 'serial_number', 'camera_model']; // Replace with your actual field names.
-        
-                // If the field name is in the ignored list, exit.
-                if (ignoredFields.indexOf(name) !== -1) {
-                    return;
-                }
-        
-                var type = $elem.attr('type');
-        
-                // Handle radio buttons.
-                if (type === 'radio') {
-                    var newVal = $elem.val();
-                    jQuery('.cameraSettingsContent input[type="radio"][name="' + name + '"]').each(function() {
-                        jQuery(this).prop('checked', jQuery(this).val() === newVal);
-                    });
-                }
-                // Handle checkboxes.
-                else if (type === 'checkbox') {
-                    var isChecked = $elem.is(':checked');
-                    jQuery('.cameraSettingsContent input[type="checkbox"][name="' + name + '"]').prop('checked', isChecked);
-                }
-                // Handle other input types, selects, and textareas.
-                else {
-                    var newVal = $elem.val();
-                    jQuery('.cameraSettingsContent [name="' + name + '"]').not(this).val(newVal);
-                }
+            // Define a list of field names to ignore for sync.
+            var ignoredFields = ['camera_name', 'serial_number', 'camera_model'];
+            if (ignoredFields.indexOf(name) !== -1) {
+                return;
             }
+        
+            // Get the current row container and its sync checkbox.
+            var $currentRow = $elem.closest('.settings-row');
+            var $currentSyncCheckbox = $currentRow.find('.syncSetting');
+        
+            // If the current row's sync checkbox is not checked, don't perform any sync.
+            if (!$currentSyncCheckbox.is(':checked')) {
+                return;
+            }
+        
+            var type = $elem.attr('type');
+            var newVal = $elem.val();
+        
+            // Loop over each row with a checked syncSetting.
+            jQuery('.settings-row').each(function() {
+                var $row = jQuery(this);
+                var $rowSyncCheckbox = $row.find('.syncSetting');
+        
+                // Only sync rows where the syncSetting checkbox is checked.
+                if ($rowSyncCheckbox.is(':checked')) {
+                    if (type === 'radio') {
+                        $row.find('input[type="radio"][name="' + name + '"]').each(function() {
+                            jQuery(this).prop('checked', jQuery(this).val() === newVal);
+                        });
+                    }
+                    else if (type === 'checkbox') {
+                        $row.find('input[type="checkbox"][name="' + name + '"]').prop('checked', $elem.is(':checked'));
+                    }
+                    else {
+                        // For text inputs, selects, and textareas, update all except the source.
+                        $row.find('[name="' + name + '"]').not($elem).val(newVal);
+                    }
+                }
+            });
         });
+
+        // Event delegation on document body for dynamic elements
+        jQuery(document.body).on('change', '#syncSettings', function() {
+            const isChecked = jQuery(this).is(':checked');
+
+            // Update all checkboxes with id 'syncSetting'
+            jQuery('input.syncSetting[type="checkbox"]').each(function() {
+                jQuery(this).prop('checked', isChecked).trigger('change');
+            });
+        });
+
         
         jQuery(document).ready(function($) {
             // Listen for clicks on either the table or card icon.
@@ -150,11 +170,18 @@ export default class CameraSettingsManager {
             var fieldValue = jQuery(this).val();
             console.log("Field name:", fieldName, "Field value:", fieldValue);
         
-            // Get the field label using the input's id and the matching label's "for" attribute.
+           // Get the field label using the input's id and the matching label's "for" attribute.
             var fieldId = jQuery(this).attr('id');
-            var fieldLabel = jQuery("label[for='" + fieldId + "']").text().trim();
+            var $label = jQuery("label[for='" + fieldId + "']").clone();
+
+            // Remove any Google icon spans (like Material Icons)
+            $label.find('.material-icons, .google-icon, .icon').remove();
+
+            // Get clean label text
+            var fieldLabel = $label.text().trim();
+
             console.log("Field label:", fieldLabel);
-        
+
             // Get the capture post ID from your store object.
             const capturePostID = store.navigationManager.getPostIdByCriteria('capture');
             console.log("Capture Post ID:", capturePostID);
