@@ -60,6 +60,7 @@ class CameraSettings {
                     'value'      => '',
                     'hide_label' => true,
                     'icon' => null,
+                    'show_icon' => false,
                     'placeholder'=> 'Enter camera name',
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -72,6 +73,7 @@ class CameraSettings {
                     'value'      => '',
                     'hide_label' => true,
                     'icon' => null,
+                    'show_icon' => false,
                     'placeholder'=> 'Enter serial number',
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -84,6 +86,7 @@ class CameraSettings {
                     'value'      => '',
                     'hide_label' => true,
                     'icon' => null,
+                    'show_icon' => false,
                     'placeholder'=> 'Enter camera model',
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -95,7 +98,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'filter_tilt_shift',
+                    'show_icon' => false,
                     'options'    => get_iso_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -107,7 +111,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'camera',
+                    'show_icon' => false,
                     'options'    => get_aperture_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -119,7 +124,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'wb_sunny',
+                    'show_icon' => false,
                     'options'    => get_white_balance_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -129,7 +135,8 @@ class CameraSettings {
                     'field_slug' => 'colour_temp',
                     'type'       => 'range',
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'heat',
+                    'show_icon' => false,
                     'value'      => '3000',
                     'display'    => true,
                     'attributes' => array(
@@ -147,7 +154,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'shutter_speed',
+                    'show_icon' => false,
                     'options'    => get_shutter_speed_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -159,7 +167,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'image',
+                    'show_icon' => false,
                     'options'    => get_file_type_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -171,11 +180,13 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'photo_size_select_large',
+                    'show_icon' => false,
                     'options'    => get_jpeg_quality_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
                 ),
+                
                 array(
                     'field_name' => 'Drive Mode',
                     'field_slug' => 'drive_mode',
@@ -183,7 +194,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'toggle_off',
+                    'show_icon' => false,
                     'options'    => get_drive_mode_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -195,7 +207,8 @@ class CameraSettings {
                     'value'      => '',
                     'display'    => true,
                     'hide_label' => true,
-                    'icon' => null,
+                    'icon' => 'center_focus_weak',
+                    'show_icon' => false,
                     'options'    => get_focus_mode_options(),
                     'beforeHTML' => '<td class="break-words border-r border-esper-yellow">',
                     'afterHTML'  => '</td>',
@@ -556,12 +569,16 @@ public function renderCommonFields( $common ) {
 
                 $fieldsCopy['fieldSets'][ $key ]['hide_label'] = false;
 
-                    $fieldsCopy['fieldSets'][ $key ]['label_class'] = 'text-black bg-esper-yellow uppercase w-full text-base p-4';
+                    $fieldsCopy['fieldSets'][ $key ]['label_class'] = 'text-black bg-esper-yellow uppercase w-full text-xs pl-3 pr-3 pt-2 pb-2';
                     $fieldsCopy['fieldSets'][ $key ]['input_class'] = 'w-full bg-black text-2xl border p-4 border-white border-opacity-25 text-white';
 
                     // Change the HTML wrappers to use divs for card view.
                     $fieldsCopy['fieldSets'][ $key ]['beforeHTML'] = '<div class="bg-black flex flex-wrap items-center field mb-2 flex-col-reversex">';
                     $fieldsCopy['fieldSets'][ $key ]['afterHTML']  = '</div>';
+
+                    if ( isset( $fieldsCopy['fieldSets'][ $key ]['icon'])) {
+                        $fieldsCopy['fieldSets'][ $key ]['show_icon']  = true;   
+                    }
             }
         }
     }

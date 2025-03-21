@@ -187,8 +187,9 @@ initMainContentHandlers() {
         });
     
     // Auto-save notes when typing stops
-    $('#jobNotes').on('input', function() {
+    $('#notes').on('input', function() {
         clearTimeout(saveTimeout);
+        
         saveTimeout = setTimeout(() => saveJobDetails(), 1000);
     });
     
@@ -238,12 +239,18 @@ initMainContentHandlers() {
         const data = {
             action: 'esper_update_job',
             nonce: esperApi.nonce,
-            job_id: jobId,
-            notes: $('#jobNotes').val(),
+            id: postId,
+            notes: $('#notes').val(),
             tags: getTags()
         };
         
         const response = await $.post(esperApi.ajaxurl, data);
+
+        if (response.success) {
+            console.log(response);
+            console.log($('#notes').val());
+            console.log(postId);
+        }
         
         if (!response.success) {
             throw new Error(response.data || 'Error saving job details');

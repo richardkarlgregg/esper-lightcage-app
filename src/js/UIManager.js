@@ -36,7 +36,31 @@ export default class UIManager {
                 default:
                     console.log('Unknown action:', action);
             }
+            
         });
+
+        const tooltip = $('<div class="tooltip"></div>').appendTo('body');
+
+        $(document)
+          .on('mouseenter', '[data-tooltip]', function() {
+            const text = $(this).attr('data-tooltip');
+            tooltip.text(text).fadeIn(150);
+        
+            const offset = $(this).offset();
+            const tooltipHeight = tooltip.outerHeight();
+            const elementWidth = $(this).outerWidth();
+            const tooltipWidth = tooltip.outerWidth();
+        
+            tooltip.css({
+              left: offset.left + (elementWidth / 2) - (tooltipWidth / 2),
+              top: offset.top - tooltipHeight - 8, // positions tooltip 8px above element
+            });
+          })
+          .on('mouseleave', '[data-tooltip]', function() {
+            tooltip.fadeOut(100);
+          });
+        
+        
     }
 
     initFolderTree() {
@@ -48,6 +72,25 @@ export default class UIManager {
     
         // Show default message
         showDefaultContent();
+
+        // Event delegation for dynamically added '#addSession' button
+        $(document.body).on('click', '#addSession', async function() {
+            const jobPostID = store.navigationManager.getPostIdByCriteria('job');
+
+             // Trigger click on the first add-btn inside the specified folder-item
+            $('.folder-item[data-id="' + jobPostID + '"] .add-btn').first().trigger('click');
+        });
+
+        // Event delegation for dynamically added '#addSession' button
+        $(document.body).on('click', '#addCapture', async function() {
+            const jobPostID = store.navigationManager.getPostIdByCriteria('session');
+
+             // Trigger click on the first add-btn inside the specified folder-item
+            $('.folder-item[data-id="' + jobPostID + '"] .add-btn').first().trigger('click');
+        });
+
+
+
     
         // Event handlers for folder tree items
         $(document).on('click', '.folder-item', function(e) {
@@ -167,8 +210,8 @@ export default class UIManager {
                 }
             });
     
-            // New Job
-            $('#newJobBtn').on('click', async function() {
+            // New Job (Event delegation on document body)
+            $(document.body).on('click', '#newJobBtn', async function() {
                 const jobCount = $('#folderTree').children('.folder-item').length + 1;
                 const newJobLabel = 'Job ' + jobCount;
                 
@@ -181,6 +224,7 @@ export default class UIManager {
                     console.error('Error creating job:', error);
                 }
             });
+
     
             // Close Job
             $('#closeJobBtn').on('click', function() {
@@ -190,7 +234,7 @@ export default class UIManager {
             // About
             $('#aboutBtn').on('click', function() {
                 $('#content').html(`
-                    <div class="flex flex-col items-center justify-center h-full text-gray-500">
+                    <div class="flex flex-col items-center justify-center h-full text-white">
                         <p class="text-lg">Not potato farmers</p>
                     </div>
                 `);
@@ -286,14 +330,19 @@ export default class UIManager {
             // Only show the welcome screen if no job is currently open
             if (!currentJobId) {
                 $('#content').html(`
-                    <div class="flex flex-col items-center justify-center h-full text-gray-500">
-                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex flex-col items-center justify-center h-full text-white">
+                        <svg class="w-24 h-24 opacity-25 mb-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
                         </svg>
-                        <p class="text-lg mb-4">No job open</p>
-                        <button id="welcomeOpenJob" class="bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
-                            Open a Job
-                        </button>
+                        <p class="text-2xl opacity-25">No job open</p>
+                        <div class="w-full flex flex-wrap justify-center mt-10">
+                            <button id="welcomeOpenJob" class="mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
+                                Open a Job
+                            </button>
+                            <button id="newJobBtn" class="bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
+                                Create New Job
+                            </button>
+                        </div>
                     </div>
                 `);
     
@@ -310,7 +359,7 @@ export default class UIManager {
         });
         $(document).on('mousemove', function(e) {
             if (!isResizing) return;
-            const newWidth = Math.min(Math.max(e.clientX, 200), 500);
+            const newWidth = Math.min(Math.max(e.clientX, 100), 500);
             $('#sidebar').css('width', newWidth);
         }).on('mouseup', function() {
             isResizing = false;
@@ -360,7 +409,8 @@ export default class UIManager {
         if (item.type === 'job') {
             const $addButton = $('<button>', {
                 'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
-                'title': 'Add Session'
+               //'title': 'Add Session',
+                'data-tooltip': 'Add Session'
             }).append(
                 $('<span>', {
                     'class': 'material-icons',
@@ -371,7 +421,8 @@ export default class UIManager {
         } else if (item.type === 'session') {
             const $addButton = $('<button>', {
                 'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
-                'title': 'Add Capture'
+                //'title': 'Add Capture',
+                'data-tooltip': 'Add Capture'
             }).append(
                 $('<span>', {
                     'class': 'material-icons',

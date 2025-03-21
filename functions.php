@@ -351,6 +351,9 @@ function esper_get_job_template($post) {
                             </button>
                         </div>
                         <div class="text-gray-500 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
+                        <button id="addSession" class="mt-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
+                            Add Session
+                        </button>
                     </div>
                 </div>
             </div>
@@ -422,7 +425,7 @@ function esper_get_job_template($post) {
                 <div class="space-y-4">
                     <div class="p-4 rounded">
                         <h3 class="text-sm font-medium text-gray-300 mb-2">Notes</h3>
-                        <textarea id="jobNotes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'notes', true)); ?></textarea>
+                        <textarea id="notes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'notes', true)); ?></textarea>
                     </div>
 
                     <div class="bg-black/80 p-4 rounded">
@@ -479,7 +482,10 @@ function esper_get_session_template($post) {
                         $parent_job_id = get_post_meta($post->ID, 'parent_job', true);
                         $parent_job = get_post($parent_job_id);
                         ?>
-                        <div class="text-gray-500 text-sm mt-2">Parent Job: <?php echo esc_html($parent_job->post_title); ?></div>
+                        <div class="text-gray-500 text-sm mt-2">Job: <?php echo esc_html($parent_job->post_title); ?></div>
+                        <button id="addCapture" class="mt-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
+                            Add Capture
+                        </button>
                     </div>
                 </div>
             </div>
@@ -524,15 +530,15 @@ function esper_get_session_template($post) {
                     <!-- Notes -->
                     <div class="p-4 rounded">
                         <h3 class="text-sm font-medium text-gray-300 mb-2">Notes</h3>
-                        <textarea id="sessionNotes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'session_notes', true)); ?></textarea>
+                        <textarea id="notes" class="w-full h-32 bg-black text-white border border-white border-opacity-10 rounded p-2 text-sm" placeholder="Add notes here..."><?php echo esc_textarea(get_post_meta($post->ID, 'notes', true)); ?></textarea>
                     </div>
 
                     <!-- Tags -->
                     <div class="bg-black/80 p-4 rounded">
                         <h3 class="text-sm font-medium text-gray-300 mb-2">Tags</h3>
-                        <div class="flex flex-wrap gap-2 mb-2" id="sessionTagContainer">
+                        <div class="flex flex-wrap gap-2 mb-2" id="tagContainer">
                             <?php
-                            $tags = get_post_meta($post->ID, 'session_tags', true);
+                            $tags = get_post_meta($post->ID, 'job_tags', true);
                             if (is_array($tags)) {
                                 foreach ($tags as $tag) {
                                     echo '<span class="bg-esper-yellow text-black px-2 py-1 rounded text-sm flex items-center">' . 
@@ -544,8 +550,8 @@ function esper_get_session_template($post) {
                             ?>
                         </div>
                         <div class="flex space-x-2">
-                            <input type="text" id="newSessionTag" class="flex-1 border border-white border-opacity-10 bg-black text-white rounded px-2 py-1 text-sm" placeholder="Add a tag">
-                            <button id="addSessionTag" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                            <input type="text" id="newTag" class="flex-1 border border-white border-opacity-10 bg-black text-white rounded px-2 py-1 text-sm" placeholder="Add a tag">
+                            <button id="addTag" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
                                 Add
                             </button>
                         </div>
@@ -1025,7 +1031,7 @@ function esper_get_take_template($post) {
                         <p class="text-gray-400 text-sm">Include sets</p>
                         <p class="text-gray-400 text-sm">Ability to exclude images</p>
                         <p class="text-gray-400 text-sm">Re-order images?</p>
-                        <label for="include_export">
+                        <label class="hidden" for="include_export">
                             <input type="checkbox" id="include_export" name="include_export" value="1" checked>
                             Include in Export
                         </label>
@@ -1617,6 +1623,8 @@ function render_input_sets( array $sets ) {
 
                 // Check if we should hide the label.
                 $hide_label = isset( $field['hide_label'] ) ? $field['hide_label'] : false;
+
+                $show_icon = isset( $field['show_icon'] ) ? $field['show_icon'] : false;
                 // Retrieve placeholder if provided.
                 $placeholder = isset( $field['placeholder'] ) ? $field['placeholder'] : '';
 
@@ -1636,7 +1644,13 @@ function render_input_sets( array $sets ) {
 
                 // Render the label unless hidden.
                 if ( ! $hide_label ) {
-                    echo '<label for="' . esc_attr( $field['field_slug'] ) . '" class="' . esc_attr( $label_class ) . '">' . esc_html( $field['field_name'] ) . '</label>';
+                    echo '<label for="' . esc_attr( $field['field_slug'] ) . '" class="' . esc_attr( $label_class ) . ' flex flex-wrap items-center">';
+
+                        if ( $show_icon && !empty($field['icon'])) {
+                            echo '<span class="material-icons w-6 h-6 mr-2 text-black flex-none">'.$field['icon'].'</span>';
+                        }
+                        echo esc_html( $field['field_name'] );
+                    echo '</label>';
                 }
 
                 // Render the input based on type.

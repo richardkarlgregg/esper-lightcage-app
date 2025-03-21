@@ -1,4 +1,4 @@
-/* Tooltip styles */
+/* Tooltip styles 
 [title] {
     position: absolute;
 }
@@ -28,4 +28,20 @@
     border: 4px solid transparent;
     border-top-color: #1f2937;
     margin-bottom: -4px;
-} 
+} */
+
+.tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 1000;
+    display: none;
+    top: 0;
+    left: 0;
+  }
+  

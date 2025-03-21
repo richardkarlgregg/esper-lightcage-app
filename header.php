@@ -9,7 +9,7 @@
         .resizable {
             resize: horizontal;
             overflow: auto;
-            min-width: 200px;
+            min-width: 100px;
             max-width: 500px;
         }
         /* Divider style for dragging */
@@ -133,8 +133,8 @@
     ?>
     <!-- Connection Status Indicator -->
     <div class="flex items-center space-x-4 ml-auto">
-        <div class="uppercase text-white">Jobs</div>
-        <div data-type="export" data-id="<?php echo $exportID;?>" data-action="export" class="uppercase text-white">Export</div>
+        <div class="hidden uppercase text-white">Jobs</div>
+        <div data-type="export" data-id="<?php echo $exportID;?>" data-action="export" class="hidden uppercase text-white">Export</div>
          <div class="connection-status"></div>
          <!-- Simulated window icons -->
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-icons window-icon" id="minimizeWindow">remove</span>
@@ -145,10 +145,10 @@
 
 <!-- Job Selection Modal -->
 <div id="jobModal" class="modal-overlay">
-    <div class="modal bg-black rounded-lg shadow-xl">
-        <div class="flex justify-between items-center p-4 border-b border-gray-700">
+    <div class="modal bg-black rounded-lgx shadow-xl text-black border border-color-white border-opacity-10">
+        <div class="flex justify-between items-center p-4 bg-esper-yellow">
             <h2 class="text-lg font-semibold">Open Job</h2>
-            <button id="closeModal" class="text-gray-400 hover:text-white">
+            <button id="closeModal" class="text-black hover:text-white">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -156,9 +156,9 @@
         </div>
         <div class="p-4">
             <div class="mb-4">
-                <input type="text" id="jobSearch" placeholder="Search jobs..." class="w-full bg-black text-white px-3 py-2 border border-gray-600 focus:border-esper-yellow focus:outline-none">
+                <input type="text" id="jobSearch" placeholder="Search jobs..." class="w-full bg-black text-white px-3 py-2 border border-esper-yellow focus:border-esper-yellow focus:outline-none">
             </div>
-            <ul id="jobList" class="space-y-1 max-h-60 overflow-y-auto">
+            <ul id="jobList" class="space-y-1 max-h-60 text-white overflow-auto scrollbar">
                 <!-- Jobs will be populated here -->
             </ul>
         </div>
