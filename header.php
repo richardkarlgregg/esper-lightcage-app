@@ -1,3 +1,10 @@
+<?php
+// Redirect to login page if user is not logged in and not already on login page
+if (!is_page_template('login.php') && !is_user_logged_in()) {
+    wp_redirect(home_url('/login/'));
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>

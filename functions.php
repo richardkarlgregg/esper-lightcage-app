@@ -1760,4 +1760,40 @@ function update_camera_settings_repeater_ajax() {
 }
 add_action('wp_ajax_update_camera_settings_repeater', 'update_camera_settings_repeater_ajax');
 
+// AJAX Login Handler
+function esper_ajax_login() {
+    // Verify nonce
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Get login credentials
+    $username = sanitize_user($_POST['username']);
+    $password = $_POST['password'];
+    $remember = (bool) $_POST['remember'];
+    
+    if (empty($username) || empty($password)) {
+        wp_send_json_error(array('message' => 'Please enter both username and password.'));
+        return;
+    }
+    
+    // Attempt to log in
+    $credentials = array(
+        'user_login' => $username,
+        'user_password' => $password,
+        'remember' => $remember
+    );
+    
+    $user = wp_signon($credentials, false);
+    
+    if (is_wp_error($user)) {
+        wp_send_json_error(array('message' => 'Invalid username or password.'));
+        return;
+    }
+    
+    wp_send_json_success(array(
+        'message' => 'Login successful!',
+        'redirect' => home_url()
+    ));
+}
+add_action('wp_ajax_nopriv_esper_ajax_login', 'esper_ajax_login');
+
 
