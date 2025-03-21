@@ -1737,6 +1737,21 @@ function render_input_sets( array $sets ) {
     }
 }
 
+function my_custom_log( $data ) {
+    // Get the WordPress uploads directory.
+    $upload_dir = wp_upload_dir();
+    // Define the log file path.
+    $log_file = trailingslashit( $upload_dir['basedir'] ) . 'my-log.txt';
+    
+    // Format the log entry with a timestamp.
+    $time = date("Y-m-d H:i:s");
+    $log_entry = $time . " - " . print_r( $data, true ) . PHP_EOL;
+    
+    // Append the log entry to the log file.
+    file_put_contents( $log_file, $log_entry, FILE_APPEND );
+}
+
+
 function update_camera_settings_repeater_ajax() {
     check_ajax_referer('esper_ajax_nonce', 'nonce');
 
@@ -1751,12 +1766,15 @@ function update_camera_settings_repeater_ajax() {
         wp_send_json_error('Invalid rows data');
     }
 
+    // Log the $rows data.
+    my_custom_log( $post_id );
+    my_custom_log( $rows );
+
     // Update the ACF repeater field named "camera_settings_repeater" for the given post.
-    if (update_field('camera_settings_repeater', $rows, $post_id)) {
-        wp_send_json_success('Repeater updated');
-    } else {
-        wp_send_json_error('Failed to update repeater');
-    }
+    update_field('camera_settings_repeater', $rows, $post_id);
+    
+    wp_send_json_success('Repeater updated');
+   
 }
 add_action('wp_ajax_update_camera_settings_repeater', 'update_camera_settings_repeater_ajax');
 
