@@ -670,7 +670,7 @@ public function renderCommonFields( $common ) {
     
     // Render the input fields using the render_input_sets helper.
     ob_start();
-    echo '<div class="camera-quick-settings font-semibold grid grid-cols-8 gap-4">';
+    echo '<div class="camera-quick-settings font-semibold grid grid-cols-4 xxl:grid-cols-8 gap-4">';
         render_input_sets( array( $fieldsCopy ) );
     echo '</div>';
     return ob_get_clean();
