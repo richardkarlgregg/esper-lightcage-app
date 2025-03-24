@@ -969,13 +969,11 @@ jQuery(document).ready(function($) {
 function esper_get_take_template($post) {
     ob_start();
 
-    // Retrieve values from the post or meta data
-    $takeTitle         = $post->post_title ? $post->post_title : "Take {$post->ID}";
     $firstThumbnailUrl = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=1';
-    $createdDate       = get_the_date('F j, Y', $post) ? get_the_date('F j, Y', $post) : 'Just now';
-    $resolution        = get_post_meta($post->ID, 'resolution', true) ?: '1920x1080';
-    $size              = get_post_meta($post->ID, 'size', true) ?: '2.4 MB';
-    $format            = get_post_meta($post->ID, 'format', true) ?: 'PNG';
+    $createdDate = get_the_date('F j, Y', $post) ? get_the_date('F j, Y', $post) : 'Just now';
+    $resolution = get_post_meta($post->ID, 'resolution', true) ?: '1920x1080';
+    $size = get_post_meta($post->ID, 'size', true) ?: '2.4 MB';
+    $format = get_post_meta($post->ID, 'format', true) ?: 'PNG';
 
     // Optionally, get the filmstrip thumbnails via a helper function.
     // If you don't have this function, you can replace it with your own markup.
@@ -999,10 +997,8 @@ function esper_get_take_template($post) {
             <!-- Right sidebar -->
             <div class="w-64 bg-black/80 p-4 overflow-auto scrollbar" id="rightSidebarPane">
                 <div class="flex items-center justify-between mb-4 group relative">
-                    <h3 class="text-lg font-semibold text-white title-display" data-type="take" data-id="<?php echo esc_attr($post->ID); ?>">
-                        <?php echo esc_html($takeTitle); ?>
-                    </h3>
-                    <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($takeTitle); ?>">
+                    <h3 class="text-lg font-semibold text-white title-display" data-type="take" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_attr($post->post_title); ?></h3>
+                    <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                     <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
                         <span class="material-icons text-sm">edit</span>
                     </button>
