@@ -380,7 +380,7 @@ export default class UIManager {
 
         // Add collapse arrow for all items (will be hidden if no children)
         const $arrow = $('<span>')
-            .addClass('material-icons w-4 flex-none text-esper-yellow transform transition-transform duration-200 ' + 
+            .addClass('material-icons w-4 flex-none text-esper-yellow transform transition-transform duration-200 rotate-90 ' + 
                 ((!item.children || item.children.length === 0) ? 'invisible' : ''))
             .text('chevron_right');
         $header.append($arrow);
@@ -409,7 +409,6 @@ export default class UIManager {
         if (item.type === 'job') {
             const $addButton = $('<button>', {
                 'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
-               //'title': 'Add Session',
                 'data-tooltip': 'Add Session'
             }).append(
                 $('<span>', {
@@ -421,7 +420,6 @@ export default class UIManager {
         } else if (item.type === 'session') {
             const $addButton = $('<button>', {
                 'class': 'add-btn ml-2 flex items-center text-black/60 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute right-2',
-                //'title': 'Add Capture',
                 'data-tooltip': 'Add Capture'
             }).append(
                 $('<span>', {
@@ -437,7 +435,7 @@ export default class UIManager {
         // Add children container if there are children
         if (item.children && item.children.length > 0) {
             const $children = $('<div>', {
-                'class': 'pl-3 mt-1 space-y-1 hidden'
+                'class': 'pl-3 mt-1 space-y-1'
             });
             
             item.children.forEach(child => {
