@@ -2262,4 +2262,74 @@ function esper_add_to_queue() {
 }
 add_action('wp_ajax_esper_add_to_queue', 'esper_add_to_queue');
 
-
+// Add AJAX handler for refreshing queue table
+add_action('wp_ajax_esper_get_queue_table', 'esper_get_queue_table');
+function esper_get_queue_table() {
+    check_ajax_referer('esper_nonce', 'nonce');
+    
+    $job_id = isset($_POST['job_id']) ? intval($_POST['job_id']) : 0;
+    if (!$job_id) {
+        wp_send_json_error(['message' => 'Invalid job ID']);
+    }
+    
+    // Get queue items for this job and user
+    $args = array(
+        'post_type' => 'export_queue',
+        'posts_per_page' => -1,
+        'meta_query' => array(
+            array(
+                'key' => 'job_id',
+                'value' => $job_id
+            ),
+            array(
+                'key' => 'user_id',
+                'value' => get_current_user_id()
+            )
+        ),
+        'orderby' => 'date',
+        'order' => 'ASC'
+    );
+    
+    $query = new WP_Query($args);
+    ob_start();
+    
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $session_id = get_field('session_id');
+            $take_id = get_field('take_id');
+            $queue_status = get_field('queue_status');
+            $total_images = get_field('total_images');
+            $processed_images = get_field('processed_images');
+            
+            // Calculate remaining images
+            $remaining = $total_images - $processed_images;
+            
+            // Get session and take names
+            $session = get_post($session_id);
+            $take = get_post($take_id);
+            
+            // Calculate JPEGs and RAWs
+            $jpegs = ceil($total_images * 0.5);
+            $raws = floor($total_images * 0.5);
+            
+            echo '<tr>';
+            echo '<td class="px-4 py-2">' . esc_html($job_id) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($session ? $session->post_title : 'Unknown Session') . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($take ? $take->post_title : 'Unknown Take') . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($jpegs) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($raws) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($total_images) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($remaining) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($queue_status) . '</td>';
+            echo '</tr>';
+        }
+    } else {
+        echo '<tr><td colspan="8" class="px-4 py-2 text-center">No items in queue.</td></tr>';
+    }
+    
+    wp_reset_postdata();
+    
+    $html = ob_get_clean();
+    wp_send_json_success(['html' => $html]);
+}

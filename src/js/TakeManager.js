@@ -15,8 +15,7 @@ export default class TakeManager {
         // Handle Add to Queue button click
         $(document).on('click', '[data-action="add-to-queue"]', function() {
             const exportId = $(this).data('export-id');
-
-            console.log(exportId);
+            const $button = $(this);
             
             $.ajax({
                 url: esperApi.ajaxurl,
@@ -28,20 +27,45 @@ export default class TakeManager {
                 },
                 success: function(response) {
                     if (response.success) {
+                        // Remove the export from the summary table
+                        $button.closest('tr').fadeOut(300, function() {
+                            $(this).remove();
+                        });
+                        
+                        // Refresh the queue table
+                        this.refreshQueueTable();
+                        
                         // Show success message
                         alert('Export added to queue successfully');
-                        
-                        // Optionally refresh the queue table
-                        // You might want to add a function to refresh the queue display
-                        // refreshQueueTable();
                     } else {
                         alert('Failed to add export to queue: ' + response.data.message);
                     }
-                },
+                }.bind(this),
                 error: function() {
                     alert('Failed to add export to queue');
                 }
             });
+        });
+    }
+
+    // Add function to refresh queue table
+    refreshQueueTable() {
+        const jobId = store.navigationManager.getPostIdByCriteria('job');
+        
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_get_queue_table',
+                nonce: esperApi.nonce,
+                job_id: jobId
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Update the queue table content
+                    $('#queue-table tbody').html(response.data.html);
+                }
+            }
         });
     }
 
