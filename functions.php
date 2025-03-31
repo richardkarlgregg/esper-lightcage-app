@@ -605,11 +605,26 @@ function esper_get_export_template($post) {
             array(
                 'key' => 'job_id',
                 'value' => $job_id
+            ),
+            array(
+                'relation' => 'OR',
+                array(
+                    'key' => 'queue_id',
+                    'compare' => 'NOT EXISTS'
+                ),
+                array(
+                    'key' => 'queue_id',
+                    'value' => '',
+                    'compare' => '='
+                )
             )
         ),
         'orderby' => 'date',
         'order' => 'DESC'
     ));
+
+
+    
     
     // Get job title
     $job_title = get_the_title($job_id);
@@ -720,7 +735,7 @@ function esper_get_export_template($post) {
                         Clear Completed
                     </button>
                 </div>
-                <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
+                <table id="queue-table" class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                     <thead>
                         <tr class="bg-esper-yellow">
                             <th class="font-normal text-black text-left">Job</th>
@@ -2234,7 +2249,8 @@ function esper_add_to_queue() {
         'user_id',
         'queue_status',
         'total_images',
-        'processed_images'
+        'processed_images',
+        'export_id'  // Add export_id to the list of fields to copy
     );
     
     foreach ($acf_fields as $field) {
@@ -2255,7 +2271,10 @@ function esper_add_to_queue() {
     $total_images = is_array($take_images) ? count($take_images) : 0;
     update_field('total_images', $total_images, $queue_id);
     
-    // Link the queue item back to the original export
+    // Store the export_id as an ACF field
+    update_field('export_id', $export_id, $queue_id);
+    
+    // Link the queue item back to the original export using post meta
     update_post_meta($queue_id, 'export_id', $export_id);
     update_post_meta($export_id, 'queue_id', $queue_id);
     

@@ -5,53 +5,64 @@ import store from './Store.js';
 
 export default class TakeManager {
     constructor() {
-        this.init();
+        // Track resizing state
+        this.isResizing = false;
+        this.currentHandle = null;
+        this.startX = 0;
+        this.startY = 0;
+        this.startWidth = 0;
+        this.startHeight = 0;
     }
 
-    init() {
-    }
-
+    /**
+     * Sets up all main event listeners.
+     */
     setupEventListeners() {
-        // Handle Add to Queue button click
+        // Handle Add to Queue
         $(document).on('click', '[data-action="add-to-queue"]', (e) => {
-            const exportId = $(e.currentTarget).data('export-id');
+            e.preventDefault();
             const $button = $(e.currentTarget);
-            
-            $.ajax({
-                url: esperApi.ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'esper_add_to_queue',
-                    nonce: esperApi.nonce,
-                    export_id: exportId
-                },
-                success: (response) => {
-                    if (response.success) {
-                        // Remove the export from the summary table
-                        $button.closest('tr').fadeOut(300, function() {
-                            $(this).remove();
-                        });
-                        
-                        // Refresh the queue table
-                        this.refreshQueueTable();
-                        
-                        // Show success message
-                        alert('Export added to queue successfully');
-                    } else {
-                        alert('Failed to add export to queue: ' + response.data.message);
-                    }
-                },
-                error: function() {
-                    alert('Failed to add export to queue');
-                }
-            });
+            const exportId = $button.data('export-id');
+            this.addToQueue(exportId, $button);
         });
     }
 
-    // Add function to refresh queue table
+    /**
+     * Makes an AJAX call to add an export to the queue, removes the row, and refreshes the queue table.
+     */
+    addToQueue(exportId, $button) {
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_add_to_queue',
+                nonce: esperApi.nonce,
+                export_id: exportId
+            },
+            success: (response) => {
+                if (response.success) {
+                    // Remove the export row and refresh queue
+                    $button.closest('tr').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                    this.refreshQueueTable();
+                    alert('Export added to queue successfully.');
+                } else {
+                    alert(`Failed to add export to queue: ${response.data.message}`);
+                }
+            },
+            error: () => {
+                alert('Failed to add export to queue.');
+            }
+        });
+    }
+
+    /**
+     * Refreshes the #queue-table content via AJAX.
+     */
     refreshQueueTable() {
         const jobId = store.navigationManager.getPostIdByCriteria('job');
-        
+
         $.ajax({
             url: esperApi.ajaxurl,
             type: 'POST',
@@ -60,506 +71,474 @@ export default class TakeManager {
                 nonce: esperApi.nonce,
                 job_id: jobId
             },
-            success: function(response) {
+            success: (response) => {
+                console.log(response);
                 if (response.success) {
-                    // Update the queue table content
                     $('#queue-table tbody').html(response.data.html);
                 }
-            }.bind(this)
+            }
         });
     }
 
-    // Add this function near the bottom of the file
-initializeResizeHandlers($takeCard) {
-    let isResizing = false;
-    let currentHandle = null;
-    let startX, startY;
-    let startWidth, startHeight;
-    
-    // Vertical resize handle
-    const $verticalHandle = $takeCard.find('#verticalResizeHandle');
-    const $rightSidebar = $takeCard.find('#rightSidebarPane');
-    const $mainPane = $takeCard.find('#mainImagePane');
-    
-    // Horizontal resize handle
-    const $horizontalHandle = $takeCard.find('#horizontalResizeHandle');
-    const $thumbnailsPane = $takeCard.find('#thumbnailsPane');
-    const $mainContainer = $takeCard.find('#takePanesContainer');
-    const $thumbnailsContent = $thumbnailsPane.find('.flex-1');
-    const $thumbnailsContainer = $thumbnailsContent.find('.flex');
-    const $thumbnails = $thumbnailsContainer.find('.flex-none');
-    
-    // Store initial aspect ratios
-    const mainImageRatio = 16/9; // 1920x1080 aspect ratio
-    const thumbRatio = 16/9; // Same as main image
+    /**
+     * Initializes drag-to-resize behavior on vertical/horizontal handles in the Take card.
+     */
+    initializeResizeHandlers($takeCard) {
+        // Cache elements
+        const $verticalHandle   = $takeCard.find('#verticalResizeHandle');
+        const $horizontalHandle = $takeCard.find('#horizontalResizeHandle');
+        const $rightSidebar     = $takeCard.find('#rightSidebarPane');
+        const $mainPane         = $takeCard.find('#mainImagePane');
+        const $thumbnailsPane   = $takeCard.find('#thumbnailsPane');
+        const $mainContainer    = $takeCard.find('#takePanesContainer');
+        const $thumbnailsContent = $thumbnailsPane.find('.flex-1');
+        const $thumbnailsContainer = $thumbnailsContent.find('.flex');
 
-    // Ensure handle maintains its height
-    $horizontalHandle.css('height', '4px').css('min-height', '4px');
-    
-    // Vertical resize
-    $verticalHandle.on('mousedown', function(e) {
-        isResizing = true;
-        currentHandle = 'vertical';
-        startX = e.clientX;
-        startWidth = $rightSidebar.width();
-        e.preventDefault();
-    });
-    
-    // Horizontal resize
-    $horizontalHandle.on('mousedown', function(e) {
-        isResizing = true;
-        currentHandle = 'horizontal';
-        startY = e.clientY;
-        startHeight = $thumbnailsPane.height();
-        e.preventDefault();
-    });
-    
-    // Handle resize
-    $(document).on('mousemove', function(e) {
-        if (!isResizing) return;
-        
-        if (currentHandle === 'vertical') {
-            const width = Math.max(200, Math.min(500, startWidth + (startX - e.clientX)));
-            $rightSidebar.css('width', width + 'px');
-            
-            // Update main image to fill available space
-            $mainPane.find('img').css({
-                'width': '100%',
-                'height': '100%',
-                'object-fit': 'contain',
-                'object-position': 'center'
-            });
-        } else if (currentHandle === 'horizontal') {
+        // Ensure horizontal handle has a fixed height
+        $horizontalHandle.css({ height: '4px', minHeight: '4px' });
+
+        // Begin vertical resize
+        $verticalHandle.on('mousedown', (e) => {
+            this.isResizing = true;
+            this.currentHandle = 'vertical';
+            this.startX = e.clientX;
+            this.startWidth = $rightSidebar.width();
+            e.preventDefault();
+        });
+
+        // Begin horizontal resize
+        $horizontalHandle.on('mousedown', (e) => {
+            this.isResizing = true;
+            this.currentHandle = 'horizontal';
+            this.startY = e.clientY;
+            this.startHeight = $thumbnailsPane.height();
+            e.preventDefault();
+        });
+
+        // Mousemove handles the actual resize
+        $(document).on('mousemove', (e) => {
+            if (!this.isResizing) return;
+
+            if (this.currentHandle === 'vertical') {
+                // Restrict width between 200-500
+                const width = Math.max(200, Math.min(500, this.startWidth + (this.startX - e.clientX)));
+                $rightSidebar.css('width', `${width}px`);
+
+                // Keep main image filling space
+                $mainPane.find('img').css({
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    objectPosition: 'center'
+                });
+            } 
+            else if (this.currentHandle === 'horizontal') {
+                const containerHeight = $takeCard.height();
+                const handleHeight = $horizontalHandle.height();
+                // Restrict height between 100-300
+                const newHeight = Math.max(100, Math.min(300, this.startHeight + (this.startY - e.clientY)));
+
+                // Adjust thumbnails and main pane
+                $thumbnailsPane.css('height', `${newHeight}px`);
+                $mainContainer.css('height', `${containerHeight - newHeight - handleHeight}px`);
+
+                // Account for any top toolbar inside the thumbnails pane
+                const toolbarHeight = $thumbnailsPane.find('.bg-black').outerHeight();
+                const availableHeight = newHeight - toolbarHeight - 16; // 16px for padding
+                $thumbnailsContent.css('height', `${availableHeight}px`);
+
+                // Force each thumbnail's img to fill
+                $thumbnailsContainer.find('.flex-none img').css({
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                });
+
+                // Reflow main image
+                requestAnimationFrame(() => {
+                    $mainPane.find('img').css({
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        objectPosition: 'center'
+                    });
+                });
+            }
+        });
+
+        // Mouseup finalizes the resize
+        $(document).on('mouseup', () => {
+            if (this.isResizing) {
+                requestAnimationFrame(() => {
+                    $mainPane.find('img').css({
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        objectPosition: 'center'
+                    });
+                });
+            }
+            this.isResizing = false;
+            this.currentHandle = null;
+        });
+
+        // Initial layout
+        const setupInitialAspectRatios = () => {
             const containerHeight = $takeCard.height();
-            const handleHeight = $horizontalHandle.height();
-            const newHeight = Math.max(100, Math.min(300, startHeight + (startY - e.clientY)));
-            
-            
-            
-            // Update thumbnails pane height
-            $thumbnailsPane.css('height', newHeight + 'px');
-            
-            // Update main container height to fill remaining space while accounting for handle height
-            const mainContainerHeight = containerHeight - newHeight - handleHeight;
-            $mainContainer.css('height', mainContainerHeight + 'px');
-            
-            // Calculate available height for thumbnails (subtract toolbar height)
-            const toolbarHeight = $thumbnailsPane.find('.bg-black').outerHeight();
-            const availableHeight = newHeight - toolbarHeight - 16; // 16px for padding
-            
-            // Update thumbnails container height
-            $thumbnailsContent.css('height', availableHeight + 'px');
-            
-            // Update thumbnail dimensions
-            $thumbnails.each(function() {
-                $(this).find('img').css({
-                    'width': '100%',
-                    'height': '100%',
-                    'object-fit': 'cover'
-                });
-            });
-            
-            // Update main image to fill the new available space
-            requestAnimationFrame(() => {
-                $mainPane.find('img').css({
-                    'width': '100%',
-                    'height': '100%',
-                    'object-fit': 'contain',
-                    'object-position': 'center'
-                });
-            });
-        }
-    }).on('mouseup', function() {
-        if (isResizing) {
-            // Final update to ensure main image fills the space
-            requestAnimationFrame(() => {
-                $mainPane.find('img').css({
-                    'width': '100%',
-                    'height': '100%',
-                    'object-fit': 'contain',
-                    'object-position': 'center'
-                });
-            });
-        }
-        isResizing = false;
-        currentHandle = null;
-    });
-    
-    // Initial aspect ratio setup
-    function setupInitialAspectRatios() {
-        // Set initial heights
-        const containerHeight = $takeCard.height();
-        const thumbnailsHeight = $thumbnailsPane.height();
-        const mainContainerHeight = containerHeight - thumbnailsHeight - $horizontalHandle.height();
-        $mainContainer.css('height', mainContainerHeight + 'px');
-        
-        // Main image aspect ratio - always fill available space
-        $mainPane.find('img').css({
-            'width': '100%',
-            'height': '100%',
-            'object-fit': 'contain',
-            'object-position': 'center'
-        });
-        
-        // Thumbnail aspect ratios
-        const availableHeight = $thumbnailsContent.height();
-        $thumbnails.each(function() {
-            const thumbWidth = availableHeight * thumbRatio;
-           // $(this).css('width', thumbWidth + 'px');
-        });
-    }
-    
-    // Call initial setup
-    setupInitialAspectRatios();
-    
-    // Handle window resize
-    $(window).on('resize', setupInitialAspectRatios);
-}
+            const thumbsHeight    = $thumbnailsPane.height();
+            const mainContainerHeight = containerHeight - thumbsHeight - $horizontalHandle.height();
+            $mainContainer.css('height', `${mainContainerHeight}px`);
 
-// Add this function for generating filmstrip thumbnails
- generateFilmstripThumbnails() {
-    const colors = ['333333', '444444', '555555', '666666', '777777', '888888'];
-    let thumbnails = '';
-    
-    // Generate 12 placeholder thumbnails with proper aspect ratio
-    for (let i = 1; i <= 12; i++) {
-        const color = colors[i % colors.length];
-        thumbnails += `
-            <div class="flex-none group">
-                <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-esper-yellow transition-all duration-200 ${i === 1 ? 'ring-2 ring-esper-yellow' : ''}">
-                    <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${i}" 
-                         alt="Thumbnail ${i}"
-                         class="w-full h-full object-cover"
-                         loading="lazy">
-                    <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        ${i}
+            // Main image aspect ratio (fill space)
+            $mainPane.find('img').css({
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                objectPosition: 'center'
+            });
+        };
+
+        setupInitialAspectRatios();
+        $(window).on('resize', setupInitialAspectRatios);
+    }
+
+    /**
+     * Simple helper to generate placeholder thumbnails (for demonstration).
+     */
+    generateFilmstripThumbnails() {
+        const colors = ['333333', '444444', '555555', '666666', '777777', '888888'];
+        let thumbnails = '';
+        
+        // Generate 12 placeholders
+        for (let i = 1; i <= 12; i++) {
+            const color = colors[i % colors.length];
+            thumbnails += `
+                <div class="flex-none group">
+                    <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer 
+                                hover:ring-2 hover:ring-esper-yellow transition-all duration-200 
+                                ${i === 1 ? 'ring-2 ring-esper-yellow' : ''}">
+                        <img src="https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${i}" 
+                             alt="Thumbnail ${i}"
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 
+                                   opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            ${i}
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
+        return thumbnails;
     }
-    
-    return thumbnails;
-}
 
-// Add this function to handle thumbnail interactions
-initializeThumbnailHandlers($takeCard) {
-    const $thumbnails = $takeCard.find('#thumbnailsPane .flex-none');
-    const $mainImage = $takeCard.find('#mainImagePane img');
-    const $filmstripScroll = $takeCard.find('.filmstrip-scroll');
-    
-    // Set first thumbnail as selected by default
-    const $firstThumbnail = $thumbnails.first();
-    $firstThumbnail.find('div').first().addClass('ring-2 ring-esper-yellow');
-    
-    // Add horizontal scroll with mouse wheel
-    $filmstripScroll.on('wheel', function(e) {
-        e.preventDefault();
-        
-        // Get scroll amount from wheel delta
-        const scrollAmount = e.originalEvent.deltaY || e.originalEvent.deltaX;
-        
-        // Scroll horizontally with smooth animation
-        $(this).stop().animate({
-            scrollLeft: $(this).scrollLeft() + (scrollAmount * 1.5)
-        }, 50);
-    });
-    
-    // Create context menu
-    const $contextMenu = $(`
-        <div class="context-menu bg-black border border-white border-opacity-20 rounded-lg shadow-lg p-2 hidden">
-            <div class="text-white text-sm mb-2">Set Rating:</div>
-            <div class="flex space-x-2 mb-2">
-                <button class="rating-btn bg-green-500 hover:bg-green-600 w-8 h-8 rounded-full" data-rating="green"></button>
-                <button class="rating-btn bg-yellow-500 hover:bg-yellow-600 w-8 h-8 rounded-full" data-rating="yellow"></button>
-                <button class="rating-btn bg-red-500 hover:bg-red-600 w-8 h-8 rounded-full" data-rating="red"></button>
-            </div>
-            <div class="border-t border-white border-opacity-20 my-2"></div>
-            <button class="export-selected text-white text-sm hover:text-esper-yellow w-full text-left px-2 py-1 rounded">
-                Export Selected
-            </button>
-        </div>
-    `).appendTo('body');
+    /**
+     * Sets up event handlers on thumbnails, including context menu, multi-select, etc.
+     */
+    initializeThumbnailHandlers($takeCard) {
+        const $filmstripScroll = $takeCard.find('.filmstrip-scroll');
+        const $thumbnails      = $takeCard.find('#thumbnailsPane .flex-none');
+        const $mainImage       = $takeCard.find('#mainImagePane img');
 
-    // Handle right-click on thumbnails
-    $thumbnails.on('contextmenu', function(e) {
-        e.preventDefault();
-        
-        // Get the take ID from the data attribute
-        const takeId = $(this).closest('.take-review').data('take-id');
-        const imageId = $(this).data('image-id');
-        
-        // Get the thumbnail's position
-        const thumbnailRect = this.getBoundingClientRect();
-        
-        // Position the context menu above the thumbnail
-        $contextMenu
-            .css({
-                position: 'fixed',
-                left: thumbnailRect.left,
-                top: thumbnailRect.top - $contextMenu.outerHeight() - 5, // 5px gap
-                zIndex: 1000
-            })
-            .removeClass('hidden')
-            .data('take-id', takeId)
-            .data('image-id', imageId);
-    });
+        // Pre-select the first
+        const $firstThumbnail = $thumbnails.first();
+        $firstThumbnail.find('div').first().addClass('ring-2 ring-esper-yellow');
 
-    // Handle export selected click
-    $contextMenu.on('click', '.export-selected', function() {
-        const takeId = $('.take-review').data('take-id');
-        
-        if (!takeId) {
-            console.error('Take ID not found');
-            alert('Error: Could not find take ID');
-            return;
-        }
-        
-        // Get all selected thumbnails
-        const selectedThumbnails = $thumbnails.filter(function() {
-            return $(this).find('div').first().hasClass('ring-2');
+        // Horizontal scroll with mouse wheel
+        $filmstripScroll.on('wheel', function(e) {
+            e.preventDefault();
+            const scrollAmount = e.originalEvent.deltaY || e.originalEvent.deltaX;
+            $(this).stop().animate({
+                scrollLeft: $(this).scrollLeft() + (scrollAmount * 1.5)
+            }, 50);
         });
-        
-        if (selectedThumbnails.length === 0) {
-            alert('Please select at least one thumbnail to export');
-            return;
-        }
-        
-        // Get the image IDs of selected thumbnails
-        const imageIds = selectedThumbnails.map(function() {
-            return $(this).data('image-id');
-        }).get();
 
-        // Get job_id, capture_id, and session_id using store helper
-        const jobId = store.navigationManager.getPostIdByCriteria('job');
-        const captureId = store.navigationManager.getPostIdByCriteria('capture');
-        const sessionId = store.navigationManager.getPostIdByCriteria('session');
-        
-        // Create new export post and add selected thumbnails
-        $.ajax({
-            url: esperApi.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'esper_create_export',
-                nonce: esperApi.nonce,
-                take_id: takeId,
-                image_ids: imageIds,
-                job_id: jobId,
-                capture_id: captureId,
-                session_id: sessionId
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Optionally show success message or redirect
-                    alert('Export created successfully!');
-                } else {
-                    console.error('Failed to create export:', response);
-                    alert(response.data.message || 'Failed to create export. Please try again.');
+        // Build a context menu element
+        const $contextMenu = $(`
+            <div class="context-menu bg-black border border-white border-opacity-20 rounded-lg shadow-lg p-2 hidden">
+                <div class="text-white text-sm mb-2">Set Rating:</div>
+                <div class="flex space-x-2 mb-2">
+                    <button class="rating-btn bg-green-500 hover:bg-green-600 w-8 h-8 rounded-full" data-rating="green"></button>
+                    <button class="rating-btn bg-yellow-500 hover:bg-yellow-600 w-8 h-8 rounded-full" data-rating="yellow"></button>
+                    <button class="rating-btn bg-red-500 hover:bg-red-600 w-8 h-8 rounded-full" data-rating="red"></button>
+                </div>
+                <div class="border-t border-white border-opacity-20 my-2"></div>
+                <button class="export-selected text-white text-sm hover:text-esper-yellow w-full text-left px-2 py-1 rounded">
+                    Export Selected
+                </button>
+            </div>
+        `).appendTo('body');
+
+        /**
+         * Context menu - Right-click
+         */
+        $thumbnails.on('contextmenu', function(e) {
+            e.preventDefault();
+            const takeId  = $(this).closest('.take-review').data('take-id');
+            const imageId = $(this).data('image-id');
+            const rect    = this.getBoundingClientRect();
+
+            $contextMenu
+                .css({
+                    position: 'fixed',
+                    left: rect.left,
+                    top:  rect.top - $contextMenu.outerHeight() - 5, // 5px gap
+                    zIndex: 1000
+                })
+                .removeClass('hidden')
+                .data('take-id', takeId)
+                .data('image-id', imageId);
+        });
+
+        /**
+         * Export selected from context menu
+         */
+        $contextMenu.on('click', '.export-selected', () => {
+            const takeId = $('.take-review').data('take-id');
+
+            if (!takeId) {
+                alert('Error: Could not find take ID');
+                return;
+            }
+            // Gather selected thumbs
+            const selectedThumbnails = $thumbnails.filter(function() {
+                return $(this).find('div').first().hasClass('ring-2');
+            });
+            if (selectedThumbnails.length === 0) {
+                alert('Please select at least one thumbnail to export');
+                return;
+            }
+
+            // Collect image IDs
+            const imageIds = selectedThumbnails.map(function() {
+                return $(this).data('image-id');
+            }).get();
+
+            // Build extra IDs from store
+            const jobId     = store.navigationManager.getPostIdByCriteria('job');
+            const captureId = store.navigationManager.getPostIdByCriteria('capture');
+            const sessionId = store.navigationManager.getPostIdByCriteria('session');
+
+            // Create export post
+            $.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'esper_create_export',
+                    nonce: esperApi.nonce,
+                    take_id: takeId,
+                    image_ids: imageIds,
+                    job_id: jobId,
+                    capture_id: captureId,
+                    session_id: sessionId
+                },
+                success: (response) => {
+                    if (response.success) {
+                        alert('Export created successfully!');
+                    } else {
+                        console.error('Failed to create export:', response);
+                        alert(response.data.message || 'Failed to create export. Please try again.');
+                    }
+                },
+                error: (xhr, status, error) => {
+                    console.error('AJAX error:', error);
+                    alert('An error occurred while creating the export.');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
-                alert('An error occurred while creating the export.');
+            });
+
+            $contextMenu.addClass('hidden');
+        });
+
+        /**
+         * Handle rating button clicks
+         */
+        $contextMenu.on('click', '.rating-btn', function() {
+            const rating = $(this).data('rating');
+            const takeId = store.navigationManager.getPostIdByCriteria('take');
+
+            if (!takeId) {
+                alert('Error: Could not find take ID');
+                return;
+            }
+
+            // Find selected thumbs or fallback to the right-clicked single
+            const $selectedThumbnails = $thumbnails.filter(function() {
+                return $(this).find('div').first().hasClass('ring-2');
+            });
+
+            if ($selectedThumbnails.length === 0) {
+                const imageId = $contextMenu.data('image-id');
+                updateThumbnailRating([{ image_id: imageId, rating }], takeId);
+            } else {
+                const thumbsData = $selectedThumbnails.map(function() {
+                    return {
+                        image_id: $(this).data('image-id'),
+                        rating
+                    };
+                }).get();
+                updateThumbnailRating(thumbsData, takeId);
+            }
+            $contextMenu.addClass('hidden');
+        });
+
+        /**
+         * Updates thumbnail rating on the server
+         */
+        const updateThumbnailRating = (thumbnailsData, takeId) => {
+            $.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'esper_update_image_rating',
+                    nonce: esperApi.nonce,
+                    take_id: takeId,
+                    thumbnails: thumbnailsData
+                },
+                success: (response) => {
+                    if (response.success) {
+                        // Add or replace rating indicators
+                        thumbnailsData.forEach((data) => {
+                            const $thumb = $thumbnails.filter(`[data-image-id="${data.image_id}"]`);
+                            $thumb.find('.rating-indicator').remove();
+                            $thumb.find('div').first().append(`
+                                <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${data.rating}-500"></div>
+                            `);
+                        });
+                    } else {
+                        console.error('Failed to update ratings:', response);
+                    }
+                },
+                error: (xhr, status, error) => {
+                    console.error('AJAX error:', error);
+                }
+            });
+        };
+
+        // Hide context menu when clicking outside
+        $(document).on('click', (e) => {
+            if (!$(e.target).closest('.context-menu, .flex-none').length) {
+                $contextMenu.addClass('hidden');
             }
         });
-        
-        // Hide the context menu
-        $contextMenu.addClass('hidden');
-    });
 
-    // Handle rating button clicks
-    $contextMenu.on('click', '.rating-btn', function() {
-        const rating = $(this).data('rating');
-        const takeId = $('.take-review').data('take-id');
-        
-        if (!takeId) {
-            console.error('Take ID not found');
-            alert('Error: Could not find take ID');
-            return;
-        }
-        
-        // Get all thumbnails with ring-2 class
-        const $selectedThumbnails = $thumbnails.find('div.ring-2').closest('.flex-none');
-        
-        if ($selectedThumbnails.length === 0) {
-            // If no thumbnails are selected, use the right-clicked thumbnail
-            const imageId = $contextMenu.data('image-id');
-            updateThumbnailRating([{ image_id: imageId, rating: rating }], takeId);
-        } else {
-            // Collect all selected thumbnails' data
-            const thumbnailsData = $selectedThumbnails.map(function() {
-                return {
-                    image_id: $(this).data('image-id'),
-                    rating: rating
-                };
-            }).get();
-            
-            // Update all selected thumbnails in one call
-            updateThumbnailRating(thumbnailsData, takeId);
-        }
-        
-        // Hide the context menu
-        $contextMenu.addClass('hidden');
-    });
+        /**
+         * Click on thumbnail to handle multi-select or single-select
+         */
+        $thumbnails.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-    // Helper function to update thumbnail ratings
-    function updateThumbnailRating(thumbnailsData, takeId) {
-        $.ajax({
-            url: esperApi.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'esper_update_image_rating',
-                nonce: esperApi.nonce,
-                take_id: takeId,
-                thumbnails: thumbnailsData
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Update the visual indicators for all thumbnails
-                    thumbnailsData.forEach(data => {
-                        const $thumbnail = $thumbnails.filter(`[data-image-id="${data.image_id}"]`);
-                        $thumbnail.find('.rating-indicator').remove();
-                        $thumbnail.find('div').first().append(`
-                            <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${data.rating}-500"></div>
-                        `);
+            const $thumbnail = $(this);
+            const $thumbDiv  = $thumbnail.find('div').first();
+
+            // Multi-select if Ctrl/Cmd
+            const isMultiSelect = e.ctrlKey || e.metaKey;
+            const isShiftSelect = e.shiftKey;
+            const clickedIndex  = $thumbnails.index($thumbnail);
+
+            if (isShiftSelect) {
+                // Range selection
+                const $lastSelected = $thumbnails.find('div.ring-2').closest('.flex-none');
+                if ($lastSelected.length) {
+                    const lastIndex = $thumbnails.index($lastSelected);
+                    const start = Math.min(clickedIndex, lastIndex);
+                    const end   = Math.max(clickedIndex, lastIndex);
+                    $thumbnails.slice(start, end + 1).each(function() {
+                        $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
                     });
                 } else {
-                    console.error('Failed to update ratings:', response);
+                    $thumbDiv.addClass('ring-2 ring-esper-yellow');
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX error:', error);
+            } 
+            else if (!isMultiSelect) {
+                // Single select
+                $thumbnails.find('.ring-2').removeClass('ring-2 ring-esper-yellow');
+                $thumbDiv.addClass('ring-2 ring-esper-yellow');
+            } 
+            else {
+                // Toggle multi-select
+                $thumbDiv.toggleClass('ring-2 ring-esper-yellow');
             }
+
+            // Update main image with higher-res version
+            const thumbnailSrc = $thumbnail.find('img').attr('src');
+            const numberMatch  = thumbnailSrc.match(/text=(\d+)/);
+            const colorMatch   = thumbnailSrc.match(/\/([0-9a-f]{6})\//);
+            if (!numberMatch || !colorMatch) return;
+
+            const number = numberMatch[1];
+            const color  = colorMatch[1];
+            const mainImageSrc = `https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${number}`;
+
+            // Show loading fade
+            $mainImage.css({ opacity: 0.5, transition: 'opacity 0.3s ease' });
+            const newImage = new Image();
+            newImage.onload = () => {
+                $mainImage
+                    .attr('src', mainImageSrc)
+                    .css({
+                        opacity: 1,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        objectPosition: 'center'
+                    });
+            };
+            newImage.src = mainImageSrc;
+        });
+
+        /**
+         * Rating filter functionality
+         */
+        const filterButtons = document.querySelectorAll('.rating-filter');
+        filterButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const rating = button.dataset.rating;
+
+                // Toggle button states
+                filterButtons.forEach((btn) => {
+                    btn.classList.remove('bg-opacity-50');
+                    btn.classList.add('bg-opacity-20');
+                });
+                button.classList.remove('bg-opacity-20');
+                button.classList.add('bg-opacity-50');
+
+                const allThumbs = document.querySelectorAll('.filmstrip-scroll .flex-none');
+                allThumbs.forEach((thumb) => {
+                    const ratingIndicator = thumb.querySelector('.rating-indicator');
+                    if (
+                        rating === 'all' ||
+                        (ratingIndicator && ratingIndicator.classList.contains(`bg-${rating}-500`))
+                    ) {
+                        thumb.style.display = '';
+                    } else {
+                        thumb.style.display = 'none';
+                        // Deselect hidden thumbs
+                        $(thumb).find('div').first().removeClass('ring-2 ring-esper-yellow');
+                    }
+                });
+
+                // Update "X images" text
+                const visibleThumbs = document.querySelectorAll('.filmstrip-scroll .flex-none[style=""]')
+                    .length;
+                const countDisplay = document
+                    .querySelector('.filmstrip-scroll')
+                    .closest('.h-full')
+                    .querySelector('.text-gray-400');
+                countDisplay.textContent = `${visibleThumbs} images`;
+            });
+        });
+
+        /**
+         * Select all visible thumbnails
+         */
+        $('.select-all-visible').on('click', () => {
+            const $visibleThumbs = $('.filmstrip-scroll .flex-none').filter(function() {
+                return $(this).css('display') !== 'none';
+            });
+            $visibleThumbs.each(function() {
+                $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
+            });
         });
     }
-
-    // Hide context menu when clicking outside
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.context-menu, .flex-none').length) {
-            $contextMenu.addClass('hidden');
-        }
-    });
-    
-    // Handle thumbnail clicks with multi-select support
-    $thumbnails.on('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const $thumbnail = $(this);
-        const $thumbnailDiv = $thumbnail.find('div').first();
-        
-        // Check if Ctrl/Cmd key is pressed
-        const isMultiSelect = e.ctrlKey || e.metaKey;
-        const isShiftSelect = e.shiftKey;
-        
-        // Get the index of the clicked thumbnail
-        const clickedIndex = $thumbnails.index($thumbnail);
-        
-        if (isShiftSelect) {
-            // Find the last selected thumbnail by looking for the ring-2 class on the inner div
-            const $lastSelected = $thumbnails.find('div.ring-2').closest('.flex-none');
-            
-            if ($lastSelected.length) {
-                const lastIndex = $thumbnails.index($lastSelected);
-                const start = Math.min(clickedIndex, lastIndex);
-                const end = Math.max(clickedIndex, lastIndex);
-                
-                // Select all thumbnails in the range
-                $thumbnails.slice(start, end + 1).each(function() {
-                    $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
-                });
-            } else {
-                // If no thumbnail was selected, just select the clicked one
-                $thumbnailDiv.addClass('ring-2 ring-esper-yellow');
-            }
-        } else if (!isMultiSelect) {
-            // Single select - clear all selections and set new active
-            $thumbnails.find('.ring-2').removeClass('ring-2 ring-esper-yellow');
-            $thumbnailDiv.addClass('ring-2 ring-esper-yellow');
-        } else {
-            // Multi-select - toggle selection
-            if ($thumbnailDiv.hasClass('ring-2')) {
-                // If it's selected, remove selection
-                $thumbnailDiv.removeClass('ring-2 ring-esper-yellow');
-            } else {
-                // If it's not selected, add selection
-                $thumbnailDiv.addClass('ring-2 ring-esper-yellow');
-            }
-        }
-        
-        // Get the thumbnail number and create a larger version URL
-        const thumbnailSrc = $thumbnail.find('img').attr('src');
-        const number = thumbnailSrc.match(/text=(\d+)/)[1];
-        const color = thumbnailSrc.match(/\/([0-9a-f]{6})\//)[1];
-        
-        // Create high-res version URL
-        const mainImageSrc = `https://placehold.co/1920x1080/${color}/FFFFFF/png?text=${number}`;
-        
-        // Update main image with loading state
-        $mainImage.css('opacity', '0.5').css('transition', 'opacity 0.3s ease');
-        const newImage = new Image();
-        newImage.onload = function() {
-            $mainImage
-                .attr('src', mainImageSrc)
-                .css('opacity', '1')
-                .css({
-                    'width': '100%',
-                    'height': '100%',
-                    'object-fit': 'contain',
-                    'object-position': 'center'
-                });
-        };
-        newImage.src = mainImageSrc;
-    });
-
-    // Add filter functionality
-    const filterButtons = document.querySelectorAll('.rating-filter');
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const rating = button.dataset.rating;
-            
-            // Update active state of buttons
-            filterButtons.forEach(btn => {
-                btn.classList.remove('bg-opacity-50');
-                btn.classList.add('bg-opacity-20');
-            });
-            button.classList.remove('bg-opacity-20');
-            button.classList.add('bg-opacity-50');
-
-            // Filter thumbnails and deselect only those that become hidden
-            const thumbnails = document.querySelectorAll('.filmstrip-scroll .flex-none');
-            thumbnails.forEach(thumb => {
-                const ratingIndicator = thumb.querySelector('.rating-indicator');
-                if (rating === 'all' || (ratingIndicator && ratingIndicator.classList.contains(`bg-${rating}-500`))) {
-                    thumb.style.display = '';
-                } else {
-                    thumb.style.display = 'none';
-                    // Only deselect thumbnails that become hidden
-                    $(thumb).find('div').first().removeClass('ring-2 ring-esper-yellow');
-                }
-            });
-
-            // Update image count
-            const visibleThumbnails = document.querySelectorAll('.filmstrip-scroll .flex-none[style=""]').length;
-            const countDisplay = document.querySelector('.filmstrip-scroll').closest('.h-full').querySelector('.text-gray-400');
-            countDisplay.textContent = `${visibleThumbnails} images`;
-        });
-    });
-
-    // Add Select All Visible functionality
-    $('.select-all-visible').on('click', function() {
-        // Get all thumbnails that are not hidden by filters
-        const $visibleThumbnails = $('.filmstrip-scroll .flex-none').filter(function() {
-            return $(this).css('display') !== 'none';
-        });
-        
-        // Add ring-2 ring-esper-yellow to all visible thumbnails' inner divs
-        $visibleThumbnails.each(function() {
-            $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
-        });
-    });
-}
-
-
-
 }

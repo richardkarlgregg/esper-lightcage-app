@@ -16,6 +16,7 @@ import PostManager from './PostManager.js';
 import SessionManager from './SessionManager.js';
 import NavigationManager from './NavigationManager.js';
 import CameraSettingsManager from './CameraSettingsManager.js';
+import ExportManager from './ExportManager.js';
 
 console.log(store);
 
@@ -30,6 +31,7 @@ $(document).ready(function () {
     const sessionManager = new SessionManager();
     const navigationManager = new NavigationManager();
     const cameraSettingsManager = new CameraSettingsManager();
+    const exportManager = new ExportManager();
 
     // Put the instance on the store
     store.uiManager = uiManager;
@@ -41,6 +43,7 @@ $(document).ready(function () {
     store.sessionManager = sessionManager;
     store.navigationManager = navigationManager;
     store.cameraSettingsManager = cameraSettingsManager;
+    store.exportManager = exportManager;
 
     store.activePostID = null;
     
@@ -49,6 +52,7 @@ $(document).ready(function () {
     store.captureManager.setupEventListeners();
     store.cameraSettingsManager.setupEventListeners();
     store.takeManager.setupEventListeners();
+    store.exportManager.setupEventListeners();
 
     // Debug
     //store.screenContent.loadPostContent(155, 'capture', 'camera_settings');
