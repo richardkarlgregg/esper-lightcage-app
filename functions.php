@@ -1947,33 +1947,33 @@ function esper_update_image_rating() {
     check_ajax_referer('esper_ajax_nonce', 'nonce');
     
     $take_id = intval($_POST['take_id']);
-    $image_id = intval($_POST['image_id']);
-    $rating = sanitize_text_field($_POST['rating']);
+    $thumbnails = $_POST['thumbnails'];
     
-    // Validate rating
-    if (!in_array($rating, ['green', 'yellow', 'red'])) {
-        wp_send_json_error('Invalid rating');
+    if (!is_array($thumbnails)) {
+        wp_send_json_error('Invalid thumbnails data');
         return;
     }
     
-    // Log the values we're trying to save
-    error_log("Updating rating for image {$image_id} to {$rating}");
-    
-    // First try using ACF's update_field
-    $updated = update_field('colour_rating', $rating, $image_id);
-    
-    // If ACF update fails, try using update_post_meta as a fallback
-    if (!$updated) {
-        error_log("ACF update failed, trying update_post_meta");
-        $updated = update_post_meta($image_id, 'colour_rating', $rating);
+    $success = true;
+    foreach ($thumbnails as $thumbnail) {
+        $image_id = intval($thumbnail['image_id']);
+        $rating = sanitize_text_field($thumbnail['rating']);
+        
+        if (!in_array($rating, ['green', 'yellow', 'red'])) {
+            $success = false;
+            continue;
+        }
+        
+        $update_result = update_field('colour_rating', $rating, $image_id);
+        if (!$update_result) {
+            $success = false;
+        }
     }
     
-    if ($updated) {
-        error_log("Rating updated successfully");
+    if ($success) {
         wp_send_json_success();
     } else {
-        error_log("Failed to update rating");
-        wp_send_json_error('Failed to update rating');
+        wp_send_json_error('Some updates failed');
     }
 }
 add_action('wp_ajax_esper_update_image_rating', 'esper_update_image_rating');

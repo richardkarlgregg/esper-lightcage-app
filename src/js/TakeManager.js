@@ -282,9 +282,33 @@ initializeThumbnailHandlers($takeCard) {
     $contextMenu.on('click', '.rating-btn', function() {
         const rating = $(this).data('rating');
         const takeId = $contextMenu.data('take-id');
-        const imageId = $contextMenu.data('image-id');
+        
+        // Get all thumbnails with ring-2 class
+        const $selectedThumbnails = $thumbnails.find('div.ring-2').closest('.flex-none');
+        
+        if ($selectedThumbnails.length === 0) {
+            // If no thumbnails are selected, use the right-clicked thumbnail
+            const imageId = $contextMenu.data('image-id');
+            updateThumbnailRating([{ image_id: imageId, rating: rating }], takeId);
+        } else {
+            // Collect all selected thumbnails' data
+            const thumbnailsData = $selectedThumbnails.map(function() {
+                return {
+                    image_id: $(this).data('image-id'),
+                    rating: rating
+                };
+            }).get();
+            
+            // Update all selected thumbnails in one call
+            updateThumbnailRating(thumbnailsData, takeId);
+        }
+        
+        // Hide the context menu
+        $contextMenu.addClass('hidden');
+    });
 
-        // Save the rating via AJAX
+    // Helper function to update thumbnail ratings
+    function updateThumbnailRating(thumbnailsData, takeId) {
         $.ajax({
             url: esperApi.ajaxurl,
             type: 'POST',
@@ -292,29 +316,27 @@ initializeThumbnailHandlers($takeCard) {
                 action: 'esper_update_image_rating',
                 nonce: esperApi.nonce,
                 take_id: takeId,
-                image_id: imageId,
-                rating: rating
+                thumbnails: thumbnailsData
             },
             success: function(response) {
                 if (response.success) {
-                    // Update the visual indicator
-                    const $thumbnail = $thumbnails.filter(`[data-image-id="${imageId}"]`);
-                    $thumbnail.find('.rating-indicator').remove();
-                    $thumbnail.find('div').first().append(`
-                        <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${rating}-500"></div>
-                    `);
+                    // Update the visual indicators for all thumbnails
+                    thumbnailsData.forEach(data => {
+                        const $thumbnail = $thumbnails.filter(`[data-image-id="${data.image_id}"]`);
+                        $thumbnail.find('.rating-indicator').remove();
+                        $thumbnail.find('div').first().append(`
+                            <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${data.rating}-500"></div>
+                        `);
+                    });
                 } else {
-                    console.error('Failed to update rating:', response);
+                    console.error('Failed to update ratings:', response);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('AJAX error:', error);
             }
         });
-
-        // Hide the context menu
-        $contextMenu.addClass('hidden');
-    });
+    }
 
     // Hide context menu when clicking outside
     $(document).on('click', function(e) {
