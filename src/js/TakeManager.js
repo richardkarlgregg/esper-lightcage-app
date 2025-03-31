@@ -321,6 +321,38 @@ initializeThumbnailHandlers($takeCard) {
         };
         newImage.src = mainImageSrc;
     });
+
+    // Add filter functionality
+    const filterButtons = document.querySelectorAll('.rating-filter');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const rating = button.dataset.rating;
+            
+            // Update active state of buttons
+            filterButtons.forEach(btn => {
+                btn.classList.remove('bg-opacity-50');
+                btn.classList.add('bg-opacity-20');
+            });
+            button.classList.remove('bg-opacity-20');
+            button.classList.add('bg-opacity-50');
+
+            // Filter thumbnails
+            const thumbnails = document.querySelectorAll('.filmstrip-scroll .flex-none');
+            thumbnails.forEach(thumb => {
+                const ratingIndicator = thumb.querySelector('.rating-indicator');
+                if (rating === 'all' || (ratingIndicator && ratingIndicator.classList.contains(`bg-${rating}-500`))) {
+                    thumb.style.display = '';
+                } else {
+                    thumb.style.display = 'none';
+                }
+            });
+
+            // Update image count
+            const visibleThumbnails = document.querySelectorAll('.filmstrip-scroll .flex-none[style=""]').length;
+            const countDisplay = document.querySelector('.filmstrip-scroll').closest('.h-full').querySelector('.text-gray-400');
+            countDisplay.textContent = `${visibleThumbnails} images`;
+        });
+    });
 }
 
 }

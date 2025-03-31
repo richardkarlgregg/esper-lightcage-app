@@ -1066,6 +1066,20 @@ function esper_get_take_template($post) {
                 <!-- Filmstrip toolbar -->
                 <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
                     <span class="text-gray-400 text-sm"><?php echo esc_html($imageCount); ?> images</span>
+                    <div class="flex items-center space-x-2">
+                        <button class="rating-filter px-2 py-1 text-xs rounded bg-green-500/20 text-green-500 hover:bg-green-500/30 transition-colors" data-rating="green">
+                            Green
+                        </button>
+                        <button class="rating-filter px-2 py-1 text-xs rounded bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 transition-colors" data-rating="yellow">
+                            Yellow
+                        </button>
+                        <button class="rating-filter px-2 py-1 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors" data-rating="red">
+                            Red
+                        </button>
+                        <button class="rating-filter px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-500 hover:bg-gray-500/30 transition-colors" data-rating="all">
+                            All
+                        </button>
+                    </div>
                 </div>
                 <!-- Filmstrip content with custom scrollbar -->
                 <div class="flex-1 overflow-x-auto filmstrip-scroll">
