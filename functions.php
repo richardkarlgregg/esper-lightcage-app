@@ -997,7 +997,9 @@ function esper_get_take_template($post) {
     $format = get_post_meta($post->ID, 'format', true) ?: 'PNG';
 
     // Get the filmstrip thumbnails by passing the take ID
-    $filmstripThumbnails = store_take_generate_filmstrip_thumbnails($post->ID);
+    $filmstripData = store_take_generate_filmstrip_thumbnails($post->ID);
+    $filmstripThumbnails = $filmstripData['thumbnails'];
+    $imageCount = $filmstripData['count'];
     ?>
     <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);">
         <!-- Main container with resizable panes -->
@@ -1063,7 +1065,7 @@ function esper_get_take_template($post) {
             <div class="h-full flex flex-col">
                 <!-- Filmstrip toolbar -->
                 <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
-                    <span class="text-gray-400 text-sm">12 images</span>
+                    <span class="text-gray-400 text-sm"><?php echo esc_html($imageCount); ?> images</span>
                 </div>
                 <!-- Filmstrip content with custom scrollbar -->
                 <div class="flex-1 overflow-x-auto filmstrip-scroll">
@@ -1096,7 +1098,10 @@ function esper_get_take_template($post) {
 function store_take_generate_filmstrip_thumbnails($take_id = null) {
     // If no take_id provided, return dummy thumbnails
     if (!$take_id) {
-        return generate_dummy_thumbnails();
+        return array(
+            'thumbnails' => generate_dummy_thumbnails(),
+            'count' => 12
+        );
     }
 
     // Get all take_image posts for this take using meta take_id
@@ -1146,11 +1151,17 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
                     </div>
                 </div>';
         }
-        return $thumbnails;
+        return array(
+            'thumbnails' => $thumbnails,
+            'count' => count($take_images)
+        );
     }
 
     // If no take images exist, generate dummy thumbnails
-    return generate_dummy_thumbnails();
+    return array(
+        'thumbnails' => generate_dummy_thumbnails(),
+        'count' => 12
+    );
 }
 
 // Helper function to generate dummy thumbnails
