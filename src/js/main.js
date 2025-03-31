@@ -48,6 +48,7 @@ $(document).ready(function () {
     store.uiManager.setupEventListeners();
     store.captureManager.setupEventListeners();
     store.cameraSettingsManager.setupEventListeners();
+    store.takeManager.setupEventListeners();
 
     // Debug
     //store.screenContent.loadPostContent(155, 'capture', 'camera_settings');

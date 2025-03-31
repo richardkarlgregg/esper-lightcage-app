@@ -12,7 +12,37 @@ export default class TakeManager {
     }
 
     setupEventListeners() {
+        // Handle Add to Queue button click
+        $(document).on('click', '[data-action="add-to-queue"]', function() {
+            const exportId = $(this).data('export-id');
 
+            console.log(exportId);
+            
+            $.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'esper_add_to_queue',
+                    nonce: esperApi.nonce,
+                    export_id: exportId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        alert('Export added to queue successfully');
+                        
+                        // Optionally refresh the queue table
+                        // You might want to add a function to refresh the queue display
+                        // refreshQueueTable();
+                    } else {
+                        alert('Failed to add export to queue: ' + response.data.message);
+                    }
+                },
+                error: function() {
+                    alert('Failed to add export to queue');
+                }
+            });
+        });
     }
 
     // Add this function near the bottom of the file

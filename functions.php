@@ -689,7 +689,9 @@ function esper_get_export_template($post) {
                                     <td><?php echo esc_html($jpeg_count); ?></td>
                                     <td><?php echo esc_html($raw_count); ?></td>
                                     <td>
-                                        <button data-action="add-to-queue" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                                        <button data-action="add-to-queue" 
+                                                data-export-id="<?php echo esc_attr($export->ID); ?>"
+                                                class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
                                             Add to Queue
                                         </button>
                                     </td>
@@ -2178,5 +2180,86 @@ function esper_create_export() {
     }
 }
 add_action('wp_ajax_esper_create_export', 'esper_create_export');
+
+// Add AJAX handler for adding exports to queue
+function esper_add_to_queue() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Get and validate parameters
+    $export_id = isset($_POST['export_id']) ? intval($_POST['export_id']) : 0;
+    
+    if (!$export_id) {
+        wp_send_json_error(array(
+            'message' => 'Invalid export ID',
+            'error' => 'Missing or invalid export_id parameter'
+        ));
+        return;
+    }
+    
+    // Get the export post
+    $export = get_post($export_id);
+    if (!$export || $export->post_type !== 'export') {
+        wp_send_json_error(array(
+            'message' => 'Invalid export',
+            'error' => 'Export post not found or invalid post type'
+        ));
+        return;
+    }
+    
+    // Create new export queue post
+    $queue_data = array(
+        'post_title' => 'Queue Item: ' . $export->post_title,
+        'post_status' => 'publish',
+        'post_type' => 'export_queue',
+        'post_author' => get_current_user_id()
+    );
+    
+    $queue_id = wp_insert_post($queue_data);
+    
+    if (is_wp_error($queue_id)) {
+        wp_send_json_error(array(
+            'message' => 'Failed to create queue item',
+            'error' => $queue_id->get_error_message()
+        ));
+        return;
+    }
+    
+    // Copy all ACF fields from the export group
+    $acf_fields = array(
+        'take_images',
+        'job_id',
+        'session_id',
+        'take_id',
+        'capture_id',
+        'user_id',
+        'queue_status',
+        'total_images',
+        'processed_images'
+    );
+    
+    foreach ($acf_fields as $field) {
+        $value = get_field($field, $export_id);
+        if ($value !== false) {
+            update_field($field, $value, $queue_id);
+        }
+    }
+    
+    // Set initial queue status
+    update_field('queue_status', 'queued', $queue_id);
+    
+    // Set initial processed count to 0
+    update_field('processed_images', 0, $queue_id);
+    
+    // Get total images count from take_images repeater
+    $take_images = get_field('take_images', $queue_id);
+    $total_images = is_array($take_images) ? count($take_images) : 0;
+    update_field('total_images', $total_images, $queue_id);
+    
+    wp_send_json_success(array(
+        'message' => 'Export added to queue successfully',
+        'queue_id' => $queue_id
+    ));
+}
+add_action('wp_ajax_esper_add_to_queue', 'esper_add_to_queue');
 
 
