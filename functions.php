@@ -215,6 +215,27 @@ function esper_create_item() {
                         update_field('camera_settings_repeater', $rows, $post_id);
                     }
                 }
+
+                // Create 12 take_image posts
+                for ($i = 1; $i <= 12; $i++) {
+                    $image_title = "Image {$i}";
+                    $image_post = array(
+                        'post_title'    => $image_title,
+                        'post_status'   => 'publish',
+                        'post_type'     => 'take_image',
+                        'post_parent'   => $post_id,
+                        'post_author'   => get_current_user_id()
+                    );
+
+                    $image_id = wp_insert_post($image_post);
+
+                    if ($image_id) {
+                        // Add the take_id as meta data
+                        update_post_meta($image_id, 'take_id', $post_id);
+                        // Add the image number as meta data
+                        update_post_meta($image_id, 'image_number', $i);
+                    }
+                }
             }
         }
         
@@ -975,11 +996,8 @@ function esper_get_take_template($post) {
     $size = get_post_meta($post->ID, 'size', true) ?: '2.4 MB';
     $format = get_post_meta($post->ID, 'format', true) ?: 'PNG';
 
-    // Optionally, get the filmstrip thumbnails via a helper function.
-    // If you don't have this function, you can replace it with your own markup.
-    $filmstripThumbnails = function_exists('store_take_generate_filmstrip_thumbnails') 
-        ? store_take_generate_filmstrip_thumbnails() 
-        : '<!-- Filmstrip thumbnails placeholder -->';
+    // Get the filmstrip thumbnails by passing the take ID
+    $filmstripThumbnails = store_take_generate_filmstrip_thumbnails($post->ID);
     ?>
     <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);">
         <!-- Main container with resizable panes -->
@@ -1075,7 +1093,80 @@ function esper_get_take_template($post) {
     return ob_get_clean();
 }
 
-function store_take_generate_filmstrip_thumbnails() {
+function store_take_generate_filmstrip_thumbnails($take_id = null) {
+    // If no take_id provided, return dummy thumbnails
+    if (!$take_id) {
+        return generate_dummy_thumbnails();
+    }
+
+    // Debug: Print current take info
+    echo '<pre>';
+    echo "Current take ID: " . $take_id . "\n\n";
+
+    // Get all take_image posts for this take using meta take_id
+    $take_images = get_posts(array(
+        'post_type' => 'take_image',
+        'posts_per_page' => 12,
+        'meta_query' => array(
+            array(
+                'key' => 'take_id',
+                'value' => $take_id
+            )
+        ),
+        'orderby' => 'meta_value_num',
+        'meta_key' => 'image_number',
+        'order' => 'ASC'
+    ));
+
+    // Debug: Print query results
+    echo "Number of take_images found: " . count($take_images) . "\n\n";
+    if (!empty($take_images)) {
+        echo "Take images found:\n";
+        foreach ($take_images as $image) {
+            echo "Image ID: " . $image->ID . "\n";
+            echo "Image title: " . $image->post_title . "\n";
+            echo "Take ID meta: " . get_post_meta($image->ID, 'take_id', true) . "\n";
+            echo "Image number meta: " . get_post_meta($image->ID, 'image_number', true) . "\n";
+            echo "-------------------\n";
+        }
+    } else {
+        echo "No take images found for this take.\n";
+    }
+    echo '</pre>';
+
+    // If we have take images, use them
+    if (!empty($take_images)) {
+        $thumbnails = '';
+        foreach ($take_images as $image) {
+            $thumbnail_url = get_the_post_thumbnail_url($image->ID, 'thumbnail');
+            if (!$thumbnail_url) {
+                $thumbnail_url = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=' . get_post_meta($image->ID, 'image_number', true);
+            }
+            
+            $extra_class = ($image->ID === $take_images[0]->ID) ? 'ring-2 ring-esper-yellow' : '';
+            
+            $thumbnails .= '
+                <div class="flex-none group">
+                    <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-esper-yellow transition-all duration-200 ' . $extra_class . '">
+                        <img src="' . esc_url($thumbnail_url) . '" 
+                             alt="' . esc_attr($image->post_title) . '"
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            ' . esc_html(get_post_meta($image->ID, 'image_number', true)) . '
+                        </div>
+                    </div>
+                </div>';
+        }
+        return $thumbnails;
+    }
+
+    // If no take images exist, generate dummy thumbnails
+    return generate_dummy_thumbnails();
+}
+
+// Helper function to generate dummy thumbnails
+function generate_dummy_thumbnails() {
     $colors = array('333333', '444444', '555555', '666666', '777777', '888888');
     $thumbnails = '';
     $num_colors = count($colors);
@@ -1087,7 +1178,7 @@ function store_take_generate_filmstrip_thumbnails() {
         $extra_class = ($i === 1) ? 'ring-2 ring-esper-yellow' : '';
         
         $thumbnails .= '
-            <div class="flex-none group">
+            <div class="flex-none group 2">
                 <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-esper-yellow transition-all duration-200 ' . $extra_class . '">
                     <img src="https://placehold.co/1920x1080/' . esc_attr($color) . '/FFFFFF/png?text=' . esc_attr($i) . '" 
                          alt="Thumbnail ' . esc_attr($i) . '"
@@ -1809,5 +1900,32 @@ function esper_ajax_login() {
     ));
 }
 add_action('wp_ajax_nopriv_esper_ajax_login', 'esper_ajax_login');
+
+// Function to create take images for a take
+function esper_create_take_images($take_id) {
+    // Create 12 take images
+    for ($i = 1; $i <= 12; $i++) {
+        $image_title = "Image {$i}";
+        $image_post = array(
+            'post_title'    => $image_title,
+            'post_status'   => 'publish',
+            'post_type'     => 'take_image',
+            'post_parent'   => $take_id,
+            'post_author'   => get_current_user_id()
+        );
+
+        $image_id = wp_insert_post($image_post);
+
+        if ($image_id) {
+            // Add the take_id as meta data
+            update_post_meta($image_id, 'take_id', $take_id);
+            // Add the image number as meta data
+            update_post_meta($image_id, 'image_number', $i);
+        }
+    }
+}
+
+// Hook into take creation
+add_action('esper_take_created', 'esper_create_take_images');
 
 

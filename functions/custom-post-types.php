@@ -218,5 +218,36 @@ function esper_register_post_types() {
         'supports' => array('title', 'editor', 'thumbnail', 'custom-fields'),
         'menu_icon' => 'dashicons-download'
     ));
+
+    // Take Image Post Type
+    register_post_type('take_image', array(
+        'labels' => array(
+            'name' => 'Take Images',
+            'singular_name' => 'Take Image',
+            'add_new' => 'Add New Take Image',
+            'add_new_item' => 'Add New Take Image',
+            'edit_item' => 'Edit Take Image',
+            'new_item' => 'New Take Image',
+            'view_item' => 'View Take Image',
+            'search_items' => 'Search Take Images',
+            'not_found' => 'No take images found',
+            'not_found_in_trash' => 'No take images found in Trash',
+            'parent_item_colon' => 'Parent Take:'
+        ),
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'take_image',
+        'rest_controller_class' => 'WP_REST_Posts_Controller',
+        'query_var' => true,
+        'rewrite' => array('slug' => 'take-image'),
+        'capability_type' => 'post',
+        'hierarchical' => true,
+        'menu_position' => 5,
+        'supports' => array('title', 'thumbnail', 'custom-fields', 'page-attributes', 'author'),
+        'menu_icon' => 'dashicons-format-gallery'
+    ));
 }
 add_action('init', 'esper_register_post_types'); 
