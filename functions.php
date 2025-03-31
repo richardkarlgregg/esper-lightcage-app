@@ -1067,6 +1067,9 @@ function esper_get_take_template($post) {
                 <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
                     <span class="text-gray-400 text-sm"><?php echo esc_html($imageCount); ?> images</span>
                     <div class="flex items-center space-x-2">
+                        <button class="select-all-visible text-xs text-white hover:text-esper-yellow transition-colors">
+                            Select All Visible
+                        </button>
                         <button class="rating-filter px-2 py-1 text-xs rounded bg-green-500/20 text-green-500 hover:bg-green-500/30 transition-colors" data-rating="green">
                             Green
                         </button>

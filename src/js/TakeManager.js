@@ -375,7 +375,7 @@ initializeThumbnailHandlers($takeCard) {
             button.classList.remove('bg-opacity-20');
             button.classList.add('bg-opacity-50');
 
-            // Filter thumbnails
+            // Filter thumbnails and deselect only those that become hidden
             const thumbnails = document.querySelectorAll('.filmstrip-scroll .flex-none');
             thumbnails.forEach(thumb => {
                 const ratingIndicator = thumb.querySelector('.rating-indicator');
@@ -383,6 +383,8 @@ initializeThumbnailHandlers($takeCard) {
                     thumb.style.display = '';
                 } else {
                     thumb.style.display = 'none';
+                    // Only deselect thumbnails that become hidden
+                    $(thumb).find('div').first().removeClass('ring-2 ring-esper-yellow');
                 }
             });
 
@@ -390,6 +392,19 @@ initializeThumbnailHandlers($takeCard) {
             const visibleThumbnails = document.querySelectorAll('.filmstrip-scroll .flex-none[style=""]').length;
             const countDisplay = document.querySelector('.filmstrip-scroll').closest('.h-full').querySelector('.text-gray-400');
             countDisplay.textContent = `${visibleThumbnails} images`;
+        });
+    });
+
+    // Add Select All Visible functionality
+    $('.select-all-visible').on('click', function() {
+        // Get all thumbnails that are not hidden by filters
+        const $visibleThumbnails = $('.filmstrip-scroll .flex-none').filter(function() {
+            return $(this).css('display') !== 'none';
+        });
+        
+        // Add ring-2 ring-esper-yellow to all visible thumbnails' inner divs
+        $visibleThumbnails.each(function() {
+            $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
         });
     });
 }
