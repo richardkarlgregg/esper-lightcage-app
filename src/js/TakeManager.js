@@ -215,11 +215,15 @@ initializeThumbnailHandlers($takeCard) {
     const $contextMenu = $(`
         <div class="context-menu bg-black border border-white border-opacity-20 rounded-lg shadow-lg p-2 hidden">
             <div class="text-white text-sm mb-2">Set Rating:</div>
-            <div class="flex space-x-2">
+            <div class="flex space-x-2 mb-2">
                 <button class="rating-btn bg-green-500 hover:bg-green-600 w-8 h-8 rounded-full" data-rating="green"></button>
                 <button class="rating-btn bg-yellow-500 hover:bg-yellow-600 w-8 h-8 rounded-full" data-rating="yellow"></button>
                 <button class="rating-btn bg-red-500 hover:bg-red-600 w-8 h-8 rounded-full" data-rating="red"></button>
             </div>
+            <div class="border-t border-white border-opacity-20 my-2"></div>
+            <button class="export-selected text-white text-sm hover:text-esper-yellow w-full text-left px-2 py-1 rounded">
+                Export Selected
+            </button>
         </div>
     `).appendTo('body');
 
@@ -231,17 +235,47 @@ initializeThumbnailHandlers($takeCard) {
         const takeId = $(this).closest('.take-review').data('take-id');
         const imageId = $(this).data('image-id');
         
-        // Position the context menu at the cursor
+        // Get the thumbnail's position
+        const thumbnailRect = this.getBoundingClientRect();
+        
+        // Position the context menu above the thumbnail
         $contextMenu
             .css({
                 position: 'fixed',
-                left: e.pageX,
-                top: e.pageY,
+                left: thumbnailRect.left,
+                top: thumbnailRect.top - $contextMenu.outerHeight() - 5, // 5px gap
                 zIndex: 1000
             })
             .removeClass('hidden')
             .data('take-id', takeId)
             .data('image-id', imageId);
+    });
+
+    // Handle export selected click
+    $contextMenu.on('click', '.export-selected', function() {
+        const takeId = $contextMenu.data('take-id');
+        
+        // Get all selected thumbnails
+        const selectedThumbnails = $thumbnails.filter(function() {
+            return $(this).find('div').first().hasClass('ring-2');
+        });
+        
+        if (selectedThumbnails.length === 0) {
+            alert('Please select at least one thumbnail to export');
+            return;
+        }
+        
+        // Get the image IDs of selected thumbnails
+        const imageIds = selectedThumbnails.map(function() {
+            return $(this).data('image-id');
+        }).get();
+        
+        // Here you would typically make an AJAX call to handle the export
+        console.log('Exporting images:', imageIds);
+        // TODO: Implement actual export functionality
+        
+        // Hide the context menu
+        $contextMenu.addClass('hidden');
     });
 
     // Handle rating button clicks
