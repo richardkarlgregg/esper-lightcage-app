@@ -211,6 +211,84 @@ initializeThumbnailHandlers($takeCard) {
         }, 50);
     });
     
+    // Create context menu
+    const $contextMenu = $(`
+        <div class="context-menu bg-black border border-white border-opacity-20 rounded-lg shadow-lg p-2 hidden">
+            <div class="text-white text-sm mb-2">Set Rating:</div>
+            <div class="flex space-x-2">
+                <button class="rating-btn bg-green-500 hover:bg-green-600 w-8 h-8 rounded-full" data-rating="green"></button>
+                <button class="rating-btn bg-yellow-500 hover:bg-yellow-600 w-8 h-8 rounded-full" data-rating="yellow"></button>
+                <button class="rating-btn bg-red-500 hover:bg-red-600 w-8 h-8 rounded-full" data-rating="red"></button>
+            </div>
+        </div>
+    `).appendTo('body');
+
+    // Handle right-click on thumbnails
+    $thumbnails.on('contextmenu', function(e) {
+        e.preventDefault();
+        
+        // Get the take ID from the data attribute
+        const takeId = $(this).closest('.take-review').data('take-id');
+        const imageId = $(this).data('image-id');
+        
+        // Position the context menu at the cursor
+        $contextMenu
+            .css({
+                position: 'fixed',
+                left: e.pageX,
+                top: e.pageY,
+                zIndex: 1000
+            })
+            .removeClass('hidden')
+            .data('take-id', takeId)
+            .data('image-id', imageId);
+    });
+
+    // Handle rating button clicks
+    $contextMenu.on('click', '.rating-btn', function() {
+        const rating = $(this).data('rating');
+        const takeId = $contextMenu.data('take-id');
+        const imageId = $contextMenu.data('image-id');
+
+        // Save the rating via AJAX
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_update_image_rating',
+                nonce: esperApi.nonce,
+                take_id: takeId,
+                image_id: imageId,
+                rating: rating
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Update the visual indicator
+                    const $thumbnail = $thumbnails.filter(`[data-image-id="${imageId}"]`);
+                    $thumbnail.find('.rating-indicator').remove();
+                    $thumbnail.find('div').first().append(`
+                        <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${rating}-500"></div>
+                    `);
+                } else {
+                    console.error('Failed to update rating:', response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+            }
+        });
+
+        // Hide the context menu
+        $contextMenu.addClass('hidden');
+    });
+
+    // Hide context menu when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.context-menu, .flex-none').length) {
+            $contextMenu.addClass('hidden');
+        }
+    });
+    
     // Existing thumbnail click handler
     $thumbnails.on('click', function() {
         // Remove highlight from all thumbnails

@@ -1099,10 +1099,6 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
         return generate_dummy_thumbnails();
     }
 
-    // Debug: Print current take info
-    echo '<pre>';
-    echo "Current take ID: " . $take_id . "\n\n";
-
     // Get all take_image posts for this take using meta take_id
     $take_images = get_posts(array(
         'post_type' => 'take_image',
@@ -1118,22 +1114,6 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
         'order' => 'ASC'
     ));
 
-    // Debug: Print query results
-    echo "Number of take_images found: " . count($take_images) . "\n\n";
-    if (!empty($take_images)) {
-        echo "Take images found:\n";
-        foreach ($take_images as $image) {
-            echo "Image ID: " . $image->ID . "\n";
-            echo "Image title: " . $image->post_title . "\n";
-            echo "Take ID meta: " . get_post_meta($image->ID, 'take_id', true) . "\n";
-            echo "Image number meta: " . get_post_meta($image->ID, 'image_number', true) . "\n";
-            echo "-------------------\n";
-        }
-    } else {
-        echo "No take images found for this take.\n";
-    }
-    echo '</pre>';
-
     // If we have take images, use them
     if (!empty($take_images)) {
         $thumbnails = '';
@@ -1145,8 +1125,15 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
             
             $extra_class = ($image->ID === $take_images[0]->ID) ? 'ring-2 ring-esper-yellow' : '';
             
+            // Get current rating
+            $current_rating = get_field('colour_rating', $image->ID);
+            $rating_indicator = '';
+            if ($current_rating) {
+                $rating_indicator = '<div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-' . esc_attr($current_rating) . '-500"></div>';
+            }
+            
             $thumbnails .= '
-                <div class="flex-none group">
+                <div class="flex-none group" data-image-id="' . esc_attr($image->ID) . '">
                     <div class="h-full bg-black/60 overflow-hidden relative cursor-pointer hover:ring-2 hover:ring-esper-yellow transition-all duration-200 ' . $extra_class . '">
                         <img src="' . esc_url($thumbnail_url) . '" 
                              alt="' . esc_attr($image->post_title) . '"
@@ -1155,6 +1142,7 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             ' . esc_html(get_post_meta($image->ID, 'image_number', true)) . '
                         </div>
+                        ' . $rating_indicator . '
                     </div>
                 </div>';
         }
@@ -1927,5 +1915,41 @@ function esper_create_take_images($take_id) {
 
 // Hook into take creation
 add_action('esper_take_created', 'esper_create_take_images');
+
+// Add AJAX handler for updating image ratings
+function esper_update_image_rating() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    $take_id = intval($_POST['take_id']);
+    $image_id = intval($_POST['image_id']);
+    $rating = sanitize_text_field($_POST['rating']);
+    
+    // Validate rating
+    if (!in_array($rating, ['green', 'yellow', 'red'])) {
+        wp_send_json_error('Invalid rating');
+        return;
+    }
+    
+    // Log the values we're trying to save
+    error_log("Updating rating for image {$image_id} to {$rating}");
+    
+    // First try using ACF's update_field
+    $updated = update_field('colour_rating', $rating, $image_id);
+    
+    // If ACF update fails, try using update_post_meta as a fallback
+    if (!$updated) {
+        error_log("ACF update failed, trying update_post_meta");
+        $updated = update_post_meta($image_id, 'colour_rating', $rating);
+    }
+    
+    if ($updated) {
+        error_log("Rating updated successfully");
+        wp_send_json_success();
+    } else {
+        error_log("Failed to update rating");
+        wp_send_json_error('Failed to update rating');
+    }
+}
+add_action('wp_ajax_esper_update_image_rating', 'esper_update_image_rating');
 
 
