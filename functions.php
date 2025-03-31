@@ -1158,9 +1158,7 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
                              alt="' . esc_attr($image->post_title) . '"
                              class="w-full h-full object-cover"
                              loading="lazy">
-                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 text-white text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            ' . esc_html(get_post_meta($image->ID, 'image_number', true)) . '
-                        </div>
+
                         ' . $rating_indicator . '
                     </div>
                 </div>';

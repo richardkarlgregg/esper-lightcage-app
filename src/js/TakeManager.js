@@ -289,16 +289,55 @@ initializeThumbnailHandlers($takeCard) {
         }
     });
     
-    // Existing thumbnail click handler
-    $thumbnails.on('click', function() {
-        // Remove highlight from all thumbnails
-        $thumbnails.find('.ring-2').removeClass('ring-2 ring-esper-yellow');
+    // Handle thumbnail clicks with multi-select support
+    $thumbnails.on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        // Add highlight to clicked thumbnail
-        $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
+        const $thumbnail = $(this);
+        const $thumbnailDiv = $thumbnail.find('div').first();
+        
+        // Check if Ctrl/Cmd key is pressed
+        const isMultiSelect = e.ctrlKey || e.metaKey;
+        const isShiftSelect = e.shiftKey;
+        
+        // Get the index of the clicked thumbnail
+        const clickedIndex = $thumbnails.index($thumbnail);
+        
+        if (isShiftSelect) {
+            // Find the last selected thumbnail by looking for the ring-2 class on the inner div
+            const $lastSelected = $thumbnails.find('div.ring-2').closest('.flex-none');
+            
+            if ($lastSelected.length) {
+                const lastIndex = $thumbnails.index($lastSelected);
+                const start = Math.min(clickedIndex, lastIndex);
+                const end = Math.max(clickedIndex, lastIndex);
+                
+                // Select all thumbnails in the range
+                $thumbnails.slice(start, end + 1).each(function() {
+                    $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
+                });
+            } else {
+                // If no thumbnail was selected, just select the clicked one
+                $thumbnailDiv.addClass('ring-2 ring-esper-yellow');
+            }
+        } else if (!isMultiSelect) {
+            // Single select - clear all selections and set new active
+            $thumbnails.find('.ring-2').removeClass('ring-2 ring-esper-yellow');
+            $thumbnailDiv.addClass('ring-2 ring-esper-yellow');
+        } else {
+            // Multi-select - toggle selection
+            if ($thumbnailDiv.hasClass('ring-2')) {
+                // If it's selected, remove selection
+                $thumbnailDiv.removeClass('ring-2 ring-esper-yellow');
+            } else {
+                // If it's not selected, add selection
+                $thumbnailDiv.addClass('ring-2 ring-esper-yellow');
+            }
+        }
         
         // Get the thumbnail number and create a larger version URL
-        const thumbnailSrc = $(this).find('img').attr('src');
+        const thumbnailSrc = $thumbnail.find('img').attr('src');
         const number = thumbnailSrc.match(/text=(\d+)/)[1];
         const color = thumbnailSrc.match(/\/([0-9a-f]{6})\//)[1];
         
@@ -354,5 +393,7 @@ initializeThumbnailHandlers($takeCard) {
         });
     });
 }
+
+
 
 }
