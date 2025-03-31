@@ -253,7 +253,13 @@ initializeThumbnailHandlers($takeCard) {
 
     // Handle export selected click
     $contextMenu.on('click', '.export-selected', function() {
-        const takeId = $contextMenu.data('take-id');
+        const takeId = $('.take-review').data('take-id');
+        
+        if (!takeId) {
+            console.error('Take ID not found');
+            alert('Error: Could not find take ID');
+            return;
+        }
         
         // Get all selected thumbnails
         const selectedThumbnails = $thumbnails.filter(function() {
@@ -270,9 +276,30 @@ initializeThumbnailHandlers($takeCard) {
             return $(this).data('image-id');
         }).get();
         
-        // Here you would typically make an AJAX call to handle the export
-        console.log('Exporting images:', imageIds);
-        // TODO: Implement actual export functionality
+        // Create new export post and add selected thumbnails
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_create_export',
+                nonce: esperApi.nonce,
+                take_id: takeId,
+                image_ids: imageIds
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Optionally show success message or redirect
+                    alert('Export created successfully!');
+                } else {
+                    console.error('Failed to create export:', response);
+                    alert(response.data.message || 'Failed to create export. Please try again.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', error);
+                alert('An error occurred while creating the export.');
+            }
+        });
         
         // Hide the context menu
         $contextMenu.addClass('hidden');
@@ -281,7 +308,13 @@ initializeThumbnailHandlers($takeCard) {
     // Handle rating button clicks
     $contextMenu.on('click', '.rating-btn', function() {
         const rating = $(this).data('rating');
-        const takeId = $contextMenu.data('take-id');
+        const takeId = $('.take-review').data('take-id');
+        
+        if (!takeId) {
+            console.error('Take ID not found');
+            alert('Error: Could not find take ID');
+            return;
+        }
         
         // Get all thumbnails with ring-2 class
         const $selectedThumbnails = $thumbnails.find('div.ring-2').closest('.flex-none');

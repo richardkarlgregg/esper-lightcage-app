@@ -1001,7 +1001,7 @@ function esper_get_take_template($post) {
     $filmstripThumbnails = $filmstripData['thumbnails'];
     $imageCount = $filmstripData['count'];
     ?>
-    <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);">
+    <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);" data-take-id="<?php echo esc_attr($post->ID); ?>">
         <!-- Main container with resizable panes -->
         <div class="flex-1 flex" id="takePanesContainer">
             <!-- Main image pane -->
@@ -1977,5 +1977,103 @@ function esper_update_image_rating() {
     }
 }
 add_action('wp_ajax_esper_update_image_rating', 'esper_update_image_rating');
+
+// Add AJAX handler for creating export posts
+function esper_create_export() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Validate take_id
+    if (!isset($_POST['take_id']) || empty($_POST['take_id'])) {
+        wp_send_json_error(array(
+            'message' => 'Take ID is required',
+            'error' => 'Missing take_id parameter'
+        ));
+        return;
+    }
+    
+    $take_id = intval($_POST['take_id']);
+    if ($take_id <= 0) {
+        wp_send_json_error(array(
+            'message' => 'Invalid take ID',
+            'error' => 'Take ID must be a positive number'
+        ));
+        return;
+    }
+    
+    // Get and validate the take post
+    $take = get_post($take_id);
+    if (!$take || $take->post_type !== 'take') {
+        wp_send_json_error(array(
+            'message' => 'Invalid take ID',
+            'error' => 'Take post not found or is not of type "take"'
+        ));
+        return;
+    }
+    
+    // Validate image_ids
+    if (!isset($_POST['image_ids']) || !is_array($_POST['image_ids']) || empty($_POST['image_ids'])) {
+        wp_send_json_error(array(
+            'message' => 'No images selected for export',
+            'error' => 'Missing or invalid image_ids parameter'
+        ));
+        return;
+    }
+    
+    $image_ids = array_map('intval', $_POST['image_ids']);
+    $image_ids = array_filter($image_ids); // Remove any zero or negative values
+    
+    if (empty($image_ids)) {
+        wp_send_json_error(array(
+            'message' => 'No valid images selected for export',
+            'error' => 'All image IDs were invalid'
+        ));
+        return;
+    }
+    
+    // Create new export post
+    $export_post = array(
+        'post_title'    => 'Export from ' . $take->post_title,
+        'post_status'   => 'publish',
+        'post_type'     => 'export',
+        'post_author'   => get_current_user_id()
+    );
+    
+    $export_id = wp_insert_post($export_post);
+    
+    if (is_wp_error($export_id)) {
+        wp_send_json_error(array(
+            'message' => 'Failed to create export post',
+            'error' => $export_id->get_error_message()
+        ));
+        return;
+    }
+    
+    // Add user_id meta
+    update_post_meta($export_id, 'user_id', get_current_user_id());
+    
+    // Prepare take_images repeater data
+    $take_images = array();
+    foreach ($image_ids as $image_id) {
+        $take_images[] = array(
+            'take_image' => $image_id
+        );
+    }
+    
+    // Update the ACF repeater field
+    $update_result = update_field('take_images', $take_images, $export_id);
+    
+    if ($update_result) {
+        wp_send_json_success(array(
+            'message' => 'Export created successfully',
+            'export_id' => $export_id
+        ));
+    } else {
+        wp_send_json_error(array(
+            'message' => 'Failed to add images to export',
+            'error' => 'ACF update_field failed'
+        ));
+    }
+}
+add_action('wp_ajax_esper_create_export', 'esper_create_export');
 
 
