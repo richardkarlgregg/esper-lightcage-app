@@ -275,6 +275,11 @@ initializeThumbnailHandlers($takeCard) {
         const imageIds = selectedThumbnails.map(function() {
             return $(this).data('image-id');
         }).get();
+
+        // Get job_id, capture_id, and session_id using store helper
+        const jobId = store.navigationManager.getPostIdByCriteria('job');
+        const captureId = store.navigationManager.getPostIdByCriteria('capture');
+        const sessionId = store.navigationManager.getPostIdByCriteria('session');
         
         // Create new export post and add selected thumbnails
         $.ajax({
@@ -284,7 +289,10 @@ initializeThumbnailHandlers($takeCard) {
                 action: 'esper_create_export',
                 nonce: esperApi.nonce,
                 take_id: takeId,
-                image_ids: imageIds
+                image_ids: imageIds,
+                job_id: jobId,
+                capture_id: captureId,
+                session_id: sessionId
             },
             success: function(response) {
                 if (response.success) {
