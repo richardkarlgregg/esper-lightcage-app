@@ -139,9 +139,9 @@ export default class CameraSettingsManager {
                 console.log(view);
                 
                 // Toggle an active state (optional)
-                $('#tableViewIcon, #cardViewIcon, #nodeViewIcon').find('.material-icons').addClass('opacity-25');
+                $('#tableViewIcon, #cardViewIcon, #nodeViewIcon').find('.material-symbols-outlined').addClass('opacity-25');
 
-                $(this).find('.material-icons').removeClass('opacity-25');
+                $(this).find('.material-symbols-outlined').removeClass('opacity-25');
         
                 // Use ajaxurl global variable provided by WordPress for AJAX calls.
                 $.ajax({
@@ -175,7 +175,7 @@ export default class CameraSettingsManager {
             var $label = jQuery("label[for='" + fieldId + "']").clone();
 
             // Remove any Google icon spans (like Material Icons)
-            $label.find('.material-icons, .google-icon, .icon').remove();
+            $label.find('.material-symbols-outlined, .google-icon, .icon').remove();
 
             // Get clean label text
             var fieldLabel = $label.text().trim();

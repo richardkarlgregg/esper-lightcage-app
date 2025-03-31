@@ -241,7 +241,7 @@ class CameraSettings {
                         <div class="text-gray-400 text-sm">
 
                             <div class="flex flex-wrap mt-3">
-                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="back"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">arrow_back_ios</span> Back</div>
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="back"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">arrow_back_ios</span> Back</div>
                                
                             </div>
                             
@@ -273,7 +273,7 @@ class CameraSettings {
             $html .= '<div class="custom-checkbox flex items-center justify-between text-xs">';
             $html .= '  <label data-tooltip="Toggle Sync All Settings" for="syncSettings" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
             $html .= '    <input type="checkbox" id="syncSettings" name="syncSettings" value="1" class="appearance-none h-5 w-5 bg-black border border-esper-yellow focus:outline-none">';
-            $html .= ' <div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-icons cursor-pointer">check</div>';
+            $html .= ' <div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-symbols-outlined cursor-pointer">check</div>';
             $html .= '    <span class="ml-2">Select All</span>';
             $html .= '  </label>';
             $html .= '</div>';
@@ -285,15 +285,15 @@ class CameraSettings {
             $html .= '<div class="view-switcher flex items-center space-x-2">';
                
                 $html .= '<div id="cardViewIcon" class="w-auto flex flex-wrap">';
-                    $html .= '<div data-tooltip="Grid View" class="material-icons text-esper-yellow cursor-pointer text-3xl">view_module</div>';
+                    $html .= '<div data-tooltip="Grid View" class="material-symbols-outlined text-esper-yellow cursor-pointer text-3xl">view_module</div>';
                 $html .= '</div>';
 
                 $html .= '<div id="tableViewIcon" class="w-auto flex flex-wrap">';
-                    $html .= '<div data-tooltip="Table View" class="material-icons text-esper-yellow cursor-pointer opacity-25 text-3xl">table_chart</div>';
+                    $html .= '<div data-tooltip="Table View" class="material-symbols-outlined text-esper-yellow cursor-pointer opacity-25 text-3xl">table_chart</div>';
                 $html .= '</div>';
 
                 $html .= '<div id="nodeViewIcon" class="hidden w-auto flex flex-wrap">';
-                    $html .= '<div class="w-5 h-5 material-icons text-white cursor-pointer">account_tree</div>';
+                    $html .= '<div class="w-5 h-5 material-symbols-outlined text-white cursor-pointer">account_tree</div>';
                 $html .= '</div>';
 
             $html .= '</div>';
@@ -361,7 +361,7 @@ class CameraSettings {
                     $html .= '<div class="custom-checkbox flex items-center justify-center text-xs">';
                         $html .= '<label for="' . $uniqueSyncId . '" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
                             $html .= '<input type="checkbox" id="' . $uniqueSyncId . '" name="' . $uniqueSyncId . '" value="1" data-tooltip="Sync Setting" class="syncSetting appearance-none h-5 w-5 bg-black border border-esper-yellow focus:outline-none">';
-                            $html .= '<div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-icons cursor-pointer">check</div>';
+                            $html .= '<div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-symbols-outlined cursor-pointer">check</div>';
                         $html .= '</label>';
                     $html .= '</div>';
                 $html .= '</td>';
@@ -534,7 +534,7 @@ $html .= '<div class="custom-checkbox flex items-center justify-between text-xs"
     $html .= '<label for="' . $uniqueSyncId . '" class="uppercase text-esper-yellow relative flex justify-start items-center cursor-pointer">';
         // Set unique id and name attributes for the input.
         $html .= '<input type="checkbox" id="' . $uniqueSyncId . '" name="' . $uniqueSyncId . '" value="1" data-tooltip="Sync Setting" class="syncSetting appearance-none h-5 w-5 bg-black border border-esper-yellow focus:outline-none mr-3">';
-        $html .= '<div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-icons cursor-pointer">check</div>';
+        $html .= '<div class="checkmark absolute inset-0 items-center justify-start text-esper-yellow pointer-events-none -ml-1 material-symbols-outlined cursor-pointer">check</div>';
     $html .= '</label>';
 $html .= '</div>';
                 $html .= $cameraName;

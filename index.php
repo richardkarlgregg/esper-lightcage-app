@@ -5,8 +5,8 @@
 <div class="flex" style="height: calc(100vh - 40px);">
 
     <div id="sideMenu" class="w-14 h-full flex flex-wrap justify-center content-start border-r p-3 border-color-white border-opacity-10">
-        <span class="material-icons w-6 h-6 text-esper-yellow flex-none">folder</span>
-        <span class="material-icons w-6 h-6 text-esper-yellow opacity-75 flex-none">file_export</span>
+        <span class="material-symbols-outlined w-6 h-6 text-esper-yellow flex-none">folder</span>
+        <span class="material-symbols-outlined w-6 h-6 text-esper-yellow opacity-75 flex-none">file_export</span>
     </div>
 
     <!-- Left Pane: Folder Tree -->

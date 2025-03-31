@@ -97,9 +97,9 @@ export default class UIManager {
             if ($(e.target).closest('.add-btn').length) return;
             
             // Handle arrow click
-            if ($(e.target).closest('.material-icons').length && $(e.target).closest('.material-icons').text() === 'chevron_right') {
+            if ($(e.target).closest('.material-symbols-outlined').length && $(e.target).closest('.material-symbols-outlined').text() === 'chevron_right') {
                 e.stopPropagation();
-                const $arrow = $(e.target).closest('.material-icons');
+                const $arrow = $(e.target).closest('.material-symbols-outlined');
                 const $children = $(this).children('div').last();
                 
                 if ($children.length) {
@@ -156,7 +156,7 @@ export default class UIManager {
                 
                 if (response.success && response.data.id) {
                     // Show parent's arrow
-                    const $arrow = parentItem.find('.material-icons').first();
+                    const $arrow = parentItem.find('.material-symbols-outlined').first();
                     $arrow.removeClass('invisible');
     
                     // Expand parent by removing hidden class
@@ -182,7 +182,7 @@ export default class UIManager {
                         const $parents = parentItem.parents('.folder-item');
                         $parents.each(function() {
                             const $parent = $(this);
-                            const $parentArrow = $parent.find('.material-icons').first();
+                            const $parentArrow = $parent.find('.material-symbols-outlined').first();
                             const $parentChildren = $parent.children('div').last();
                             
                             $parentArrow.removeClass('invisible').addClass('rotate-90');
@@ -380,7 +380,7 @@ export default class UIManager {
 
         // Add collapse arrow for all items (will be hidden if no children)
         const $arrow = $('<span>')
-            .addClass('material-icons w-4 flex-none text-esper-yellow transform transition-transform duration-200 rotate-90 ' + 
+            .addClass('material-symbols-outlined w-4 flex-none text-esper-yellow transform transition-transform duration-200 rotate-90 ' + 
                 ((!item.children || item.children.length === 0) ? 'invisible' : ''))
             .text('chevron_right');
         $header.append($arrow);
@@ -392,7 +392,7 @@ export default class UIManager {
                         'movie';
 
         const $icon = $('<span>', {
-            'class': 'material-icons w-6 h-6 text-esper-yellow flex-none',
+            'class': 'material-symbols-outlined w-6 h-6 text-esper-yellow flex-none',
             'text': iconType
         });
         $header.append($icon);
@@ -412,7 +412,7 @@ export default class UIManager {
                 'data-tooltip': 'Add Session'
             }).append(
                 $('<span>', {
-                    'class': 'material-icons',
+                    'class': 'material-symbols-outlined',
                     'text': 'add_circle'
                 })
             );
@@ -423,7 +423,7 @@ export default class UIManager {
                 'data-tooltip': 'Add Capture'
             }).append(
                 $('<span>', {
-                    'class': 'material-icons',
+                    'class': 'material-symbols-outlined',
                     'text': 'add_circle'
                 })
             );

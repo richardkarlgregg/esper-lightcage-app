@@ -368,7 +368,7 @@ function esper_get_job_template($post) {
                             <h2 class="text-lg font-semibold text-white title-display" data-type="job" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-500 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="material-icons text-sm">edit</span>
+                                <span class="material-symbols-outlined text-sm">edit</span>
                             </button>
                         </div>
                         <div class="text-gray-500 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
@@ -495,7 +495,7 @@ function esper_get_session_template($post) {
                             <h2 class="text-lg font-semibold text-white title-display" data-type="session" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-500 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="material-icons text-sm">edit</span>
+                                <span class="material-symbols-outlined text-sm">edit</span>
                             </button>
                         </div>
                         <div class="text-gray-500 text-sm mt-2">Created: <?php echo get_the_date('F j, Y', $post); ?></div>
@@ -855,7 +855,7 @@ function esper_get_capture_template($post) {
                             <h2 class="text-2xl font-bold text-white title-display" data-type="capture" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_html($post->post_title); ?></h2>
                             <input type="text" class="hidden absolute inset-0 bg-black text-white text-2xl font-bold px-2 py-1 title-input" value="<?php echo esc_attr($post->post_title); ?>">
                             <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span class="material-icons">edit</span>
+                                <span class="material-symbols-outlined">edit</span>
                             </button>
                         </div>
                         <div class="text-gray-400 text-sm">
@@ -867,8 +867,8 @@ function esper_get_capture_template($post) {
                             <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
 
                             <div class="flex flex-wrap mt-3">
-                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
-                                <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-icons w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
+                                <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
                             </div>
                             
 
@@ -879,7 +879,7 @@ function esper_get_capture_template($post) {
                                 class="bg-esper-yellow text-black px-6 py-3 rounded-lg font-semibold flex items-center"
                                 data-capture-id="<?php echo esc_attr($post->ID); ?>">
 
-                                <span class="material-icons w-6 h-6 mr-2 text-black flex-none">camera</span>
+                                <span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">camera</span>
                                 
                             Trigger Take
                         </button>
@@ -917,7 +917,7 @@ function esper_get_capture_template($post) {
     <div class="mb-4">
         <h3 id="toggleTakes" class="text-lg font-semibold text-white cursor-pointer inline-flex items-center">
             Takes
-            <span id="toggleTakesIcon" class="material-icons transition-transform duration-300 ml-2">
+            <span id="toggleTakesIcon" class="material-symbols-outlined transition-transform duration-300 ml-2">
                 keyboard_arrow_down
             </span>
         </h3>
@@ -1020,7 +1020,7 @@ function esper_get_take_template($post) {
                     <h3 class="text-lg font-semibold text-white title-display" data-type="take" data-id="<?php echo esc_attr($post->ID); ?>"><?php echo esc_attr($post->post_title); ?></h3>
                     <input type="text" class="hidden absolute inset-0 bg-black text-white text-lg font-semibold px-2 py-1 rounded title-input" value="<?php echo esc_attr($post->post_title); ?>">
                     <button class="ml-2 text-gray-400 hover:text-esper-yellow opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span class="material-icons text-sm">edit</span>
+                        <span class="material-symbols-outlined text-sm">edit</span>
                     </button>
                 </div>
                 <div class="space-y-4">
@@ -1451,8 +1451,8 @@ function esper_lightcage_scripts() {
     
     // Enqueue Google Material Icons
     wp_enqueue_style(
-        'google-material-icons',
-        'https://fonts.googleapis.com/icon?family=Material+Icons',
+        'google-material-symbols-outlined',
+        'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined',
         array(),
         null
     );
@@ -1765,7 +1765,7 @@ function render_input_sets( array $sets ) {
                     echo '<label for="' . esc_attr( $field['field_slug'] ) . '" class="' . esc_attr( $label_class ) . ' flex flex-wrap items-center">';
 
                         if ( $show_icon && !empty($field['icon'])) {
-                            echo '<span class="material-icons w-6 h-6 mr-2 text-black flex-none">'.$field['icon'].'</span>';
+                            echo '<span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">'.$field['icon'].'</span>';
                         }
                         echo esc_html( $field['field_name'] );
                     echo '</label>';

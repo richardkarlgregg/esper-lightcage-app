@@ -73,11 +73,11 @@ export default class CaptureManager {
 
                 // Expand job
                 $job.children('div').last().removeClass('hidden');
-                $job.find('.material-icons').first().addClass('rotate-90');
+                $job.find('.material-symbols-outlined').first().addClass('rotate-90');
 
                 // Expand session
                 $session.children('div').last().removeClass('hidden');
-                $session.find('.material-icons').first().addClass('rotate-90');
+                $session.find('.material-symbols-outlined').first().addClass('rotate-90');
 
                 // Ensure capture has a children container
                 let $captureChildren = $capture.children('div').last();
@@ -89,7 +89,7 @@ export default class CaptureManager {
                 }
 
                 // Show capture's arrow and expand
-                const $captureArrow = $capture.find('.material-icons').first();
+                const $captureArrow = $capture.find('.material-symbols-outlined').first();
                 $captureArrow.removeClass('invisible').addClass('rotate-90');
                 $captureChildren.removeClass('hidden');
 
