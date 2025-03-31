@@ -589,6 +589,30 @@ function esper_get_session_template($post) {
 
 function esper_get_export_template($post) {
     ob_start();
+    
+    // Get current user ID
+    $current_user_id = get_current_user_id();
+    
+    // Get job_id from the current export post
+    $job_id = get_post_meta($post->ID, 'job_id', true);
+    
+    // Get all exports for this user and job
+    $exports = get_posts(array(
+        'post_type' => 'export',
+        'posts_per_page' => -1,
+        'author' => $current_user_id,
+        'meta_query' => array(
+            array(
+                'key' => 'job_id',
+                'value' => $job_id
+            )
+        ),
+        'orderby' => 'date',
+        'order' => 'DESC'
+    ));
+    
+    // Get job title
+    $job_title = get_the_title($job_id);
     ?>
     <div class="export-template bg-black min-h-screen p-6">
         <div class="w-full space-y-6">
@@ -615,7 +639,7 @@ function esper_get_export_template($post) {
             <!-- First HTML Table: Export Summary -->
             <div class="bg-black p-6 border border-esper-yellow">
                 <h3 class="text-lg font-semibold text-white mb-4">Export Summary</h3>
-                <p>Would be all the exports for the current open job.</p>
+                <p class="text-white mb-4">Job: <?php echo esc_html($job_title); ?></p>
                 <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                     <thead>
                         <tr class="bg-esper-yellow">
@@ -627,26 +651,55 @@ function esper_get_export_template($post) {
                             <th class="font-normal text-black text-left">Jpegs</th>
                             <th class="font-normal text-black text-left">Raws</th>
                             <th class="font-normal text-black text-left">Queue Take</th>
-                            <th class="font-normal text-black text-left">Read-back Check</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Example row (dynamically generate rows as needed) -->
-                        <tr class="border-b border-esper-yellow">
-                            <td>Job 1</td>
-                            <td>Session 1</td>
-                            <td>Take 1</td>
-                            <td>2</td>
-                            <td>10</td>
-                            <td>5</td>
-                            <td>5</td>
-                            <td>
-                                <button data-action="add-to-queue" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
-                                    Add to Queue
-                                </button>
-                            </td>
-                            <td>OK</td>
-                        </tr>
+                        <?php
+                        if (!empty($exports)) {
+                            foreach ($exports as $export) {
+                                // Get related data
+                                $session_id = get_post_meta($export->ID, 'session_id', true);
+                                $take_id = get_post_meta($export->ID, 'take_id', true);
+                                $session_title = get_the_title($session_id);
+                                $take_title = get_the_title($take_id);
+                                
+                                // Get take images from the repeater field
+                                $take_images = get_field('take_images', $export->ID);
+                                $image_count = is_array($take_images) ? count($take_images) : 0;
+                                
+                                // Get camera count from take's camera settings
+                                $camera_count = 0;
+                                if ($take_id) {
+                                    $camera_settings = get_field('camera_settings_repeater', $take_id);
+                                    if (is_array($camera_settings)) {
+                                        $camera_count = count($camera_settings);
+                                    }
+                                }
+                                
+                                // Calculate jpegs and raws (placeholder logic)
+                                $jpeg_count = ceil($image_count / 2);
+                                $raw_count = floor($image_count / 2);
+                                ?>
+                                <tr class="border-b border-esper-yellow">
+                                    <td><?php echo esc_html($job_title); ?></td>
+                                    <td><?php echo esc_html($session_title); ?></td>
+                                    <td><?php echo esc_html($take_title); ?></td>
+                                    <td><?php echo esc_html($camera_count); ?></td>
+                                    <td><?php echo esc_html($image_count); ?></td>
+                                    <td><?php echo esc_html($jpeg_count); ?></td>
+                                    <td><?php echo esc_html($raw_count); ?></td>
+                                    <td>
+                                        <button data-action="add-to-queue" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                                            Add to Queue
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        } else {
+                            echo '<tr><td colspan="8" class="text-center text-white">No exports found</td></tr>';
+                        }
+                        ?>
                     </tbody>
                 </table>
             </div>
@@ -673,25 +726,76 @@ function esper_get_export_template($post) {
                             <th class="font-normal text-black text-left">Take</th>
                             <th class="font-normal text-black text-left">Jpegs</th>
                             <th class="font-normal text-black text-left">Raws</th>
-                            <th class="font-normal text-black text-left">ReadBackCheck</th>
                             <th class="font-normal text-black text-left">Images To Export</th>
                             <th class="font-normal text-black text-left">Remaining</th>
                             <th class="font-normal text-black text-left">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Example row (dynamically generate rows as needed) -->
-                        <tr class="border-b border-esper-yellow">
-                            <td>Job 1</td>
-                            <td>Session 1</td>
-                            <td>Take 1</td>
-                            <td>5</td>
-                            <td>5</td>
-                            <td>OK</td>
-                            <td>10</td>
-                            <td>0</td>
-                            <td>Completed</td>
-                        </tr>
+                        <?php
+                        // Get current user ID
+                        $current_user_id = get_current_user_id();
+                        
+                        // Query export queue items for current user and job
+                        $queue_args = array(
+                            'post_type' => 'export_queue',
+                            'posts_per_page' => -1,
+                            'meta_query' => array(
+                                'relation' => 'AND',
+                                array(
+                                    'key' => 'user_id',
+                                    'value' => $current_user_id,
+                                    'compare' => '='
+                                ),
+                                array(
+                                    'key' => 'job_id',
+                                    'value' => $job_id,
+                                    'compare' => '='
+                                )
+                            ),
+                            'orderby' => 'date',
+                            'order' => 'ASC'
+                        );
+                        
+                        $queue_query = new WP_Query($queue_args);
+                        
+                        if ($queue_query->have_posts()) {
+                            while ($queue_query->have_posts()) {
+                                $queue_query->the_post();
+                                
+                                // Get related data from meta fields
+                                $session_id = get_post_meta(get_the_ID(), 'session_id', true);
+                                $take_id = get_post_meta(get_the_ID(), 'take_id', true);
+                                $session_title = get_the_title($session_id);
+                                $take_title = get_the_title($take_id);
+                                
+                                // Get queue status and progress
+                                $status = get_post_meta(get_the_ID(), 'queue_status', true);
+                                $total_images = get_post_meta(get_the_ID(), 'total_images', true);
+                                $processed_images = get_post_meta(get_the_ID(), 'processed_images', true);
+                                $remaining = max(0, $total_images - $processed_images);
+                                
+                                // Calculate jpegs and raws (placeholder logic)
+                                $jpeg_count = ceil($total_images / 2);
+                                $raw_count = floor($total_images / 2);
+                                ?>
+                                <tr class="border-b border-esper-yellow">
+                                    <td><?php echo esc_html($job_title); ?></td>
+                                    <td><?php echo esc_html($session_title); ?></td>
+                                    <td><?php echo esc_html($take_title); ?></td>
+                                    <td><?php echo esc_html($jpeg_count); ?></td>
+                                    <td><?php echo esc_html($raw_count); ?></td>
+                                    <td><?php echo esc_html($total_images); ?></td>
+                                    <td><?php echo esc_html($remaining); ?></td>
+                                    <td><?php echo esc_html($status); ?></td>
+                                </tr>
+                                <?php
+                            }
+                        } else {
+                            echo '<tr><td colspan="8" class="text-center text-white">No items in queue</td></tr>';
+                        }
+                        wp_reset_postdata();
+                        ?>
                     </tbody>
                 </table>
             </div>

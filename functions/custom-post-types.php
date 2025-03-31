@@ -249,5 +249,36 @@ function esper_register_post_types() {
         'supports' => array('title', 'thumbnail', 'custom-fields', 'page-attributes', 'author'),
         'menu_icon' => 'dashicons-format-gallery'
     ));
+
+    // Export Queue Post Type
+    register_post_type('export_queue', array(
+        'labels' => array(
+            'name' => 'Export Queue',
+            'singular_name' => 'Export Queue Item',
+            'add_new' => 'Add New Queue Item',
+            'add_new_item' => 'Add New Queue Item',
+            'edit_item' => 'Edit Queue Item',
+            'new_item' => 'New Queue Item',
+            'view_item' => 'View Queue Item',
+            'search_items' => 'Search Queue Items',
+            'not_found' => 'No queue items found',
+            'not_found_in_trash' => 'No queue items found in Trash',
+            'parent_item_colon' => ''
+        ),
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'export_queue',
+        'rest_controller_class' => 'WP_REST_Posts_Controller',
+        'query_var' => true,
+        'rewrite' => array('slug' => 'export-queue'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 5,
+        'supports' => array('title', 'custom-fields', 'author'),
+        'menu_icon' => 'dashicons-list-view'
+    ));
 }
 add_action('init', 'esper_register_post_types'); 
