@@ -2255,6 +2255,10 @@ function esper_add_to_queue() {
     $total_images = is_array($take_images) ? count($take_images) : 0;
     update_field('total_images', $total_images, $queue_id);
     
+    // Link the queue item back to the original export
+    update_post_meta($queue_id, 'export_id', $export_id);
+    update_post_meta($export_id, 'queue_id', $queue_id);
+    
     wp_send_json_success(array(
         'message' => 'Export added to queue successfully',
         'queue_id' => $queue_id
@@ -2263,9 +2267,8 @@ function esper_add_to_queue() {
 add_action('wp_ajax_esper_add_to_queue', 'esper_add_to_queue');
 
 // Add AJAX handler for refreshing queue table
-add_action('wp_ajax_esper_get_queue_table', 'esper_get_queue_table');
 function esper_get_queue_table() {
-    check_ajax_referer('esper_nonce', 'nonce');
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
     
     $job_id = isset($_POST['job_id']) ? intval($_POST['job_id']) : 0;
     if (!$job_id) {
@@ -2333,3 +2336,86 @@ function esper_get_queue_table() {
     $html = ob_get_clean();
     wp_send_json_success(['html' => $html]);
 }
+add_action('wp_ajax_esper_get_queue_table', 'esper_get_queue_table');
+
+// Modify the export summary query to exclude queued items
+function esper_get_export_summary() {
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    $job_id = isset($_POST['job_id']) ? intval($_POST['job_id']) : 0;
+    if (!$job_id) {
+        wp_send_json_error(['message' => 'Invalid job ID']);
+    }
+    
+    // Get exports for this job and user
+    $args = array(
+        'post_type' => 'export',
+        'posts_per_page' => -1,
+        'meta_query' => array(
+            'relation' => 'AND',
+            array(
+                'key' => 'job_id',
+                'value' => $job_id
+            ),
+            array(
+                'key' => 'user_id',
+                'value' => get_current_user_id()
+            ),
+            array(
+                'relation' => 'OR',
+                array(
+                    'key' => 'queue_id',
+                    'compare' => 'NOT EXISTS'
+                ),
+                array(
+                    'key' => 'queue_id',
+                    'value' => '',
+                    'compare' => '='
+                )
+            )
+        ),
+        'orderby' => 'date',
+        'order' => 'DESC'
+    );
+    
+    $query = new WP_Query($args);
+    ob_start();
+    
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+            $session_id = get_field('session_id');
+            $take_id = get_field('take_id');
+            $take_images = get_field('take_images');
+            $total_images = is_array($take_images) ? count($take_images) : 0;
+            
+            // Get session and take names
+            $session = get_post($session_id);
+            $take = get_post($take_id);
+            
+            // Calculate JPEGs and RAWs
+            $jpegs = ceil($total_images * 0.5);
+            $raws = floor($total_images * 0.5);
+            
+            echo '<tr>';
+            echo '<td class="px-4 py-2">' . esc_html($job_id) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($session ? $session->post_title : 'Unknown Session') . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($take ? $take->post_title : 'Unknown Take') . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($jpegs) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($raws) . '</td>';
+            echo '<td class="px-4 py-2">' . esc_html($total_images) . '</td>';
+            echo '<td class="px-4 py-2">';
+            echo '<button data-action="add-to-queue" data-export-id="' . esc_attr(get_the_ID()) . '" class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">Add to Queue</button>';
+            echo '</td>';
+            echo '</tr>';
+        }
+    } else {
+        echo '<tr><td colspan="7" class="px-4 py-2 text-center">No exports found.</td></tr>';
+    }
+    
+    wp_reset_postdata();
+    
+    $html = ob_get_clean();
+    wp_send_json_success(['html' => $html]);
+}
+add_action('wp_ajax_esper_get_export_summary', 'esper_get_export_summary');

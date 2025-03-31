@@ -13,9 +13,9 @@ export default class TakeManager {
 
     setupEventListeners() {
         // Handle Add to Queue button click
-        $(document).on('click', '[data-action="add-to-queue"]', function() {
-            const exportId = $(this).data('export-id');
-            const $button = $(this);
+        $(document).on('click', '[data-action="add-to-queue"]', (e) => {
+            const exportId = $(e.currentTarget).data('export-id');
+            const $button = $(e.currentTarget);
             
             $.ajax({
                 url: esperApi.ajaxurl,
@@ -25,7 +25,7 @@ export default class TakeManager {
                     nonce: esperApi.nonce,
                     export_id: exportId
                 },
-                success: function(response) {
+                success: (response) => {
                     if (response.success) {
                         // Remove the export from the summary table
                         $button.closest('tr').fadeOut(300, function() {
@@ -40,7 +40,7 @@ export default class TakeManager {
                     } else {
                         alert('Failed to add export to queue: ' + response.data.message);
                     }
-                }.bind(this),
+                },
                 error: function() {
                     alert('Failed to add export to queue');
                 }
@@ -65,7 +65,7 @@ export default class TakeManager {
                     // Update the queue table content
                     $('#queue-table tbody').html(response.data.html);
                 }
-            }
+            }.bind(this)
         });
     }
 
