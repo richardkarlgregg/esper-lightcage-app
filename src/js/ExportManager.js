@@ -36,7 +36,13 @@ export default class ExportManager {
                 if (response.success) {
                     // Remove the export row and refresh queue
                     $button.closest('tr').fadeOut(300, function() {
+                        const $tbody = $(this).closest('tbody');
                         $(this).remove();
+                        
+                        // Check if table body is now empty (excluding header row)
+                        if ($tbody.find('tr').length === 0) {
+                            $tbody.append('<tr><td colspan="8" class="px-4 py-2 text-center">No exports found</td></tr>');
+                        }
                     });
                     this.refreshQueueTable();
                 } else {
