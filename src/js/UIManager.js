@@ -21,12 +21,13 @@ export default class UIManager {
                     const postId = $(this).data('id');
                     const postType = $(this).data('type');
                     const context = $(this).data('context');
-                    store.navigationManager.pushScreen( postId, postType, context );
+                    store.navigationManager.pushScreen(postId, postType, context);
                     break;
                 case 'back':
-                    // Handle action2
-                    console.log('back');
                     store.navigationManager.popScreen();
+                    break;
+                case 'forward':
+                    store.navigationManager.forwardScreen();
                     break;
                 case 'export':
                     console.log('Show export manager');
@@ -34,8 +35,8 @@ export default class UIManager {
                     $(this).removeClass('opacity-25');
                     $('#sidebar').hide();
                     $('#divider').hide();
-                    store.navigationManager.pushScreen( $(this).data('id'), 'export', null );
-                break;
+                    store.navigationManager.pushScreen($(this).data('id'), 'export', null);
+                    break;
                 case 'jobManager':
                     console.log('Show job manager');
                     $('#sideMenu span').addClass('opacity-25');
@@ -43,7 +44,7 @@ export default class UIManager {
                     $('#sidebar').show();
                     $('#divider').show();
                     store.navigationManager.popScreen();
-                break;
+                    break;
                 // Add more cases as needed
                 default:
                     console.log('Unknown action:', action);
