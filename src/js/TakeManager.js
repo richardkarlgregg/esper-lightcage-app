@@ -440,17 +440,47 @@ export default class TakeManager {
          * Rating filter functionality
          */
         const filterButtons = document.querySelectorAll('.rating-filter');
+        
+        // Set 'All' as default active state
+        const defaultFilter = document.querySelector('.rating-filter[data-rating="all"]');
+        defaultFilter.classList.remove('bg-opacity-20', 'text-gray-500');
+        defaultFilter.classList.add('bg-opacity-50', 'bg-white', 'text-black');
+        
         filterButtons.forEach((button) => {
             button.addEventListener('click', () => {
                 const rating = button.dataset.rating;
 
                 // Toggle button states
                 filterButtons.forEach((btn) => {
-                    btn.classList.remove('bg-opacity-50');
+                    btn.classList.remove('bg-opacity-50', 'text-black');
                     btn.classList.add('bg-opacity-20');
+                    
+                    // Remove any background color classes
+                    btn.classList.remove('bg-white', 'bg-green-500', 'bg-yellow-500', 'bg-red-500');
+                    
+                    // Restore original text colors
+                    if (btn.dataset.rating === 'green') {
+                        btn.classList.add('text-green-500');
+                    } else if (btn.dataset.rating === 'yellow') {
+                        btn.classList.add('text-yellow-500');
+                    } else if (btn.dataset.rating === 'red') {
+                        btn.classList.add('text-red-500');
+                    } else if (btn.dataset.rating === 'all') {
+                        btn.classList.add('text-gray-500');
+                    }
                 });
+                
+                // Set active state with appropriate background color
                 button.classList.remove('bg-opacity-20');
                 button.classList.add('bg-opacity-50');
+                
+                // Add background color based on rating
+                if (rating === 'all') {
+                    button.classList.add('bg-white', 'text-black');
+                    button.classList.remove('text-gray-500');
+                } else {
+                    button.classList.add(`bg-${rating}-500`);
+                }
 
                 const allThumbs = document.querySelectorAll('.filmstrip-scroll .flex-none');
                 allThumbs.forEach((thumb) => {
