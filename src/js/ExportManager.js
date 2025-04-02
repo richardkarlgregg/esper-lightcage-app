@@ -87,6 +87,29 @@ export default class ExportManager {
     }
 
     /**
+     * Refreshes the export summary table content via AJAX.
+     */
+    refreshExportSummary() {
+        const jobId = store.navigationManager.getPostIdByCriteria('job');
+
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_get_export_summary',
+                nonce: esperApi.nonce,
+                job_id: jobId
+            },
+            success: (response) => {
+                console.log(response);
+                if (response.success) {
+                    $('.export-template .exportSummary').html(response.data.html);
+                }
+            }
+        });
+    }
+
+    /**
      * Makes an AJAX call to remove an item from the queue and refreshes the queue table.
      */
     removeFromQueue(queueId, $button) {
@@ -111,6 +134,7 @@ export default class ExportManager {
                         }
                     });
                     this.refreshQueueTable();
+                    this.refreshExportSummary();
                 } else {
                     alert(`Failed to remove item from queue: ${response.data.message}`);
                 }

@@ -222,68 +222,16 @@ class ExportHandler {
         if (!$job_id) {
             wp_send_json_error(['message' => 'Invalid job ID']);
         }
+        
+        $current_user_id = get_current_user_id();
         $job_title = get_the_title($job_id);
-        $args = [
-            'post_type'      => 'export',
-            'posts_per_page' => -1,
-            'meta_query'     => [
-                'relation' => 'AND',
-                [
-                    'key'   => 'job_id',
-                    'value' => $job_id
-                ],
-                [
-                    'key'   => 'user_id',
-                    'value' => get_current_user_id()
-                ],
-                [
-                    'relation' => 'OR',
-                    [
-                        'key'     => 'queue_id',
-                        'compare' => 'NOT EXISTS'
-                    ],
-                    [
-                        'key'     => 'queue_id',
-                        'value'   => '',
-                        'compare' => '='
-                    ]
-                ]
-            ],
-            'orderby' => 'date',
-            'order'   => 'DESC'
-        ];
-        $query = new WP_Query($args);
-        ob_start(); 
-        ?>
-        <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
-            <thead>
-                <tr class="bg-esper-yellow">
-                    <th class="font-normal text-black text-left">Job1</th>
-                    <th class="font-normal text-black text-left">Session</th>
-                    <th class="font-normal text-black text-left">Take</th>
-                    <th class="font-normal text-black text-left">Cameras</th>
-                    <th class="font-normal text-black text-left">Images</th>
-                    <th class="font-normal text-black text-left">Jpegs</th>
-                    <th class="font-normal text-black text-left">Raws</th>
-                    <th class="font-normal text-black text-left">Queue Take</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php
-            if ($query->have_posts()) {
-                while ($query->have_posts()) {
-                    $query->the_post();
-                    echo $this->renderExportRow(get_post(), $job_title);
-                }
-            } else {
-                echo '<tr><td colspan="8" class="text-center text-white">No exports found.</td></tr>';
-            }
-            ?>
-            </tbody>
-        </table>
-        <?php
-        wp_reset_postdata();
+        $exports = $this->getExportsForJob($job_id, $current_user_id);
+        
+        ob_start();
+        echo $this->renderExportSummarySection($job_title, $exports);
         $html = ob_get_clean();
+        
+        wp_reset_postdata();
         wp_send_json_success(['html' => $html]);
     }
 
@@ -303,10 +251,13 @@ class ExportHandler {
         <div class="export-template bg-black min-h-screen p-6">
             <?php
             echo $this->renderHeader();
-            //echo $this->renderFileNameItems();
-            echo $this->renderExportSummarySection($job_title, $exports);
-            echo $this->renderQueueSection($job_id, $job_title, $current_user_id);
-            ?>
+            //echo $this->renderFileNameItems(); ?>
+            <div class="exportSummary">
+                <?php echo $this->renderExportSummarySection($job_title, $exports); ?>
+            </div>
+            <div class="exportQueue">
+                <?php echo $this->renderQueueSection($job_id, $job_title, $current_user_id); ?>
+            </div>
         </div>
         <?php
         return ob_get_clean();
