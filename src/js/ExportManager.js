@@ -11,12 +11,12 @@ export default class ExportManager {
     }
 
     setupEventListeners() {
-         // Handle Add to Queue
-         $(document).on('click', '[data-action="add-to-queue"]', (e) => {
+        // Handle Add to Queue
+        $(document).on('click', '[data-action="add-to-queue"]', (e) => {
             e.preventDefault();
             const $button = $(e.currentTarget);
             const exportId = $button.data('export-id');
-            this.addToQueue(exportId, $button);
+            this.addToQueue(exportId);
         });
 
         // Handle Remove from Queue
@@ -24,7 +24,7 @@ export default class ExportManager {
             e.preventDefault();
             const $button = $(e.currentTarget);
             const queueId = $button.data('queue-id');
-            this.removeFromQueue(queueId, $button);
+            this.removeFromQueue(queueId);
         });
 
         // Handle Process Queue
@@ -33,27 +33,41 @@ export default class ExportManager {
             this.processQueue();
         });
 
+        // Handle Process Single Item
+        $(document).on('click', '[data-action="process-single"]', (e) => {
+            e.preventDefault();
+            const $button = $(e.currentTarget);
+            const queueId = $button.data('queue-id');
+            this.processSingleItem(queueId);
+        });
+
         // Handle Select All checkbox
         $(document).on('change', '.queue-select-all', (e) => {
-            const isChecked = $(e.currentTarget).prop('checked');
-            $('#queue-table tbody .queue-item-select').prop('checked', isChecked);
+            const $selectAll = $(e.currentTarget);
+            const $checkboxes = $('.queue-item-select');
+            $checkboxes.prop('checked', $selectAll.prop('checked'));
         });
 
         // Handle individual checkbox changes
         $(document).on('change', '.queue-item-select', (e) => {
-            const $allCheckboxes = $('#queue-table tbody .queue-item-select');
-            const $checkedCheckboxes = $allCheckboxes.filter(':checked');
             const $selectAll = $('.queue-select-all');
-            
-            // Update select all checkbox state
+            const $allCheckboxes = $('.queue-item-select');
+            const $checkedCheckboxes = $('.queue-item-select:checked');
             $selectAll.prop('checked', $allCheckboxes.length === $checkedCheckboxes.length);
+        });
+
+        $(document).on('click', '[data-action="open-file-location"]', (e) => {
+            e.preventDefault();
+            alert('This would open the file directory on Win / Mac');
         });
     }
 
     /**
      * Makes an AJAX call to add an export to the queue, removes the row, and refreshes the queue table.
      */
-    addToQueue(exportId, $button) {
+    addToQueue(exportId) {
+        const $button = $(`[data-action="add-to-queue"][data-export-id="${exportId}"]`);
+        
         $.ajax({
             url: esperApi.ajaxurl,
             type: 'POST',
@@ -134,7 +148,9 @@ export default class ExportManager {
     /**
      * Makes an AJAX call to remove an item from the queue and refreshes the queue table.
      */
-    removeFromQueue(queueId, $button) {
+    removeFromQueue(queueId) {
+        const $button = $(`[data-action="remove-from-queue"][data-queue-id="${queueId}"]`);
+        
         $.ajax({
             url: esperApi.ajaxurl,
             type: 'POST',
@@ -200,6 +216,17 @@ export default class ExportManager {
                     $row.find('td:nth-child(9)').text('completed');
                     // Restore the original image count
                     $row.find('td:nth-child(7)').text(totalImages);
+                    // Replace Process button with Open File Location button
+                    const $actionsCell = $row.find('td:last-child');
+                    const $removeButton = $actionsCell.find('[data-action="remove-from-queue"]');
+                    $actionsCell.html(`
+                        <button data-action="open-file-location"
+                                data-queue-id="${queueId}"
+                                class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
+                            Open File Location
+                        </button>
+                        ${$removeButton.prop('outerHTML')}
+                    `);
                 });
             });
         });
@@ -230,6 +257,45 @@ export default class ExportManager {
             error: () => {
                 alert('Failed to update status.');
             }
+        });
+    }
+
+    /**
+     * Process a single queue item with progress bar animation
+     */
+    processSingleItem(queueId) {
+        const $row = $(`[data-queue-id="${queueId}"]`).closest('tr');
+        const totalImages = parseInt($row.find('td:nth-child(7)').text());
+        
+        // Create progress bar
+        const $progressBar = $('<div>', {
+            class: 'w-full bg-gray-700 rounded-full h-2.5',
+            html: '<div class="bg-esper-yellow h-2.5 rounded-full" style="width: 0%"></div>'
+        });
+        
+        // Replace the "Images To Export" cell content with progress bar
+        $row.find('td:nth-child(7)').html($progressBar);
+        
+        // Animate progress bar over 2 seconds
+        $progressBar.find('div').animate({ width: '100%' }, 2000, 'linear', () => {
+            // Update status to completed
+            this.updateQueueStatus(queueId, 'completed', () => {
+                // Update the status cell
+                $row.find('td:nth-child(9)').text('completed');
+                // Restore the original image count
+                $row.find('td:nth-child(7)').text(totalImages);
+                // Replace Process button with Open File Location button
+                const $actionsCell = $row.find('td:last-child');
+                const $removeButton = $actionsCell.find('[data-action="remove-from-queue"]');
+                $actionsCell.html(`
+                    <button data-action="open-file-location"
+                            data-queue-id="${queueId}"
+                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
+                        Open File Location
+                    </button>
+                    ${$removeButton.prop('outerHTML')}
+                `);
+            });
         });
     }
 

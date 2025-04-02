@@ -90,6 +90,10 @@ class ExportHandler {
         if ($capture_id) update_post_meta($export_id, 'capture_id', $capture_id);
         if ($session_id) update_post_meta($export_id, 'session_id', $session_id);
         if ($take_id)    update_post_meta($export_id, 'take_id', $take_id);
+        
+        // Set initial status to 'export'
+        update_field('status', 'export', $export_id);
+        
         // Prepare and update images for ACF repeater field
         $images = [];
         foreach ($image_ids as $image_id) {
@@ -355,7 +359,7 @@ class ExportHandler {
                         <th class="font-normal text-black text-left">Images</th>
                         <th class="font-normal text-black text-left">Jpegs</th>
                         <th class="font-normal text-black text-left">Raws</th>
-                        <th class="font-normal text-black text-left">Queue Take</th>
+                        <th class="font-normal text-black text-left">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -394,6 +398,7 @@ class ExportHandler {
             }
         }
         $counts = $this->calculateImageCounts($image_count);
+        $status = get_field('status', $export->ID);
         ?>
         <tr class="border-b border-esper-yellow">
             <td><?php echo esc_html($job_title); ?></td>
@@ -404,11 +409,19 @@ class ExportHandler {
             <td><?php echo esc_html($counts['jpegs']); ?></td>
             <td><?php echo esc_html($counts['raws']); ?></td>
             <td>
-                <button data-action="add-to-queue"
-                        data-export-id="<?php echo esc_attr($export->ID); ?>"
-                        class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
-                    Add to Queue
-                </button>
+                <?php if ($status === 'export'): ?>
+                    <button data-action="add-to-queue"
+                            data-export-id="<?php echo esc_attr($export->ID); ?>"
+                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                        Add to Queue
+                    </button>
+                <?php elseif ($status === 'exported'): ?>
+                    <button data-action="open-file-location"
+                            data-export-id="<?php echo esc_attr($export->ID); ?>"
+                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
+                        Open File Location
+                    </button>
+                <?php endif; ?>
             </td>
         </tr>
         <?php
@@ -527,6 +540,19 @@ class ExportHandler {
             <td><?php echo esc_html($remaining); ?></td>
             <td><?php echo esc_html($status); ?></td>
             <td>
+                <?php if ($status === 'completed'): ?>
+                    <button data-action="open-file-location"
+                            data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
+                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
+                        Open File Location
+                    </button>
+                <?php elseif ($status === 'queued'): ?>
+                    <button data-action="process-single"
+                            data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
+                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
+                        Process
+                    </button>
+                <?php endif; ?>
                 <button data-action="remove-from-queue"
                         data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
                         class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
@@ -563,11 +589,18 @@ class ExportHandler {
             return;
         }
         
-        // Get the export_id from ACF
+        // Get the export_id and status from ACF
         $export_id = get_field('export_id', $queue_id);
+        $status = get_field('status', $queue_id);
+        
         if ($export_id) {
             // Clear the queue_id from the export post
             update_post_meta($export_id, 'queue_id', '');
+            
+            // If the queue item was completed, update the export status to exported
+            if ($status === 'completed') {
+                update_post_meta($export_id, 'status', 'exported');
+            }
         }
         
         // Delete the queue item
