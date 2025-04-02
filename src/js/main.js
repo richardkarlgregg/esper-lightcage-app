@@ -55,6 +55,7 @@ $(document).ready(function () {
     store.exportManager.setupEventListeners();
 
     // Debug
+    store.screenContent.loadPostContent(202, 'job', null);
     store.screenContent.loadPostContent(202, 'export', null);
 
 });

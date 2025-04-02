@@ -310,7 +310,7 @@ class ExportHandler {
     private function renderHeader() {
         ob_start();
         ?>
-        <h2 class="text-2xl font-bold text-white mb-4">Export Controls</h2>
+        <h2 class="text-2xl font-bold text-white mb-4">Export</h2>
         <div class="hidden w-full flex justify-between flex-wrap mb-4">
             <div class="bg-esper-yellow cursor-pointer text-black px-6 py-3 rounded-lg font-semibold flex items-center" data-action="back">Back</div>
         </div>
