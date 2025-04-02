@@ -756,7 +756,8 @@ function esper_get_capture_template($post) {
 
                             <div class="flex flex-wrap mt-3">
                                 <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
-                                <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="save_as_preset" data-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">save</span> Save as Preset</div>
                             </div>
                             
 
@@ -1909,6 +1910,31 @@ function save_camera_preset_ajax() {
     ));
 }
 add_action('wp_ajax_save_camera_preset', 'save_camera_preset_ajax');
+
+// AJAX handler for getting camera settings from a capture
+function get_camera_settings_ajax() {
+    // Verify nonce
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Get the camera settings ID
+    $camera_settings_id = intval($_POST['camera_settings_id']);
+    
+    if (!$camera_settings_id) {
+        wp_send_json_error('Invalid camera settings ID');
+        return;
+    }
+    
+    // Get the camera settings repeater field
+    $camera_settings = get_field('camera_settings_repeater', $camera_settings_id);
+    
+    if (!$camera_settings || !is_array($camera_settings)) {
+        wp_send_json_error('No camera settings data found');
+        return;
+    }
+    
+    wp_send_json_success($camera_settings);
+}
+add_action('wp_ajax_get_camera_settings', 'get_camera_settings_ajax');
 
 
 
