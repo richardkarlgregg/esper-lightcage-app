@@ -1870,5 +1870,45 @@ function esper_update_image_rating() {
 }
 add_action('wp_ajax_esper_update_image_rating', 'esper_update_image_rating');
 
+// AJAX handler for saving camera presets
+function save_camera_preset_ajax() {
+    // Verify nonce
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Get and decode the preset data
+    $preset_data = json_decode(stripslashes($_POST['preset_data']), true);
+    
+    if (empty($preset_data)) {
+        wp_send_json_error('Invalid preset data');
+        return;
+    }
+    
+    // Create a new preset post
+    $preset_post = array(
+        'post_title'  => $preset_data['camera_name'] ?: 'Untitled Preset',
+        'post_type'   => 'preset',
+        'post_status' => 'publish',
+        'post_author' => get_current_user_id()
+    );
+    
+    $preset_id = wp_insert_post($preset_post);
+    
+    if (is_wp_error($preset_id)) {
+        wp_send_json_error('Failed to create preset');
+        return;
+    }
+    
+    // Save each field as post meta
+    foreach ($preset_data as $key => $value) {
+        update_post_meta($preset_id, $key, $value);
+    }
+    
+    wp_send_json_success(array(
+        'message' => 'Preset saved successfully',
+        'preset_id' => $preset_id
+    ));
+}
+add_action('wp_ajax_save_camera_preset', 'save_camera_preset_ajax');
+
 
 

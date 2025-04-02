@@ -62,6 +62,51 @@ export default class CameraSettingsManager {
             });
         });
 
+        jQuery(document).on('click', '[data-action="save_as_preset"]', function() {
+            var $table = jQuery('.settings-set');
+            var cameraSettingsId = jQuery(this).data('id');
+            var rowsData = [];
+            
+            // Get the first row's data
+            var $firstRow = $table.find('.settings-row').first();
+            var presetData = {
+                camera_name: $firstRow.find('input[name="camera_name"]').val() || '',
+                serial_number: $firstRow.find('input[name="serial_number"]').val() || '',
+                camera_model: $firstRow.find('input[name="camera_model"]').val() || '',
+                iso: $firstRow.find('select[name="iso"]').val() || '',
+                aperture: $firstRow.find('select[name="aperture"]').val() || '',
+                white_balance: $firstRow.find('select[name="white_balance"]').val() || '',
+                colour_temp: $firstRow.find('input[name="colour_temp"]').val() || '',
+                shutter_speed: $firstRow.find('select[name="shutter_speed"]').val() || '',
+                file_type: $firstRow.find('select[name="file_type"]').val() || '',
+                jpeg_quality: $firstRow.find('select[name="jpeg_quality"]').val() || '',
+                drive_mode: $firstRow.find('select[name="drive_mode"]').val() || '',
+                focus_mode: $firstRow.find('select[name="focus_mode"]').val() || ''
+            };
+            
+            // Send AJAX request to create the preset
+            jQuery.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'save_camera_preset',
+                    nonce: esperApi.nonce,
+                    preset_data: JSON.stringify(presetData)
+                },
+                success: function(response) {
+                    if(response.success) {
+                        store.notificationManager.showSuccess('Preset saved successfully.');
+                    } else {
+                        store.notificationManager.showError('Error: ' + response.data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    store.notificationManager.showError('AJAX error: ' + error);
+                }
+            });
+        });
+
         jQuery(document).on('change input', '.cameraSettingsContent input, .cameraSettingsContent select, .cameraSettingsContent textarea', function() {
             var $elem = jQuery(this);
             var name = $elem.attr('name');

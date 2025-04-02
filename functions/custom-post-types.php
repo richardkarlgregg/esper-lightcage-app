@@ -280,5 +280,36 @@ function esper_register_post_types() {
         'supports' => array('title', 'custom-fields', 'author'),
         'menu_icon' => 'dashicons-list-view'
     ));
+
+    // Preset Post Type
+    register_post_type('preset', array(
+        'labels' => array(
+            'name' => 'Presets',
+            'singular_name' => 'Preset',
+            'add_new' => 'Add New Preset',
+            'add_new_item' => 'Add New Preset',
+            'edit_item' => 'Edit Preset',
+            'new_item' => 'New Preset',
+            'view_item' => 'View Preset',
+            'search_items' => 'Search Presets',
+            'not_found' => 'No presets found',
+            'not_found_in_trash' => 'No presets found in Trash',
+            'parent_item_colon' => ''
+        ),
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => true,
+        'show_in_rest' => true,
+        'rest_base' => 'preset',
+        'rest_controller_class' => 'WP_REST_Posts_Controller',
+        'query_var' => true,
+        'rewrite' => array('slug' => 'preset'),
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_position' => 8,
+        'supports' => array('title', 'editor', 'thumbnail', 'custom-fields', 'author'),
+        'menu_icon' => 'dashicons-saved'
+    ));
 }
 add_action('init', 'esper_register_post_types'); 

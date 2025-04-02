@@ -242,7 +242,7 @@ class CameraSettings {
 
                             <div class="flex flex-wrap mt-3">
                                 <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="back"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">arrow_back_ios</span> Back</div>
-                               
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="save_as_preset"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">save</span> Save as Preset</div>
                             </div>
                             
 
