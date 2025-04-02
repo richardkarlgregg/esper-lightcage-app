@@ -973,22 +973,7 @@ function esper_get_take_template($post) {
                     </div>
                 </div>
                 <!-- Filmstrip content with custom scrollbar -->
-                <div class="flex-1 overflow-x-auto filmstrip-scroll">
-                    <style>
-                        .filmstrip-scroll::-webkit-scrollbar {
-                            height: 6px;
-                        }
-                        .filmstrip-scroll::-webkit-scrollbar-track {
-                            background: #000000;
-                        }
-                        .filmstrip-scroll::-webkit-scrollbar-thumb {
-                            background: #333333;
-                            border-radius: 3px;
-                        }
-                        .filmstrip-scroll::-webkit-scrollbar-thumb:hover {
-                            background: #fcd34d;
-                        }
-                    </style>
+                <div class="flex-1 overflow-x-auto scrollbar filmstrip-scroll">
                     <div class="flex h-full p-2 space-x-2">
                         <?php echo $filmstripThumbnails; ?>
                     </div>
