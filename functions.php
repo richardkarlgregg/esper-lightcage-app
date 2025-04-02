@@ -1903,9 +1903,12 @@ function save_camera_preset_ajax() {
         return;
     }
     
+    // Get the preset name from the data, or use a default
+    $preset_name = isset($preset_data['preset_name']) ? sanitize_text_field($preset_data['preset_name']) : 'Untitled Preset';
+    
     // Create a new preset post
     $preset_post = array(
-        'post_title'  => $preset_data['camera_name'] ?: 'Untitled Preset',
+        'post_title'  => $preset_name,
         'post_type'   => 'preset',
         'post_status' => 'publish',
         'post_author' => get_current_user_id()
@@ -1920,7 +1923,10 @@ function save_camera_preset_ajax() {
     
     // Save each field as post meta
     foreach ($preset_data as $key => $value) {
-        update_post_meta($preset_id, $key, $value);
+        // Skip the preset_name field as it's already used for the post title
+        if ($key !== 'preset_name') {
+            update_post_meta($preset_id, $key, $value);
+        }
     }
     
     wp_send_json_success(array(

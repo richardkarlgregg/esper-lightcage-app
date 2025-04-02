@@ -100,26 +100,61 @@ export default class CameraSettingsManager {
         });
 
         function savePreset(presetData) {
-            jQuery.ajax({
-                url: esperApi.ajaxurl,
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    action: 'save_camera_preset',
-                    nonce: esperApi.nonce,
-                    preset_data: JSON.stringify(presetData)
-                },
-                success: function(response) {
-                    if(response.success) {
-                        store.notificationManager.showSuccess('Preset saved successfully.');
-                    } else {
-                        store.notificationManager.showError('Error: ' + response.data);
+            // Show dialog to get preset name
+            store.uiManager.showCustomDialog(
+                'Save Preset',
+                '<div class="mb-4"><label for="preset-name" class="block text-sm font-medium text-gray-300 mb-2">Preset Name</label><input type="text" id="preset-name" class="w-full bg-black border border-white border-opacity-25 text-white p-2 rounded" placeholder="Enter preset name"></div>',
+                [
+                    {
+                        name: 'Cancel',
+                        className: 'bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded mr-2',
+                        action: function() {
+                            // Close the dialog
+                            store.uiManager.hideCustomDialog();
+                        }
+                    },
+                    {
+                        name: 'Save',
+                        className: 'bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded',
+                        action: function() {
+                            const presetName = document.getElementById('preset-name').value.trim();
+                            if (!presetName) {
+                                store.notificationManager.showError('Please enter a preset name');
+                                return;
+                            }
+                            
+                            // Add the preset name to the data
+                            presetData.preset_name = presetName;
+                            
+                            // Send AJAX request to save the preset
+                            jQuery.ajax({
+                                url: esperApi.ajaxurl,
+                                type: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    action: 'save_camera_preset',
+                                    nonce: esperApi.nonce,
+                                    preset_data: JSON.stringify(presetData)
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        store.notificationManager.showSuccess('Preset saved successfully.');
+                                        // Close the dialog
+                                        store.uiManager.hideCustomDialog();
+                                        // Refresh the current screen using NavigationManager
+                                        store.navigationManager.refreshCurrentScreen();
+                                    } else {
+                                        store.notificationManager.showError('Error saving preset: ' + response.data);
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    store.notificationManager.showError('AJAX error: ' + error);
+                                }
+                            });
+                        }
                     }
-                },
-                error: function(xhr, status, error) {
-                    store.notificationManager.showError('AJAX error: ' + error);
-                }
-            });
+                ]
+            );
         }
 
         jQuery(document).on('change input', '.cameraSettingsContent input, .cameraSettingsContent select, .cameraSettingsContent textarea', function() {
