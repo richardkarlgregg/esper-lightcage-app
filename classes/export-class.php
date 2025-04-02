@@ -660,31 +660,43 @@ class ExportHandler {
     }
 
     /**
-     * AJAX handler to clear all items from the queue.
+     * AJAX handler to clear items from the queue based on status.
      */
     public function esper_clear_queue() {
         check_ajax_referer('esper_ajax_nonce', 'nonce');
 
         $job_id = isset($_POST['job_id']) ? intval($_POST['job_id']) : 0;
+        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : '';
+
         if (!$job_id) {
             wp_send_json_error(['message' => 'Invalid job ID']);
             return;
+        }
+
+        $meta_query = array(
+            array(
+                'key' => 'job_id',
+                'value' => $job_id
+            ),
+            array(
+                'key' => 'user_id',
+                'value' => get_current_user_id()
+            )
+        );
+
+        // Add status filter if specified
+        if ($status) {
+            $meta_query[] = array(
+                'key' => 'status',
+                'value' => $status
+            );
         }
 
         $args = array(
             'post_type' => 'export_queue',
             'posts_per_page' => -1,
             'post_status' => 'publish',
-            'meta_query' => array(
-                array(
-                    'key' => 'job_id',
-                    'value' => $job_id
-                ),
-                array(
-                    'key' => 'user_id',
-                    'value' => get_current_user_id()
-                )
-            )
+            'meta_query' => $meta_query
         );
 
         $queue_items = get_posts($args);
@@ -692,6 +704,10 @@ class ExportHandler {
         foreach ($queue_items as $queue_item) {
             $export_id = get_field('export_id', $queue_item->ID);
             if ($export_id) {
+                // If clearing completed items, update export status to exported
+                if ($status === 'completed') {
+                    update_field('status', 'exported', $export_id);
+                }
                 update_field('queue_id', '', $export_id);
             }
             wp_delete_post($queue_item->ID, true);

@@ -30,7 +30,13 @@ export default class ExportManager {
         // Handle Clear Queued
         $(document).on('click', '[data-action="clear-queued"]', (e) => {
             e.preventDefault();
-            this.clearQueue();
+            this.clearQueue('queued');
+        });
+
+        // Handle Clear Completed
+        $(document).on('click', '[data-action="clear-completed"]', (e) => {
+            e.preventDefault();
+            this.clearQueue('completed');
         });
 
         // Handle Process Queue
@@ -306,9 +312,9 @@ export default class ExportManager {
     }
 
     /**
-     * Makes an AJAX call to clear all items from the queue and refreshes the queue table.
+     * Makes an AJAX call to clear items from the queue based on status.
      */
-    clearQueue() {
+    clearQueue(status = '') {
         const jobId = store.navigationManager.getPostIdByCriteria('job');
         
         $.ajax({
@@ -317,7 +323,8 @@ export default class ExportManager {
             data: {
                 action: 'esper_clear_queue',
                 nonce: esperApi.nonce,
-                job_id: jobId
+                job_id: jobId,
+                status: status
             },
             success: (response) => {
                 if (response.success) {
