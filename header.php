@@ -124,7 +124,7 @@ if (!is_page_template('login.php') && !is_user_logged_in()) {
         //print_r($exports);
         //echo '</pre>';
 
-        
+        global $exportID;
     
         // If there is at least one export, get the first (most recent) one.
         if (!empty($exports)) {
@@ -140,8 +140,8 @@ if (!is_page_template('login.php') && !is_user_logged_in()) {
     ?>
     <!-- Connection Status Indicator -->
     <div class="flex items-center space-x-4 ml-auto">
-        <div class="uppercase text-white">Jobs</div>
-        <div data-type="export" data-id="<?php echo $exportID;?>" data-action="export" class="uppercase text-white">Export</div>
+        <div class="hidden uppercase text-white">Jobs</div>
+        <div data-type="export" data-id="<?php echo $exportID;?>" data-action="export" class="hidden uppercase text-white">Export</div>
          <div class="connection-status"></div>
          <!-- Simulated window icons -->
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-symbols-outlined window-icon" id="minimizeWindow">remove</span>

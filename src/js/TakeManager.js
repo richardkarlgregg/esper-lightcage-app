@@ -277,6 +277,12 @@ export default class TakeManager {
                     if (response.success) {
                         //alert('Export created successfully!');
 
+                        console.log('Show export manager');
+                        $('#sideMenu span').addClass('opacity-25');
+                        $('[data-action="export"]').removeClass('opacity-25');
+                        $('#sidebar').hide();
+                        $('#divider').hide();
+
                         store.navigationManager.pushScreen( $('.menu-bar [data-action="export"]').data('id'), 'export', null );
                     } else {
                         console.error('Failed to create export:', response);

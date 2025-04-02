@@ -30,7 +30,19 @@ export default class UIManager {
                     break;
                 case 'export':
                     console.log('Show export manager');
+                    $('#sideMenu span').addClass('opacity-25');
+                    $(this).removeClass('opacity-25');
+                    $('#sidebar').hide();
+                    $('#divider').hide();
                     store.navigationManager.pushScreen( $(this).data('id'), 'export', null );
+                break;
+                case 'jobManager':
+                    console.log('Show job manager');
+                    $('#sideMenu span').addClass('opacity-25');
+                    $(this).removeClass('opacity-25');
+                    $('#sidebar').show();
+                    $('#divider').show();
+                    store.navigationManager.popScreen();
                 break;
                 // Add more cases as needed
                 default:
@@ -42,23 +54,24 @@ export default class UIManager {
         const tooltip = $('<div class="tooltip"></div>').appendTo('body');
 
         $(document)
-          .on('mouseenter', '[data-tooltip]', function() {
-            const text = $(this).attr('data-tooltip');
-            tooltip.text(text).fadeIn(150);
-        
-            const offset = $(this).offset();
-            const tooltipHeight = tooltip.outerHeight();
-            const elementWidth = $(this).outerWidth();
-            const tooltipWidth = tooltip.outerWidth();
-        
-            tooltip.css({
-              left: offset.left + (elementWidth / 2) - (tooltipWidth / 2),
-              top: offset.top - tooltipHeight - 8, // positions tooltip 8px above element
-            });
-          })
-          .on('mouseleave', '[data-tooltip]', function() {
-            tooltip.fadeOut(100);
+        .on('mouseenter', '[data-tooltip]', function() {
+          const text = $(this).attr('data-tooltip');
+          tooltip.text(text).fadeIn(150);
+      
+          const offset = $(this).offset();
+          const elementHeight = $(this).outerHeight();
+          const elementWidth = $(this).outerWidth();
+          const tooltipHeight = tooltip.outerHeight();
+      
+          tooltip.css({
+            left: offset.left + elementWidth + 8, // positions tooltip 8px to the right of the element
+            top: offset.top + (elementHeight / 2) - (tooltipHeight / 2) // vertically centers tooltip
           });
+        })
+        .on('mouseleave', '[data-tooltip]', function() {
+          tooltip.fadeOut(100);
+        });
+      
         
         
     }
@@ -302,6 +315,10 @@ export default class UIManager {
                     nonce: esperApi.nonce,
                     job_id: jobId
                 });
+
+                $('#sideMenu').show();
+                $('#sidebar').show();
+                $('#divider').show();
                 
                 $('#folderTree').empty();
                 
@@ -323,6 +340,10 @@ export default class UIManager {
             $('#currentJobTitle').text('No job open');
             $('#folderTree').empty();
             showDefaultContent();
+
+            $('#sideMenu').hide();
+                $('#sidebar').hide();
+                $('#divider').hide();
         }
     
         // Show default content
@@ -352,17 +373,25 @@ export default class UIManager {
             }
         }
     
-        // Simple implementation for a draggable divider
+        // Simple implementation for a draggable divider that accounts for the sideMenu.
         let isResizing = false;
-        $('#divider').on('mousedown', function(e) {
-            isResizing = true;
+        const $divider  = $('#divider');
+        const $sidebar  = $('#sidebar');
+        const $sideMenu = $('#sideMenu');
+
+        $divider.on('mousedown', function(e) {
+        isResizing = true;
         });
+
         $(document).on('mousemove', function(e) {
-            if (!isResizing) return;
-            const newWidth = Math.min(Math.max(e.clientX, 100), 500);
-            $('#sidebar').css('width', newWidth);
+        if (!isResizing) return;
+        // If sideMenu is visible, get its outer width; otherwise, assume 0.
+        const sideMenuWidth = $sideMenu.is(':visible') ? $sideMenu.outerWidth() : 0;
+        // Calculate new sidebar width relative to mouse position minus sideMenu width.
+        const newWidth = Math.min(Math.max(e.clientX - sideMenuWidth, 100), 500);
+        $sidebar.css('width', newWidth);
         }).on('mouseup', function() {
-            isResizing = false;
+        isResizing = false;
         });
     }
 
