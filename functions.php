@@ -788,7 +788,7 @@ function esper_get_capture_template($post) {
 
             <div class="bg-black p-6">
                 <div class="w-full mb-4">
-                    <h3>Quick Camera Settings</h3>
+                    <h3>Current Camera Settings</h3>
                 </div>
                 <?php
                     $cameraSettings = new CameraSettings( $post );
@@ -888,13 +888,22 @@ function esper_get_take_template($post) {
     $filmstripData = store_take_generate_filmstrip_thumbnails($post->ID);
     $filmstripThumbnails = $filmstripData['thumbnails'];
     $imageCount = $filmstripData['count'];
+
+    $parent_capture = get_field('parent_capture', $post->ID);
     ?>
     <div class="take-review flex flex-col bg-black" style="height: calc(100vh - 40px);" data-take-id="<?php echo esc_attr($post->ID); ?>">
+        
+           
+    
         <!-- Main container with resizable panes -->
         <div class="flex-1 flex" id="takePanesContainer">
             <!-- Main image pane -->
+            
             <div class="flex-1 relative bg-black flex items-center justify-center overflow-hidden" id="mainImagePane">
-                <img src="<?php echo esc_url($firstThumbnailUrl); ?>" 
+
+          
+            
+                            <img src="<?php echo esc_url($firstThumbnailUrl); ?>" 
                      alt="Main Image"
                      class="w-full h-full object-contain">
             </div>
@@ -911,26 +920,31 @@ function esper_get_take_template($post) {
                         <span class="material-symbols-outlined text-sm">edit</span>
                     </button>
                 </div>
-                <div class="space-y-4">
-                    <div class="bg-black/60 p-3 rounded">
+               
+                <div class="space-y-4"> 
+                    
+                    <div class="w-full relative bg-black flex items-center justify-start">
+                        <div class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($parent_capture); ?>" data-type="capture" data-context="retake_<?php echo esc_attr($post->ID); ?>"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none hidden">photo_camera</span> Retake</div>
+                    </div>
+                    <div class="bg-black/60">
                         <h4 class="text-sm font-medium text-gray-300 mb-2">Details</h4>
                         <p class="text-gray-400 text-sm">Created: <?php echo esc_html($createdDate); ?></p>
                         <p class="text-gray-400 text-sm">Status: Active</p>
                     </div>
-                    <div class="bg-black/60 p-3 rounded">
+                    <div class="bg-black/60">
                         <h4 class="text-sm font-medium text-gray-300 mb-2">Metadata</h4>
                         <p class="text-gray-400 text-sm">Resolution: <?php echo esc_html($resolution); ?></p>
                         <p class="text-gray-400 text-sm">Size: <?php echo esc_html($size); ?></p>
                         <p class="text-gray-400 text-sm">Format: <?php echo esc_html($format); ?></p>
                     </div>
-                    <div class="bg-black/60 p-3 rounded">
+                    <div class="bg-black/60">
                         <h4 class="text-sm font-medium text-gray-300 mb-2">Camera Settings</h4>
                         <p class="text-gray-400 text-sm">Shutter: 1/125</p>
                         <p class="text-gray-400 text-sm">Aperture: f/2.8</p>
                         <p class="text-gray-400 text-sm">ISO: 100</p>
                     </div>
 
-                    <div class="bg-black/60 p-3 rounded">
+                    <div class="bg-black/60">
                         <h4 class="text-sm font-medium text-gray-300 mb-2">Export Settings</h4>
                         <p class="text-gray-400 text-sm">Include sets</p>
                         <p class="text-gray-400 text-sm">Ability to exclude images</p>
@@ -939,6 +953,10 @@ function esper_get_take_template($post) {
                             <input type="checkbox" id="include_export" name="include_export" value="1" checked>
                             Include in Export
                         </label>
+                    </div>
+
+                    <div class="w-full relative bg-black flex items-center justify-start">
+                        <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($parent_capture); ?>" data-type="capture" data-context=""><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none hidden">photo_camera</span> Return to Capture</div>
                     </div>
 
                 </div>

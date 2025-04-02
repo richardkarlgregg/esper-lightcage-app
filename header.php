@@ -142,8 +142,13 @@ if (!is_page_template('login.php') && !is_user_logged_in()) {
     <div class="flex items-center space-x-4 ml-auto">
         <div class="hidden uppercase text-white">Jobs</div>
         <div data-type="export" data-id="<?php echo $exportID;?>" data-action="export" class="hidden uppercase text-white">Export</div>
-         <div class="connection-status"></div>
-         <!-- Simulated window icons -->
+        <!-- Navigation Arrows -->
+        <div class="flex items-center space-x-2">
+            <button id="backButton" class="opacity-25 transition cursor-pointer hover:opacity-100 material-symbols-outlined text-white" data-action="back">arrow_back</button>
+            <button id="forwardButton" class="opacity-25 transition cursor-pointer hover:opacity-100 material-symbols-outlined text-white" data-action="forward">arrow_forward</button>
+        </div>
+        <div class="connection-status"></div>
+        <!-- Simulated window icons -->
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-symbols-outlined window-icon" id="minimizeWindow">remove</span>
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-symbols-outlined window-icon" id="maximizeWindow">crop_square</span>
         <span class="opacity-25 transition cursor-pointer hover:opacity-100 material-symbols-outlined window-icon" id="closeWindow">close</span>
