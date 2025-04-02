@@ -26,6 +26,22 @@ export default class ExportManager {
             const queueId = $button.data('queue-id');
             this.removeFromQueue(queueId, $button);
         });
+
+        // Handle Select All checkbox
+        $(document).on('change', '.queue-select-all', (e) => {
+            const isChecked = $(e.currentTarget).prop('checked');
+            $('#queue-table tbody .queue-item-select').prop('checked', isChecked);
+        });
+
+        // Handle individual checkbox changes
+        $(document).on('change', '.queue-item-select', (e) => {
+            const $allCheckboxes = $('#queue-table tbody .queue-item-select');
+            const $checkedCheckboxes = $allCheckboxes.filter(':checked');
+            const $selectAll = $('.queue-select-all');
+            
+            // Update select all checkbox state
+            $selectAll.prop('checked', $allCheckboxes.length === $checkedCheckboxes.length);
+        });
     }
 
     /**

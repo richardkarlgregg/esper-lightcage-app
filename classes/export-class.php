@@ -461,6 +461,9 @@ class ExportHandler {
             <table id="queue-table" class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                 <thead>
                     <tr class="bg-esper-yellow">
+                        <th class="font-normal text-black text-left">
+                            <input type="checkbox" class="queue-select-all" checked>
+                        </th>
                         <th class="font-normal text-black text-left">Job</th>
                         <th class="font-normal text-black text-left">Session</th>
                         <th class="font-normal text-black text-left">Take</th>
@@ -509,6 +512,9 @@ class ExportHandler {
         $status           = get_field('queue_status');
         ?>
         <tr class="border-b border-esper-yellow">
+            <td>
+                <input type="checkbox" class="queue-item-select" checked data-queue-id="<?php echo esc_attr(get_the_ID()); ?>">
+            </td>
             <td><?php echo esc_html($job_title); ?></td>
             <td><?php echo esc_html($session_title); ?></td>
             <td><?php echo esc_html($take_title); ?></td>
