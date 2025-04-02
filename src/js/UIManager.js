@@ -477,4 +477,74 @@ export default class UIManager {
 
         return $item;
     }
+
+    // Hide the custom dialog
+    hideCustomDialog(onHidden) {
+        this.fadeOutOverlay(() => {
+            if (typeof onHidden === "function") {
+                onHidden(); // Execute callback after the overlay fades out
+            }
+        });
+    }
+
+    showCustomDialog(title, bodyContent, buttons = [], customClass = 'w-full max-w-md') {
+        // Set the dialog header
+        $("#dialogTitle").text(title);
+    
+        // Set the dialog body
+        $("#dialogBody").html(bodyContent);
+    
+        // Set the dialog buttons
+        $("#dialogFooter").empty(); // Clear previous buttons
+        const self = this; // Save a reference to the UIManager instance
+    
+        // Add buttons dynamically
+        buttons.forEach(({ name, action, className = "" }) => {
+            const button = $("<button></button>")
+                .text(name)
+                .addClass(className) // Add classes dynamically
+                .click(function () {
+                    action.call(self); // Ensure the action uses UIManager's context
+                });
+            $("#dialogFooter").append(button);
+        });
+
+        // Apply the custom class to overlayDialogInner
+        const dialogInner = $(".overlayDialogInner");
+        dialogInner.removeClass().addClass(`bg-white p-6 overlayDialogInner ${customClass}`);
+    
+        // Add click event to the close button
+        $("#dialogCloseButton").off("click").on("click", function () {
+            self.hideCustomDialog(); // Hide the dialog when the close button is clicked
+        });
+    
+        // Show the dialog
+        this.fadeInOverlay();
+    }
+
+    // Show the overlay instantly
+    showOverlay(callback) {
+        $(".overlayDialog").show(0, callback); // The callback will execute after the display is set to block
+    }
+
+    // Hide the overlay instantly
+    hideOverlay(callback) {
+        $(".overlayDialog").hide(0, callback); // The callback will execute after the display is set to none
+    }
+
+    // Fade in the overlay with callback
+    fadeInOverlay(callback) {
+        $(".overlayDialog").fadeIn("slow", function () {
+            //console.log("Fade in complete!");
+            if (typeof callback === "function") callback(); // Execute callback if provided
+        });
+    }
+
+    // Fade out the overlay with callback
+    fadeOutOverlay(callback) {
+        $(".overlayDialog").fadeOut("slow", function () {
+            //console.log("Fade out complete!");
+            if (typeof callback === "function") callback(); // Execute callback if provided
+        });
+    }
 }
