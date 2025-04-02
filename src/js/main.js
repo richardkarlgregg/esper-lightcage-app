@@ -55,6 +55,6 @@ $(document).ready(function () {
     store.exportManager.setupEventListeners();
 
     // Debug
-    //store.screenContent.loadPostContent(155, 'capture', 'camera_settings');
+    store.screenContent.loadPostContent(202, 'export', null);
 
 });
