@@ -773,7 +773,7 @@ function esper_get_capture_template($post) {
                                         }
                                         ?>
                                     </select>
-                                    <button class="bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded-r" data-action="load_preset" data-camera-settings-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>">
+                                    <button class="flex items-center bg-esper-yellow borderx border-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded-r" data-action="load_preset" data-camera-settings-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>">
                                         <span class="material-symbols-outlined w-6 h-6 text-black flex-none">download</span> Load
                                     </button>
                                 </div>
