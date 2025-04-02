@@ -7,6 +7,7 @@ class ExportHandler {
         add_action('wp_ajax_esper_add_to_queue', [$this, 'esper_add_to_queue']);
         add_action('wp_ajax_esper_get_queue_table', [$this, 'esper_get_queue_table']);
         add_action('wp_ajax_esper_get_export_summary', [$this, 'esper_get_export_summary']);
+        add_action('wp_ajax_esper_remove_from_queue', [$this, 'esper_remove_from_queue']);
     }
 
     /**
@@ -517,6 +518,7 @@ class ExportHandler {
                         <th class="font-normal text-black text-left">Images To Export</th>
                         <th class="font-normal text-black text-left">Remaining</th>
                         <th class="font-normal text-black text-left">Status</th>
+                        <th class="font-normal text-black text-left">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -564,9 +566,63 @@ class ExportHandler {
             <td><?php echo esc_html($total_images); ?></td>
             <td><?php echo esc_html($remaining); ?></td>
             <td><?php echo esc_html($status); ?></td>
+            <td>
+                <button data-action="remove-from-queue"
+                        data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
+                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                    Remove
+                </button>
+            </td>
         </tr>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * AJAX handler for removing items from the queue.
+     */
+    public function esper_remove_from_queue() {
+        check_ajax_referer('esper_ajax_nonce', 'nonce');
+        
+        $queue_id = isset($_POST['queue_id']) ? intval($_POST['queue_id']) : 0;
+        if (!$queue_id) {
+            wp_send_json_error([
+                'message' => 'Invalid queue ID',
+                'error' => 'Missing or invalid queue_id parameter'
+            ]);
+            return;
+        }
+        
+        // Get the queue item
+        $queue_item = get_post($queue_id);
+        if (!$queue_item || $queue_item->post_type !== 'export_queue') {
+            wp_send_json_error([
+                'message' => 'Invalid queue item',
+                'error' => 'Queue item not found or invalid post type'
+            ]);
+            return;
+        }
+        
+        // Get the export_id from ACF
+        $export_id = get_field('export_id', $queue_id);
+        if ($export_id) {
+            // Clear the queue_id from the export post
+            update_post_meta($export_id, 'queue_id', '');
+        }
+        
+        // Delete the queue item
+        $result = wp_delete_post($queue_id, true);
+        
+        if ($result) {
+            wp_send_json_success([
+                'message' => 'Item removed from queue successfully'
+            ]);
+        } else {
+            wp_send_json_error([
+                'message' => 'Failed to remove item from queue',
+                'error' => 'wp_delete_post failed'
+            ]);
+        }
     }
 }
 
