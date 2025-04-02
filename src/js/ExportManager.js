@@ -27,6 +27,12 @@ export default class ExportManager {
             this.removeFromQueue(queueId, $button);
         });
 
+        // Handle Process Queue
+        $(document).on('click', '[data-action="process-queue"]', (e) => {
+            e.preventDefault();
+            this.processQueue();
+        });
+
         // Handle Select All checkbox
         $(document).on('change', '.queue-select-all', (e) => {
             const isChecked = $(e.currentTarget).prop('checked');
@@ -157,6 +163,72 @@ export default class ExportManager {
             },
             error: () => {
                 alert('Failed to remove item from queue.');
+            }
+        });
+    }
+
+    /**
+     * Process all checked queue items with progress bar animation
+     */
+    processQueue() {
+        const $checkedRows = $('#queue-table tbody tr:has(.queue-item-select:checked)');
+        
+        if ($checkedRows.length === 0) {
+            alert('Please select at least one item to process');
+            return;
+        }
+
+        $checkedRows.each((index, row) => {
+            const $row = $(row);
+            const queueId = $row.find('.queue-item-select').data('queue-id');
+            const totalImages = parseInt($row.find('td:nth-child(7)').text());
+            
+            // Create progress bar
+            const $progressBar = $('<div>', {
+                class: 'w-full bg-gray-700 rounded-full h-2.5',
+                html: '<div class="bg-esper-yellow h-2.5 rounded-full" style="width: 0%"></div>'
+            });
+            
+            // Replace the "Images To Export" cell content with progress bar
+            $row.find('td:nth-child(7)').html($progressBar);
+            
+            // Animate progress bar over 2 seconds
+            $progressBar.find('div').animate({ width: '100%' }, 2000, 'linear', () => {
+                // Update status to completed
+                this.updateQueueStatus(queueId, 'completed', () => {
+                    // Update the status cell
+                    $row.find('td:nth-child(9)').text('completed');
+                    // Restore the original image count
+                    $row.find('td:nth-child(7)').text(totalImages);
+                });
+            });
+        });
+    }
+
+    /**
+     * Update the status of a queue item via AJAX
+     */
+    updateQueueStatus(queueId, status, callback) {
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_update_queue_status',
+                nonce: esperApi.nonce,
+                queue_id: queueId,
+                status: status
+            },
+            success: (response) => {
+                if (response.success) {
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                } else {
+                    alert(`Failed to update status: ${response.data.message}`);
+                }
+            },
+            error: () => {
+                alert('Failed to update status.');
             }
         });
     }

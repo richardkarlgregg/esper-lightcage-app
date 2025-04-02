@@ -8,6 +8,7 @@ class ExportHandler {
         add_action('wp_ajax_esper_get_queue_table', [$this, 'esper_get_queue_table']);
         add_action('wp_ajax_esper_get_export_summary', [$this, 'esper_get_export_summary']);
         add_action('wp_ajax_esper_remove_from_queue', [$this, 'esper_remove_from_queue']);
+        add_action('wp_ajax_esper_update_queue_status', [$this, 'esper_update_queue_status']);
     }
 
     /**
@@ -148,7 +149,7 @@ class ExportHandler {
             'take_id',
             'capture_id',
             'user_id',
-            'queue_status',
+            'status',
             'total_images',
             'processed_images',
             'export_id'
@@ -159,7 +160,7 @@ class ExportHandler {
                 update_field($field, $value, $queue_id);
             }
         }
-        update_field('queue_status', 'queued', $queue_id);
+        update_field('status', 'queued', $queue_id);
         update_field('processed_images', 0, $queue_id);
         $take_images  = get_field('take_images', $queue_id);
         $total_images = is_array($take_images) ? count($take_images) : 0;
@@ -206,7 +207,7 @@ class ExportHandler {
                 echo $this->renderQueueRow();
             }
         } else {
-            echo '<tr><td colspan="8" class="px-4 py-2 text-center">No items in queue.</td></tr>';
+            echo '<tr><td colspan="10" class="px-4 py-2 text-center">No items in queue.</td></tr>';
         }
         wp_reset_postdata();
         $html = ob_get_clean();
@@ -483,7 +484,7 @@ class ExportHandler {
                         echo $this->renderQueueRow();
                     }
                 } else {
-                    echo '<tr><td colspan="8" class="text-center text-white">No items in queue</td></tr>';
+                    echo '<tr><td colspan="10" class="text-center text-white">No items in queue</td></tr>';
                 }
                 wp_reset_postdata();
                 ?>
@@ -509,11 +510,13 @@ class ExportHandler {
         $processed_images = get_field('processed_images');
         $remaining        = max(0, $total_images - $processed_images);
         $counts           = $this->calculateImageCounts($total_images);
-        $status           = get_field('queue_status');
+        $status           = get_field('status');
         ?>
         <tr class="border-b border-esper-yellow">
             <td>
-                <input type="checkbox" class="queue-item-select" checked data-queue-id="<?php echo esc_attr(get_the_ID()); ?>">
+                <?php if ($status === 'queued'): ?>
+                    <input type="checkbox" class="queue-item-select" checked data-queue-id="<?php echo esc_attr(get_the_ID()); ?>">
+                <?php endif; ?>
             </td>
             <td><?php echo esc_html($job_title); ?></td>
             <td><?php echo esc_html($session_title); ?></td>
@@ -578,6 +581,46 @@ class ExportHandler {
             wp_send_json_error([
                 'message' => 'Failed to remove item from queue',
                 'error' => 'wp_delete_post failed'
+            ]);
+        }
+    }
+
+    /**
+     * AJAX handler for updating queue item status.
+     */
+    public function esper_update_queue_status() {
+        check_ajax_referer('esper_ajax_nonce', 'nonce');
+        
+        $queue_id = isset($_POST['queue_id']) ? intval($_POST['queue_id']) : 0;
+        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : '';
+        
+        if (!$queue_id) {
+            wp_send_json_error([
+                'message' => 'Invalid queue ID',
+                'error' => 'Missing or invalid queue_id parameter'
+            ]);
+            return;
+        }
+        
+        if (!$status) {
+            wp_send_json_error([
+                'message' => 'Invalid status',
+                'error' => 'Missing or invalid status parameter'
+            ]);
+            return;
+        }
+        
+        // Update the ACF field
+        $result = update_field('status', $status, $queue_id);
+        
+        if ($result) {
+            wp_send_json_success([
+                'message' => 'Status updated successfully'
+            ]);
+        } else {
+            wp_send_json_error([
+                'message' => 'Failed to update status',
+                'error' => 'ACF update_field failed'
             ]);
         }
     }
