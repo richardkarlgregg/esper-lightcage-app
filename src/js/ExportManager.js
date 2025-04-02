@@ -27,6 +27,12 @@ export default class ExportManager {
             this.removeFromQueue(queueId);
         });
 
+        // Handle Clear Queued
+        $(document).on('click', '[data-action="clear-queued"]', (e) => {
+            e.preventDefault();
+            this.clearQueue();
+        });
+
         // Handle Process Queue
         $(document).on('click', '[data-action="process-queue"]', (e) => {
             e.preventDefault();
@@ -296,6 +302,36 @@ export default class ExportManager {
                     ${$removeButton.prop('outerHTML')}
                 `);
             });
+        });
+    }
+
+    /**
+     * Makes an AJAX call to clear all items from the queue and refreshes the queue table.
+     */
+    clearQueue() {
+        const jobId = store.navigationManager.getPostIdByCriteria('job');
+        
+        $.ajax({
+            url: esperApi.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'esper_clear_queue',
+                nonce: esperApi.nonce,
+                job_id: jobId
+            },
+            success: (response) => {
+                if (response.success) {
+                    // Clear the queue table and add empty message
+                    $('#queue-table tbody').html('<tr><td colspan="9" class="px-4 py-2 text-center">No items in queue.</td></tr>');
+                    this.refreshQueueTable();
+                    this.refreshExportSummary();
+                } else {
+                    alert(`Failed to clear queue: ${response.data.message}`);
+                }
+            },
+            error: () => {
+                alert('Failed to clear queue.');
+            }
         });
     }
 

@@ -9,6 +9,7 @@ class ExportHandler {
         add_action('wp_ajax_esper_get_export_summary', [$this, 'esper_get_export_summary']);
         add_action('wp_ajax_esper_remove_from_queue', [$this, 'esper_remove_from_queue']);
         add_action('wp_ajax_esper_update_queue_status', [$this, 'esper_update_queue_status']);
+        add_action('wp_ajax_esper_clear_queue', [$this, 'esper_clear_queue']);
     }
 
     /**
@@ -656,6 +657,47 @@ class ExportHandler {
                 'error' => 'ACF update_field failed'
             ]);
         }
+    }
+
+    /**
+     * AJAX handler to clear all items from the queue.
+     */
+    public function esper_clear_queue() {
+        check_ajax_referer('esper_ajax_nonce', 'nonce');
+
+        $job_id = isset($_POST['job_id']) ? intval($_POST['job_id']) : 0;
+        if (!$job_id) {
+            wp_send_json_error(['message' => 'Invalid job ID']);
+            return;
+        }
+
+        $args = array(
+            'post_type' => 'export_queue',
+            'posts_per_page' => -1,
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => 'job_id',
+                    'value' => $job_id
+                ),
+                array(
+                    'key' => 'user_id',
+                    'value' => get_current_user_id()
+                )
+            )
+        );
+
+        $queue_items = get_posts($args);
+
+        foreach ($queue_items as $queue_item) {
+            $export_id = get_field('export_id', $queue_item->ID);
+            if ($export_id) {
+                update_field('queue_id', '', $export_id);
+            }
+            wp_delete_post($queue_item->ID, true);
+        }
+
+        wp_send_json_success();
     }
 }
 
