@@ -103,4 +103,8 @@ export default class NavigationManager {
     canGoBack() {
         return this.currentIndex > 0;
     }
+
+    refreshCurrentScreen() {
+        this.loadCurrentScreen();
+    }
 }

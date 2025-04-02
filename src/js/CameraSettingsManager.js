@@ -267,5 +267,70 @@ export default class CameraSettingsManager {
             });
         });
         
+        jQuery(document).on('click', '[data-action="load_preset"]', function() {
+            var presetId = jQuery('#preset-select').val();
+            var cameraSettingsId = jQuery(this).data('camera-settings-id');
+            
+            if (!presetId) {
+                store.notificationManager.showError('Please select a preset to load.');
+                return;
+            }
+            
+            if (!cameraSettingsId) {
+                store.notificationManager.showError('No camera settings ID found.');
+                return;
+            }
+            
+            // Get the preset data
+            jQuery.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'get_preset_data',
+                    nonce: esperApi.nonce,
+                    preset_id: presetId
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        var presetData = response.data;
+                        
+                        // Apply the preset to the camera settings
+                        applyPresetToCameraSettings(presetData, cameraSettingsId);
+                    } else {
+                        store.notificationManager.showError('Error retrieving preset data: ' + response.data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    store.notificationManager.showError('AJAX error: ' + error);
+                }
+            });
+        });
+        
+        function applyPresetToCameraSettings(presetData, cameraSettingsId) {
+            jQuery.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'apply_preset_to_camera_settings',
+                    nonce: esperApi.nonce,
+                    preset_data: JSON.stringify(presetData),
+                    camera_settings_id: cameraSettingsId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        store.notificationManager.showSuccess('Preset applied successfully.');
+                        // Refresh the current screen using NavigationManager
+                        store.navigationManager.refreshCurrentScreen();
+                    } else {
+                        store.notificationManager.showError('Error applying preset: ' + response.data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    store.notificationManager.showError('AJAX error: ' + error);
+                }
+            });
+        }
     }
 }

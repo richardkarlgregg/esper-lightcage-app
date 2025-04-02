@@ -758,6 +758,25 @@ function esper_get_capture_template($post) {
                                 <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
                                 <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
                                 <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="save_as_preset" data-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">save</span> Save as Preset</div>
+                                <div class="flex items-center mr-4">
+                                    <select id="preset-select" class="bg-black text-white border border-esper-yellow rounded-l px-3 py-2 focus:outline-none focus:ring-2 focus:ring-esper-yellow">
+                                        <option value="">Select Preset</option>
+                                        <?php
+                                        $presets = get_posts(array(
+                                            'post_type' => 'preset',
+                                            'posts_per_page' => -1,
+                                            'orderby' => 'title',
+                                            'order' => 'ASC'
+                                        ));
+                                        foreach ($presets as $preset) {
+                                            echo '<option value="' . esc_attr($preset->ID) . '">' . esc_html($preset->post_title) . '</option>';
+                                        }
+                                        ?>
+                                    </select>
+                                    <button class="bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded-r" data-action="load_preset" data-camera-settings-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>">
+                                        <span class="material-symbols-outlined w-6 h-6 text-black flex-none">download</span> Load
+                                    </button>
+                                </div>
                             </div>
                             
 
@@ -1935,6 +1954,86 @@ function get_camera_settings_ajax() {
     wp_send_json_success($camera_settings);
 }
 add_action('wp_ajax_get_camera_settings', 'get_camera_settings_ajax');
+
+// AJAX handler for getting preset data
+function get_preset_data_ajax() {
+    // Verify nonce
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Get the preset ID
+    $preset_id = intval($_POST['preset_id']);
+    
+    if (!$preset_id) {
+        wp_send_json_error('Invalid preset ID');
+        return;
+    }
+    
+    // Get all the preset meta fields
+    $preset_data = array();
+    $meta_keys = array(
+        'camera_name', 'serial_number', 'camera_model', 'iso', 'aperture', 
+        'white_balance', 'colour_temp', 'shutter_speed', 'file_type', 
+        'jpeg_quality', 'drive_mode', 'focus_mode'
+    );
+    
+    foreach ($meta_keys as $key) {
+        $preset_data[$key] = get_post_meta($preset_id, $key, true);
+    }
+    
+    wp_send_json_success($preset_data);
+}
+add_action('wp_ajax_get_preset_data', 'get_preset_data_ajax');
+
+// AJAX handler for applying preset to camera settings
+function apply_preset_to_camera_settings_ajax() {
+    // Verify nonce
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+    
+    // Get the preset data and camera settings ID
+    $preset_data = json_decode(stripslashes($_POST['preset_data']), true);
+    $camera_settings_id = intval($_POST['camera_settings_id']);
+    
+    if (!$preset_data || !is_array($preset_data)) {
+        wp_send_json_error('Invalid preset data');
+        return;
+    }
+    
+    if (!$camera_settings_id) {
+        wp_send_json_error('Invalid camera settings ID');
+        return;
+    }
+    
+    // Get the current camera settings repeater field
+    $camera_settings = get_field('camera_settings_repeater', $camera_settings_id);
+    
+    if (!$camera_settings || !is_array($camera_settings)) {
+        wp_send_json_error('No camera settings found');
+        return;
+    }
+    
+    // Fields to ignore when applying preset
+    $ignored_fields = array('camera_name', 'serial_number', 'camera_model');
+    
+    // Update all rows with the preset data
+    foreach ($camera_settings as &$row) {
+        foreach ($preset_data as $key => $value) {
+            // Skip ignored fields
+            if (!in_array($key, $ignored_fields)) {
+                $row[$key] = $value;
+            }
+        }
+    }
+    
+    // Update the repeater field
+    $updated = update_field('camera_settings_repeater', $camera_settings, $camera_settings_id);
+    
+    if ($updated) {
+        wp_send_json_success('Preset applied successfully');
+    } else {
+        wp_send_json_error('Failed to update camera settings');
+    }
+}
+add_action('wp_ajax_apply_preset_to_camera_settings', 'apply_preset_to_camera_settings_ajax');
 
 
 
