@@ -2061,4 +2061,79 @@ function esper_update_image_selected_handler() {
     wp_send_json_success( [ 'image_id' => $image_id, 'selected' => $selected ] );
 }
 
+// Add AJAX handler for updating take's active filter
+add_action('wp_ajax_update_take_active_filter', 'update_take_active_filter');
+function update_take_active_filter() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'esper_ajax_nonce')) {
+        wp_send_json_error([
+            'message' => 'Invalid nonce',
+            'debug' => [
+                'nonce_received' => isset($_POST['nonce']) ? $_POST['nonce'] : 'not set',
+                'nonce_expected' => wp_create_nonce('esper_ajax_nonce'),
+                'nonce_name' => 'esper_ajax_nonce'
+            ]
+        ]);
+        return;
+    }
+
+    // Get and validate take ID
+    $take_id = isset($_POST['take_id']) ? intval($_POST['take_id']) : 0;
+    if (!$take_id) {
+        wp_send_json_error([
+            'message' => 'Invalid take ID',
+            'debug' => [
+                'take_id_received' => isset($_POST['take_id']) ? $_POST['take_id'] : 'not set',
+                'take_id_validated' => $take_id
+            ]
+        ]);
+        return;
+    }
+
+    // Get and validate filter value
+    $filter = isset($_POST['filter']) ? sanitize_text_field($_POST['filter']) : '';
+    if (!in_array($filter, ['green', 'yellow', 'red', 'all'])) {
+        wp_send_json_error([
+            'message' => 'Invalid filter value',
+            'debug' => [
+                'filter_received' => isset($_POST['filter']) ? $_POST['filter'] : 'not set',
+                'filter_validated' => $filter,
+                'allowed_values' => ['green', 'yellow', 'red', 'all']
+            ]
+        ]);
+        return;
+    }
+
+    // Update the ACF field
+    $updated = update_field('active_filter', $filter, $take_id);
+    $current_value = get_field('active_filter', $take_id);
+
+    if ($updated) {
+        wp_send_json_success([
+            'message' => 'Filter updated successfully',
+            'debug' => [
+                'take_id' => $take_id,
+                'filter_set' => $filter,
+                'filter_current' => $current_value,
+                'update_result' => $updated,
+                'post_exists' => get_post_status($take_id),
+                'post_type' => get_post_type($take_id)
+            ]
+        ]);
+    } else {
+        wp_send_json_error([
+            'message' => 'Failed to update active filter',
+            'debug' => [
+                'take_id' => $take_id,
+                'filter_attempted' => $filter,
+                'current_value' => $current_value,
+                'update_result' => $updated,
+                'post_exists' => get_post_status($take_id),
+                'post_type' => get_post_type($take_id),
+                'acf_field_exists' => function_exists('get_field') ? 'yes' : 'no'
+            ]
+        ]);
+    }
+}
+
 

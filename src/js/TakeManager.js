@@ -174,6 +174,37 @@ export default class TakeManager {
     }
 
     /**
+     * Updates the active filter in the take post's ACF field
+     * @param {string} filter - The filter value to save (green, yellow, red, all)
+     */
+    async saveActiveFilter(filter) {
+        try {
+            const takeId = $('.take-review').data('take-id');
+            if (!takeId) {
+                console.error('No take ID found');
+                return;
+            }
+
+            const response = await $.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'update_take_active_filter',
+                    nonce: esperApi.nonce,
+                    take_id: takeId,
+                    filter: filter
+                }
+            });
+
+            if (!response.success) {
+                console.error('Failed to update active filter:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error updating active filter:', error);
+        }
+    }
+
+    /**
      * Sets up event handlers on thumbnails, including context menu, multi-select, etc.
      */
     initializeThumbnailHandlers($takeCard) {
@@ -490,6 +521,9 @@ export default class TakeManager {
         defaultFilter.classList.remove('bg-opacity-20', 'text-gray-500');
         defaultFilter.classList.add('bg-opacity-50', 'bg-white', 'text-black');
         
+        // Save initial filter state
+        this.saveActiveFilter('all');
+        
         filterButtons.forEach((button) => {
             button.addEventListener('click', () => {
                 const rating = button.dataset.rating;
@@ -525,6 +559,9 @@ export default class TakeManager {
                 } else {
                     button.classList.add(`bg-${rating}-500`);
                 }
+
+                // Save the active filter
+                this.saveActiveFilter(rating);
 
                 const allThumbs = document.querySelectorAll('.filmstrip-scroll .flex-none');
                 allThumbs.forEach((thumb) => {
