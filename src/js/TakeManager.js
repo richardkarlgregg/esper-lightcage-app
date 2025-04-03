@@ -517,12 +517,9 @@ export default class TakeManager {
         const filterButtons = document.querySelectorAll('.rating-filter');
         
         // Set 'All' as default active state
-        const defaultFilter = document.querySelector('.rating-filter[data-rating="all"]');
-        defaultFilter.classList.remove('bg-opacity-20', 'text-gray-500');
-        defaultFilter.classList.add('bg-opacity-50', 'bg-white', 'text-black');
-        
-        // Save initial filter state
-        this.saveActiveFilter('all');
+        //const defaultFilter = document.querySelector('.rating-filter[data-rating="all"]');
+        //defaultFilter.classList.remove('bg-opacity-20', 'text-gray-500');
+        //defaultFilter.classList.add('bg-opacity-50', 'bg-white', 'text-black');
         
         filterButtons.forEach((button) => {
             button.addEventListener('click', () => {
@@ -589,6 +586,8 @@ export default class TakeManager {
             });
         });
 
+       
+
         /**
          * Select all visible thumbnails
          */
@@ -600,5 +599,12 @@ export default class TakeManager {
                 $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
             });
         });
+
+       // document.addEventListener('DOMContentLoaded', () => {
+            const defaultFilter = document.querySelector('.rating-filter.active-filter');
+            if (defaultFilter) {
+              defaultFilter.click();  // triggers the existing handler for "All"
+            }
+         // });
     }
 }

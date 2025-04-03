@@ -990,26 +990,44 @@ function esper_get_take_template($post) {
         <div class="h-32 bg-black/80" id="thumbnailsPane">
             <div class="h-full flex flex-col">
                 <!-- Filmstrip toolbar -->
-                <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
-                    <span class="text-gray-400 text-sm"><?php echo esc_html($imageCount); ?> images</span>
-                    <div class="flex items-center space-x-2">
-                        <button class="select-all-visible text-xs text-white hover:text-esper-yellow transition-colors">
-                            Select All Visible
-                        </button>
-                        <button class="rating-filter px-2 py-1 text-xs rounded bg-green-500/20 text-green-500 hover:bg-green-500/30 transition-colors" data-rating="green">
-                            Green
-                        </button>
-                        <button class="rating-filter px-2 py-1 text-xs rounded bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 transition-colors" data-rating="yellow">
-                            Yellow
-                        </button>
-                        <button class="rating-filter px-2 py-1 text-xs rounded bg-red-500/20 text-red-500 hover:bg-red-500/30 transition-colors" data-rating="red">
-                            Red
-                        </button>
-                        <button class="rating-filter px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-500 hover:bg-gray-500/30 transition-colors" data-rating="all">
-                            All
-                        </button>
-                    </div>
-                </div>
+                <?php
+    // Get the ACF field; returns something like "green", "yellow", "red", or "all"
+    $activeFilter = get_field('active_filter', $post->ID);
+
+    if ( empty($activeFilter)) {
+        $activeFilter = 'all';
+    }
+?>
+<div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
+    <span class="text-gray-400 text-sm"><?php echo esc_html($imageCount); ?> images</span>
+    <div class="flex items-center space-x-2">
+        <button class="select-all-visible text-xs text-white hover:text-esper-yellow transition-colors">
+            Select All Visible
+        </button>
+
+        <?php
+            // List of possible ratings
+            $ratings = [
+                'green'  => 'bg-green-500/20 text-green-500 hover:bg-green-500/30',
+                'yellow' => 'bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30',
+                'red'    => 'bg-red-500/20 text-red-500 hover:bg-red-500/30',
+                'all'    => 'bg-gray-500/20 text-gray-500 hover:bg-gray-500/30',
+            ];
+
+            // Render each button, adding "active-filter" if it matches $activeFilter
+            foreach ($ratings as $ratingKey => $extraClasses) :
+                // Add "active-filter" if $ratingKey == $activeFilter
+                $activeClass = ($ratingKey === $activeFilter) ? ' active-filter' : '';
+        ?>
+            <button 
+                class="rating-filter px-2 py-1 text-xs rounded transition-colors <?php echo $extraClasses . $activeClass; ?>" 
+                data-rating="<?php echo esc_attr($ratingKey); ?>">
+                <?php echo ucfirst($ratingKey); ?>
+            </button>
+        <?php endforeach; ?>
+    </div>
+</div>
+
                 <!-- Filmstrip content with custom scrollbar -->
                 <div class="flex-1 overflow-x-auto scrollbar filmstrip-scroll">
                     <div class="flex h-full p-2 space-x-2">
