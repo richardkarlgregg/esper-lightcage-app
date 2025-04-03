@@ -1056,7 +1056,8 @@ function store_take_generate_filmstrip_thumbnails($take_id = null) {
                 $thumbnail_url = 'https://placehold.co/1920x1080/333333/FFFFFF/png?text=' . get_post_meta($image->ID, 'image_number', true);
             }
             
-            $extra_class = ($image->ID === $take_images[0]->ID) ? 'ring-2 ring-esper-yellow' : '';
+            $selected = get_field('selected', $image->ID);
+            $extra_class = $selected ? 'ring-2 ring-esper-yellow' : '';
             
             // Get current rating
             $current_rating = get_field('colour_rating', $image->ID);
@@ -2041,5 +2042,23 @@ function apply_preset_to_camera_settings_ajax() {
 }
 add_action('wp_ajax_apply_preset_to_camera_settings', 'apply_preset_to_camera_settings_ajax');
 
+add_action( 'wp_ajax_esper_update_image_selected', 'esper_update_image_selected_handler' );
+function esper_update_image_selected_handler() {
+    // Make sure the user can edit or that the nonce is valid:
+    check_ajax_referer('esper_ajax_nonce', 'nonce');
+
+    $image_id = isset($_POST['image_id']) ? intval($_POST['image_id']) : 0;
+    $selected = isset($_POST['selected']) ? intval($_POST['selected']) : 0;
+
+    if (!$image_id) {
+        wp_send_json_error( ['message' => 'Missing or invalid image_id'] );
+    }
+
+    // Update your ACF true/false field. 
+    // Example if your field name is "selected":
+    update_field( 'selected', $selected, $image_id );
+
+    wp_send_json_success( [ 'image_id' => $image_id, 'selected' => $selected ] );
+}
 
 

@@ -177,6 +177,34 @@ export default class TakeManager {
      * Sets up event handlers on thumbnails, including context menu, multi-select, etc.
      */
     initializeThumbnailHandlers($takeCard) {
+
+        /**
+         * Updates the "selected" true/false field in ACF via AJAX.
+         *
+         * @param {number} imageId
+         * @param {boolean} isSelected
+         */
+        function updateSelectedState(imageId, isSelected) {
+            $.ajax({
+                url: esperApi.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'esper_update_image_selected',  // Name your action
+                    nonce: esperApi.nonce,
+                    image_id: imageId,
+                    selected: isSelected ? 1 : 0,           // ACF true/false fields are typically 1 or 0
+                },
+                success: (response) => {
+                    if (!response.success) {
+                        console.error('Failed to update selection state:', response);
+                    }
+                },
+                error: (xhr, status, error) => {
+                    console.error('AJAX error:', error);
+                }
+            });
+        }
+
         const $filmstripScroll = $takeCard.find('.filmstrip-scroll');
         const $thumbnails      = $takeCard.find('#thumbnailsPane .flex-none');
         const $mainImage       = $takeCard.find('#mainImagePane img');
@@ -394,19 +422,35 @@ export default class TakeManager {
                     const end   = Math.max(clickedIndex, lastIndex);
                     $thumbnails.slice(start, end + 1).each(function() {
                         $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
+
+                        // IMPORTANT: also call the Ajax helper
+                        updateSelectedState($(this).data('image-id'), true);
                     });
                 } else {
                     $thumbDiv.addClass('ring-2 ring-esper-yellow');
+
+                    updateSelectedState($thumbnail.data('image-id'), true);
                 }
             } 
             else if (!isMultiSelect) {
-                // Single select
-                $thumbnails.find('.ring-2').removeClass('ring-2 ring-esper-yellow');
+               // Single select: remove ring from all, add to the clicked
+                $thumbnails.find('.ring-2').each(function() {
+                    const $div = $(this);
+                    $div.removeClass('ring-2 ring-esper-yellow');
+                    
+                    // The parent .flex-none has the data('image-id')
+                    const imageId = $div.closest('.flex-none').data('image-id');
+                    updateSelectedState(imageId, false);
+                });
+
                 $thumbDiv.addClass('ring-2 ring-esper-yellow');
+                updateSelectedState($thumbnail.data('image-id'), true);
             } 
             else {
                 // Toggle multi-select
+                const wasSelected = $thumbDiv.hasClass('ring-2');
                 $thumbDiv.toggleClass('ring-2 ring-esper-yellow');
+                updateSelectedState($thumbnail.data('image-id'), !wasSelected);
             }
 
             // Update main image with higher-res version
