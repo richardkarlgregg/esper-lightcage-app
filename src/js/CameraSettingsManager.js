@@ -102,10 +102,12 @@ export default class CameraSettingsManager {
         function showPresetNameInput(presetData) {
             // Get the button that was clicked
             const $button = jQuery('[data-action="save_as_preset"]');
+            // Get the preset dropdown container
+            const $presetDropdown = jQuery('.preset-dropdown-container');
             
             // Create the input container
             const $inputContainer = jQuery('<div>', {
-                class: 'flex items-center space-x-2 mt-2'
+                class: 'flex items-center space-x-2'
             });
             
             // Create the input field
@@ -147,6 +149,8 @@ export default class CameraSettingsManager {
                             $inputContainer.remove();
                             // Show the original button again
                             $button.show();
+                            // Show the preset dropdown again
+                            $presetDropdown.show();
                             // Refresh the current screen using NavigationManager
                             store.navigationManager.refreshCurrentScreen();
                         } else {
@@ -168,6 +172,8 @@ export default class CameraSettingsManager {
                 $inputContainer.remove();
                 // Show the original button again
                 $button.show();
+                // Show the preset dropdown again
+                $presetDropdown.show();
             });
             
             // Add the input and buttons to the container
@@ -175,6 +181,8 @@ export default class CameraSettingsManager {
             
             // Hide the original button
             $button.hide();
+            // Hide the preset dropdown
+            $presetDropdown.hide();
             
             // Add the input container after the button
             $button.after($inputContainer);

@@ -754,32 +754,6 @@ function esper_get_capture_template($post) {
                             <p>Session: <?php echo esc_html($parent_session->post_title); ?></p>
                             <p>Created: <?php echo get_the_date('F j, Y g:i a', $post); ?></p>
 
-                            <div class="flex flex-wrap mt-3">
-                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
-                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
-                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="save_as_preset" data-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">save</span> Save as Preset</div>
-                                <div class="flex items-center mr-4">
-                                    <select id="preset-select" class="bg-black text-white border border-esper-yellow rounded-l px-3 py-2 focus:outline-none focus:ring-2 focus:ring-esper-yellow">
-                                        <option value="">Select Preset</option>
-                                        <?php
-                                        $presets = get_posts(array(
-                                            'post_type' => 'preset',
-                                            'posts_per_page' => -1,
-                                            'orderby' => 'title',
-                                            'order' => 'ASC'
-                                        ));
-                                        foreach ($presets as $preset) {
-                                            echo '<option value="' . esc_attr($preset->ID) . '">' . esc_html($preset->post_title) . '</option>';
-                                        }
-                                        ?>
-                                    </select>
-                                    <button class="flex items-center bg-esper-yellow borderx border-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded-r" data-action="load_preset" data-camera-settings-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>">
-                                        <span class="material-symbols-outlined w-6 h-6 text-black flex-none">download</span> Load
-                                    </button>
-                                </div>
-                            </div>
-                            
-
                         </div>
                     </div>
                     <div class="flex space-x-2">
@@ -790,6 +764,32 @@ function esper_get_capture_template($post) {
                                 <span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">camera</span>
                                 
                             Trigger Take
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="flex flex-wrap mt-3">
+                    <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="camera_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">photo_camera</span> Advanced Camera Settings</div>
+                    <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="openScreen" data-id="<?php echo esc_attr($post->ID); ?>" data-type="capture" data-context="light_settings"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">light_mode</span> Advanced Light Settings</div>
+                    <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="save_as_preset" data-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">save</span> Save as Preset</div>
+                    <div class="flex items-center mr-4 preset-dropdown-container">
+                        <select id="preset-select" class="bg-black text-white border border-esper-yellow rounded-l px-3 py-2 focus:outline-none focus:ring-2 focus:ring-esper-yellow">
+                            <option value="">Select Preset</option>
+                            <?php
+                            $presets = get_posts(array(
+                                'post_type' => 'preset',
+                                'posts_per_page' => -1,
+                                'orderby' => 'title',
+                                'order' => 'ASC'
+                            ));
+                            foreach ($presets as $preset) {
+                                echo '<option value="' . esc_attr($preset->ID) . '">' . esc_html($preset->post_title) . '</option>';
+                            }
+                            ?>
+                        </select>
+                        <button class="flex items-center bg-esper-yellow borderx border-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded-r" data-action="load_preset" data-camera-settings-id="<?php echo esc_attr(get_post_meta($post->ID, 'capture_camera_settings', true)); ?>">
+                            <span class="material-symbols-outlined w-6 h-6 text-black flex-none">download</span> Load
                         </button>
                     </div>
                 </div>
