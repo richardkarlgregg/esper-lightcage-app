@@ -388,13 +388,14 @@ export default class CameraSettingsManager {
                     camera_settings_id: cameraSettingsId
                 },
                 success: function(response) {
-                    if (response.success) {
+                    //console.log(response);
+                   // if (response.success) {
                         store.notificationManager.showSuccess('Preset applied successfully.');
                         // Refresh the current screen using NavigationManager
                         store.navigationManager.refreshCurrentScreen();
-                    } else {
-                        store.notificationManager.showError('Error applying preset: ' + response.data);
-                    }
+                    //} else {
+                       // store.notificationManager.showError('Error applying preset: ' + response.data);
+                   // }
                 },
                 error: function(xhr, status, error) {
                     store.notificationManager.showError('AJAX error: ' + error);

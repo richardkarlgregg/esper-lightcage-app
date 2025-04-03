@@ -37,7 +37,7 @@ class CameraSettings {
      * @return array The repeater rows.
      */
     protected function getRepeaterRows() {
-        $rows = get_field( 'camera_settings_repeater', $this->cameraSettingsId );
+        $rows = get_field( 'field_67eedcf4fe13d', $this->cameraSettingsId );
         return is_array( $rows ) ? $rows : array();
     }
 
@@ -736,7 +736,7 @@ function update_acf_field_callback() {
     }
 
     // Get the repeater field rows.
-    $rows = get_field( 'camera_settings_repeater', $cameraSettingsPostID );
+    $rows = get_field( 'field_67eedcf4fe13d', $cameraSettingsPostID );
     if ( ! is_array( $rows ) || empty( $rows ) ) {
         wp_send_json_error( 'No repeater field rows found.' );
         wp_die();
@@ -750,7 +750,7 @@ function update_acf_field_callback() {
     }
 
     // Update the repeater field with the modified rows.
-    $updated = update_field( 'camera_settings_repeater', $rows, $cameraSettingsPostID );
+    $updated = update_field( 'field_67eedcf4fe13d', $rows, $cameraSettingsPostID );
 
     if ( $updated ) {
         wp_send_json_success( 'Field updated successfully.' );

@@ -209,10 +209,10 @@ function esper_create_item() {
                 $cameraSettingsPostID = get_post_meta($capture_id, 'capture_camera_settings', true);
                 if ($cameraSettingsPostID) {
                     // Retrieve the repeater field rows from the camera settings post.
-                    $rows = get_field('camera_settings_repeater', $cameraSettingsPostID);
+                    $rows = get_field('field_67eedcf4fe13d', $cameraSettingsPostID);
                     if ($rows) {
                         // Copy the repeater data to the new take.
-                        update_field('camera_settings_repeater', $rows, $post_id);
+                        update_field('field_67eedcf4fe13d', $rows, $post_id);
                     }
                 }
 
@@ -330,7 +330,7 @@ function create_light_and_camera_settings_for_capture( $post_id, $post, $update 
             );
         }
         // Use ACF's update_field() to set the repeater field.
-        update_field( 'camera_settings_repeater', $rows, $camera_settings_id );
+        update_field( 'field_67eedcf4fe13d', $rows, $camera_settings_id );
     
     }
 
@@ -1629,61 +1629,60 @@ function esper_update_session_notes() {
  *  - fieldSets: an array of field definitions. Each field can include:
  *      - field_name: Label text.
  *      - field_slug: Used for the name and id attributes.
+ *      - field_key: ACF's field key, used to add data-field-key="..."
  *      - type: Input type (text, number, select, checkbox, radio, range, etc.).
  *      - value: Default value.
  *      - placeholder: Optional placeholder attribute.
- *      - hide_label: If set to true, the label will not be output.
+ *      - hide_label: If set to true, the label won't be rendered.
  *      - options: For select or radio types.
- *      - attributes: An associative array of additional attributes.
+ *      - attributes: Additional attributes as an assoc array.
  *      - beforeHTML, afterHTML: Wrapper markup for the field.
  *
  * @param array $sets Array of input set definitions.
  */
 function render_input_sets( array $sets ) {
     foreach ( $sets as $set ) {
+        
+        // Get top-level styling classes if provided.
+        $global_label_class = isset( $set['label_class'] ) ? $set['label_class'] : '';
+        $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'w-full bg-black border p-2 border-white border-opacity-25 text-white';
 
-                // Get top-level styling classes if provided.
-                $global_label_class = isset( $set['label_class'] ) ? $set['label_class'] : '';
-                $global_input_class = isset( $set['input_class'] ) ? $set['input_class'] : 'w-full bg-black border p-2 border-white border-opacity-25 text-white';
-
-                
         // Output set wrapper (beforeHTML).
         if ( ! empty( $set['beforeHTML'] ) ) {
             echo $set['beforeHTML'];
         }
 
-        // Optional set title.
+        // Optional set title
         if ( ! empty( $set['set_name'] ) ) {
-            //echo '<h3>' . esc_html( $set['set_name'] ) . '</h3>';
+            // echo '<h3>' . esc_html( $set['set_name'] ) . '</h3>';
         }
 
-        // Loop through each field in the set.
+        // Loop each field in the set
         if ( ! empty( $set['fieldSets'] ) && is_array( $set['fieldSets'] ) ) {
             foreach ( $set['fieldSets'] as $field ) {
 
-                // Get field-specific classes; fall back to global ones.
+                // Field-specific classes or fallback to global
                 $label_class = isset( $field['label_class'] ) ? $field['label_class'] : $global_label_class;
                 $input_class = isset( $field['input_class'] ) ? $field['input_class'] : $global_input_class;
                 
-                // Output any field beforeHTML.
+                // Output field beforeHTML
                 if ( ! empty( $field['beforeHTML'] ) ) {
                     echo $field['beforeHTML'];
                 }
 
-                // Check if we should hide the label.
+                // Label logic
                 $hide_label = isset( $field['hide_label'] ) ? $field['hide_label'] : false;
+                $show_icon  = isset( $field['show_icon'] )  ? $field['show_icon']  : false;
 
-                $show_icon = isset( $field['show_icon'] ) ? $field['show_icon'] : false;
-                // Retrieve placeholder if provided.
+                // Build placeholder & other attributes
                 $placeholder = isset( $field['placeholder'] ) ? $field['placeholder'] : '';
-
-                // Build additional attribute string.
                 $attr_string = '';
+
                 if ( ! empty( $placeholder ) ) {
                     $attr_string .= ' placeholder="' . esc_attr( $placeholder ) . '"';
                 }
                 if ( isset( $field['display']) && $field['display'] == false ) {
-                    $attr_string .= ' style="display:none;" ' ;
+                    $attr_string .= ' style="display:none;"';
                 }
                 if ( isset( $field['attributes'] ) && is_array( $field['attributes'] ) ) {
                     foreach ( $field['attributes'] as $attr_key => $attr_val ) {
@@ -1691,32 +1690,38 @@ function render_input_sets( array $sets ) {
                     }
                 }
 
-                // Render the label unless hidden.
+                // --- ADD data-field-key if present ---
+                if ( ! empty( $field['key'] ) ) {
+                    $attr_string .= ' data-field-key="' . esc_attr( $field['key'] ) . '"';
+                }
+
+                // Render label unless hidden
                 if ( ! $hide_label ) {
                     echo '<label for="' . esc_attr( $field['field_slug'] ) . '" class="' . esc_attr( $label_class ) . ' flex flex-wrap items-center">';
-
-                        if ( $show_icon && !empty($field['icon'])) {
-                            echo '<span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">'.$field['icon'].'</span>';
+                        if ( $show_icon && ! empty( $field['icon'] ) ) {
+                            echo '<span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">' . $field['icon'] . '</span>';
                         }
                         echo esc_html( $field['field_name'] );
                     echo '</label>';
                 }
 
-                // Render the input based on type.
-                $type       = isset( $field['type'] ) ? $field['type'] : 'text';
+                // Prepare the input
+                $type       = isset( $field['type'] )       ? $field['type']       : 'text';
                 $field_slug = isset( $field['field_slug'] ) ? $field['field_slug'] : '';
-                $value      = isset( $field['value'] ) ? $field['value'] : '';
+                $value      = isset( $field['value'] )      ? $field['value']      : '';
 
                 switch ( $type ) {
+
+                    // text / number / readOnly
                     case 'text':
                     case 'number':
                     case 'readOnly':
-                        // If the type is readOnly, add the readonly attribute and change type to text.
-                        $readonly = ( $type === 'readOnly' ) ? ' readonly="readonly"' : '';
+                        $readonly  = ( $type === 'readOnly' ) ? ' readonly="readonly"' : '';
                         $inputType = ( $type === 'readOnly' ) ? 'text' : $type;
                         echo '<input type="' . esc_attr( $inputType ) . '" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '" class="' . esc_attr( $input_class ) . '"' . $attr_string . $readonly . '>';
                         break;
 
+                    // select
                     case 'select':
                         echo '<select name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" class="' . esc_attr( $input_class ) . '"' . $attr_string . '>';
                         if ( isset( $field['options'] ) && is_array( $field['options'] ) ) {
@@ -1727,6 +1732,7 @@ function render_input_sets( array $sets ) {
                         echo '</select>';
                         break;
 
+                    // checkbox
                     case 'checkbox':
                         echo '<label for="' . esc_attr( $field_slug ) . '">';
                         echo '<input type="checkbox" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="1" ' . checked( 1, $value, false ) . $attr_string . '>';
@@ -1734,6 +1740,7 @@ function render_input_sets( array $sets ) {
                         echo '</label>';
                         break;
 
+                    // radio
                     case 'radio':
                         echo '<span>' . esc_html( $field['field_name'] ) . '</span>';
                         if ( isset( $field['options'] ) && is_array( $field['options'] ) ) {
@@ -1746,28 +1753,31 @@ function render_input_sets( array $sets ) {
                         }
                         break;
 
+                    // range
                     case 'range':
-                        echo '<input  class="' . esc_attr( $input_class ) . '" type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
+                        echo '<input class="' . esc_attr( $input_class ) . '" type="range" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
                         break;
 
+                    // default: text
                     default:
                         echo '<input type="text" name="' . esc_attr( $field_slug ) . '" id="' . esc_attr( $field_slug ) . '" value="' . esc_attr( $value ) . '"' . $attr_string . '>';
                         break;
                 }
 
-                // Output any field afterHTML.
+                // Output field afterHTML
                 if ( ! empty( $field['afterHTML'] ) ) {
                     echo $field['afterHTML'];
                 }
             }
         }
 
-        // Output set wrapper closing markup.
+        // Output set wrapper closing markup
         if ( ! empty( $set['afterHTML'] ) ) {
             echo $set['afterHTML'];
         }
     }
 }
+
 
 function my_custom_log( $data ) {
     // Get the WordPress uploads directory.
@@ -1803,7 +1813,7 @@ function update_camera_settings_repeater_ajax() {
     my_custom_log( $rows );
 
     // Update the ACF repeater field named "camera_settings_repeater" for the given post.
-    update_field('camera_settings_repeater', $rows, $post_id);
+    update_field('field_67eedcf4fe13d', $rows, $post_id);
     
     wp_send_json_success('Repeater updated');
    
@@ -1969,7 +1979,7 @@ function get_camera_settings_ajax() {
     }
     
     // Get the camera settings repeater field
-    $camera_settings = get_field('camera_settings_repeater', $camera_settings_id);
+    $camera_settings = get_field('field_67eedcf4fe13d', $camera_settings_id);
     
     if (!$camera_settings || !is_array($camera_settings)) {
         wp_send_json_error('No camera settings data found');
@@ -2009,56 +2019,78 @@ function get_preset_data_ajax() {
 }
 add_action('wp_ajax_get_preset_data', 'get_preset_data_ajax');
 
-// AJAX handler for applying preset to camera settings
 function apply_preset_to_camera_settings_ajax() {
-    // Verify nonce
     check_ajax_referer('esper_ajax_nonce', 'nonce');
-    
-    // Get the preset data and camera settings ID
-    $preset_data = json_decode(stripslashes($_POST['preset_data']), true);
-    $camera_settings_id = intval($_POST['camera_settings_id']);
-    
+
+    // We'll store debug info here.
+    $debug_info = [];
+
+    // For clarity, let's also store the entire $_POST.
+    $debug_info[] = '[Debug] $_POST = ' . print_r($_POST, true);
+
+    // Parse incoming data
+    $preset_data_json   = isset($_POST['preset_data']) ? stripslashes($_POST['preset_data']) : '';
+    $preset_data        = json_decode($preset_data_json, true);
+    $camera_settings_id = isset($_POST['camera_settings_id']) ? intval($_POST['camera_settings_id']) : 0;
+
+    $debug_info[] = '[Debug] $preset_data = ' . print_r($preset_data, true);
+    $debug_info[] = '[Debug] $camera_settings_id = ' . $camera_settings_id;
+
+    // Validate
     if (!$preset_data || !is_array($preset_data)) {
-        wp_send_json_error('Invalid preset data');
-        return;
+        wp_send_json_error([
+            'message' => 'Invalid preset data',
+            'debug'   => $debug_info,
+        ]);
     }
-    
+
     if (!$camera_settings_id) {
-        wp_send_json_error('Invalid camera settings ID');
-        return;
+        wp_send_json_error([
+            'message' => 'Invalid camera settings ID',
+            'debug'   => $debug_info,
+        ]);
     }
-    
-    // Get the current camera settings repeater field
-    $camera_settings = get_field('camera_settings_repeater', $camera_settings_id);
-    
+
+    // Retrieve the current ACF repeater
+    $camera_settings = get_field('field_67eedcf4fe13d', $camera_settings_id);
+    $debug_info[] = '[Debug] $camera_settings BEFORE = ' . print_r($camera_settings, true);
+
     if (!$camera_settings || !is_array($camera_settings)) {
-        wp_send_json_error('No camera settings found');
-        return;
+        wp_send_json_error([
+            'message' => 'No camera settings found or not an array',
+            'debug'   => $debug_info,
+        ]);
     }
-    
-    // Fields to ignore when applying preset
-    $ignored_fields = array('camera_name', 'serial_number', 'camera_model');
-    
-    // Update all rows with the preset data
+
+    // Fields to ignore
+    $ignored_fields = ['camera_name', 'serial_number', 'camera_model'];
+
+    // Update each row with the preset data
     foreach ($camera_settings as &$row) {
         foreach ($preset_data as $key => $value) {
-            // Skip ignored fields
             if (!in_array($key, $ignored_fields)) {
                 $row[$key] = $value;
             }
         }
     }
-    
-    // Update the repeater field
-    $updated = update_field('camera_settings_repeater', $camera_settings, $camera_settings_id);
-    
+    $debug_info[] = '[Debug] $camera_settings AFTER = ' . print_r($camera_settings, true);
+
+    // Save updated repeater
+    $updated = update_field('field_67eedcf4fe13d', $camera_settings, $camera_settings_id);
     if ($updated) {
-        wp_send_json_success('Preset applied successfully');
+        wp_send_json_success([
+            'message' => 'Preset applied successfully',
+            'debug'   => $debug_info,
+        ]);
     } else {
-        wp_send_json_error('Failed to update camera settings');
+        wp_send_json_error([
+            'message' => 'Failed to update camera settings',
+            'debug'   => $debug_info,
+        ]);
     }
 }
 add_action('wp_ajax_apply_preset_to_camera_settings', 'apply_preset_to_camera_settings_ajax');
+
 
 add_action( 'wp_ajax_esper_update_image_selected', 'esper_update_image_selected_handler' );
 function esper_update_image_selected_handler() {

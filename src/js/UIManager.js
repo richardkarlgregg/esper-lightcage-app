@@ -130,6 +130,7 @@ export default class UIManager {
             const postId = $(this).data('id');
             const postType = $(this).data('type');
             store.navigationManager.pushScreen(postId, postType);
+            store.navigationManager.hierarchy = store.navigationManager.updateHierarchyFromFolderItem($(this));
             $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
             $(this).addClass('bg-esper-yellow bg-opacity-10');
         });
@@ -309,8 +310,7 @@ export default class UIManager {
             $('#currentJobTitle').text(jobTitle);
             
             try {
-                // First load the job content
-                await store.navigationManager.pushScreen(jobId, 'job');
+                
                 
                 // Then load the hierarchy for the folder tree
                 const response = await $.post(esperApi.ajaxurl, {
@@ -331,6 +331,9 @@ export default class UIManager {
                         $('#folderTree').append(self.createFolderItem(job));
                     }
                 }
+
+                // First load the job content
+                await store.navigationManager.pushScreen(jobId, 'job');
             } catch (error) {
                 console.error('Error loading job:', error);
                 store.notificationManager.showError('Error loading job');

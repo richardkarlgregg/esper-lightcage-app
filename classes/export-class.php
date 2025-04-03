@@ -350,7 +350,7 @@ class ExportHandler {
         <div class="mb-4">
             <h3 class="text-lg font-semibold text-white mb-4">Export Summary</h3>
             <p class="text-white mb-4">Job: <?php echo esc_html($job_title); ?></p>
-            <div class="h-96 overflow-y-scroll scrollbar">
+            <div class="max-h-96 overflow-y-scroll scrollbar">
                 <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                     <thead>
                         <tr class="bg-esper-yellow">
@@ -395,7 +395,7 @@ class ExportHandler {
         $image_count   = is_array($take_images) ? count($take_images) : 0;
         $camera_count  = 0;
         if ($take_id) {
-            $camera_settings = get_field('camera_settings_repeater', $take_id);
+            $camera_settings = get_field('field_67eedcf4fe13d', $take_id);
             if (is_array($camera_settings)) {
                 $camera_count = count($camera_settings);
             }
@@ -477,7 +477,7 @@ class ExportHandler {
                 <button data-action="clear-queued" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">Clear Queued</button>
                 <button data-action="clear-completed" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">Clear Completed</button>
             </div>
-            <div class="h-96 overflow-y-scroll scrollbar">
+            <div class="max-h-96 overflow-y-scroll scrollbar">
                 <table id="queue-table" class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                     <thead>
                         <tr class="bg-esper-yellow">

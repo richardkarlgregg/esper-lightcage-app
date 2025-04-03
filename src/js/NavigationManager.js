@@ -5,6 +5,7 @@ export default class NavigationManager {
     constructor() {
         this.history = [];  // Array to store navigation history
         this.currentIndex = -1;  // Current position in history
+        this.stack = [];
     }
 
     // Update the navigation stack from the folder tree hierarchy.
@@ -18,10 +19,17 @@ export default class NavigationManager {
             hierarchy.unshift({ postId, postType });
             $currentItem = $currentItem.parent().closest('.folder-item');
         }
-        return hierarchy;
+        this.stack = hierarchy;
     }
 
     pushScreen(postId, postType, context = {}) {
+
+        if (postType !== 'export') {
+            // Update the navigation stack based on the folder tree.
+            this.updateHierarchyFromFolderItem($('.folder-item[data-id="' + postId + '"]'));
+            console.log(this.stack);
+        }
+
         // Get the current screen
         const currentScreen = this.getCurrentScreen();
         
@@ -75,9 +83,11 @@ export default class NavigationManager {
         return this.history[this.currentIndex];
     }
     
-    // Get a postId from the history by searching by postType and/or context
+    // New function: Get a postId from the stack by searching by postType and/or context.
+    // If both searchPostType and searchContext are provided, both must match.
+    // Returns the first matching postId or null if no match is found.
     getPostIdByCriteria(searchPostType, searchContext) {
-        const match = this.history.find(screen => {
+        const match = this.stack.find(screen => {
             let typeMatches = true;
             let contextMatches = true;
             
@@ -86,6 +96,7 @@ export default class NavigationManager {
             }
             
             if (searchContext !== undefined && searchContext !== null) {
+                // If screen.context is undefined, treat it as an empty object.
                 contextMatches = JSON.stringify(screen.context || {}) === JSON.stringify(searchContext);
             }
             
