@@ -57,7 +57,8 @@ export default class UIManager {
         $(document)
         .on('mouseenter', '[data-tooltip]', function() {
           const text = $(this).attr('data-tooltip');
-          tooltip.text(text).fadeIn(150);
+          // Stop any existing animations and clear the queue
+          tooltip.stop(true, true).text(text).fadeIn(150);
       
           const offset = $(this).offset();
           const elementHeight = $(this).outerHeight();
@@ -70,7 +71,8 @@ export default class UIManager {
           });
         })
         .on('mouseleave', '[data-tooltip]', function() {
-          tooltip.fadeOut(100);
+          // Stop any existing animations and clear the queue
+          tooltip.stop(true, true).fadeOut(100);
         });
       
         

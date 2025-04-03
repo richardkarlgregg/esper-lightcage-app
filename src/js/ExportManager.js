@@ -16,6 +16,7 @@ export default class ExportManager {
             e.preventDefault();
             const $button = $(e.currentTarget);
             const exportId = $button.data('export-id');
+            console.log(exportId);
             this.addToQueue(exportId);
         });
 
@@ -53,25 +54,27 @@ export default class ExportManager {
             this.processSingleItem(queueId);
         });
 
-        // Handle Select All checkbox
-        $(document).on('change', '.queue-select-all', (e) => {
-            const $selectAll = $(e.currentTarget);
-            const $checkboxes = $('.queue-item-select');
-            $checkboxes.prop('checked', $selectAll.prop('checked'));
+        // Handle individual queue item checkbox changes
+        $(document).on('change', '.queue-item-select', function() {
+            const $row = $(this).closest('tr');
+            if ($(this).is(':checked')) {
+                $row.addClass('bg-esper-yellow bg-opacity-10');
+            } else {
+                $row.removeClass('bg-esper-yellow bg-opacity-10');
+            }
         });
 
-        // Handle individual checkbox changes
-        $(document).on('change', '.queue-item-select', (e) => {
-            const $selectAll = $('.queue-select-all');
-            const $allCheckboxes = $('.queue-item-select');
-            const $checkedCheckboxes = $('.queue-item-select:checked');
-            $selectAll.prop('checked', $allCheckboxes.length === $checkedCheckboxes.length);
+        // Handle select all checkbox
+        $(document).on('change', '.queue-select-all', function() {
+            const isChecked = $(this).is(':checked');
+            $('.queue-item-select').prop('checked', isChecked).trigger('change');
         });
 
         $(document).on('click', '[data-action="open-file-location"]', (e) => {
             e.preventDefault();
             alert('This would open the file directory on Win / Mac');
         });
+
     }
 
     /**
@@ -101,6 +104,7 @@ export default class ExportManager {
                         }
                     });
                     this.refreshQueueTable();
+                    console.log('Export added to queue');
                 } else {
                     alert(`Failed to add export to queue: ${response.data.message}`);
                 }
@@ -234,8 +238,9 @@ export default class ExportManager {
                     $actionsCell.html(`
                         <button data-action="open-file-location"
                                 data-queue-id="${queueId}"
-                                class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
-                            Open File Location
+                                data-tooltip="Open File Location"
+                                class="bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm">
+                            <span class="material-symbols-outlined">folder_open</span>
                         </button>
                         ${$removeButton.prop('outerHTML')}
                     `);
@@ -302,8 +307,9 @@ export default class ExportManager {
                 $actionsCell.html(`
                     <button data-action="open-file-location"
                             data-queue-id="${queueId}"
-                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
-                        Open File Location
+                            data-tooltip="Open File Location"
+                            class="bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm">
+                        <span class="material-symbols-outlined">folder_open</span>
                     </button>
                     ${$removeButton.prop('outerHTML')}
                 `);

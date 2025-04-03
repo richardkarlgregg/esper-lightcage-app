@@ -354,14 +354,14 @@ class ExportHandler {
                 <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                     <thead>
                         <tr class="bg-esper-yellow">
-                            <th class="font-normal text-black text-left">Job</th>
-                            <th class="font-normal text-black text-left">Session</th>
-                            <th class="font-normal text-black text-left">Take</th>
-                            <th class="font-normal text-black text-left">Cameras</th>
-                            <th class="font-normal text-black text-left">Images</th>
-                            <th class="font-normal text-black text-left">Jpegs</th>
-                            <th class="font-normal text-black text-left">Raws</th>
-                            <th class="font-normal text-black text-left">Actions</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Job</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Session</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Take</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Cameras</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Images</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Jpegs</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Raws</th>
+                            <th class="font-normal text-black text-left px-4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -371,7 +371,7 @@ class ExportHandler {
                             echo $this->renderExportRow($export, $job_title);
                         }
                     } else {
-                        echo '<tr><td colspan="8" class="text-center text-white">No exports found</td></tr>';
+                        echo '<tr><td colspan="8" class="text-center text-white px-4 py-2">No exports found</td></tr>';
                     }
                     ?>
                     </tbody>
@@ -403,26 +403,28 @@ class ExportHandler {
         $counts = $this->calculateImageCounts($image_count);
         $status = get_field('status', $export->ID);
         ?>
-        <tr class="border-b border-esper-yellow">
-            <td><?php echo esc_html($job_title); ?></td>
-            <td><?php echo esc_html($session_title); ?></td>
-            <td><?php echo esc_html($take_title); ?></td>
-            <td><?php echo esc_html($camera_count); ?></td>
-            <td><?php echo esc_html($image_count); ?></td>
-            <td><?php echo esc_html($counts['jpegs']); ?></td>
-            <td><?php echo esc_html($counts['raws']); ?></td>
-            <td>
+        <tr class="border-b border-esper-yellow hover:bg-esper-yellow hover:bg-opacity-25 transition">
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($job_title); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($session_title); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($take_title); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($camera_count); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($image_count); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($counts['jpegs']); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($counts['raws']); ?></td>
+            <td class="px-4 py-2 flex space-x-1">
                 <?php if ($status === 'export'): ?>
-                    <button data-action="add-to-queue"
+                    <button class="bg-esper-yellow hover:bg-esper-yellow/80 text-black px-2 py-1 rounded flex items-center text-sm add-to-queue" 
+                            data-action="add-to-queue"
                             data-export-id="<?php echo esc_attr($export->ID); ?>"
-                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
-                        Add to Queue
+                            data-tooltip="Add to Queue">
+                        <span class="material-symbols-outlined">add</span>
                     </button>
                 <?php elseif ($status === 'exported'): ?>
                     <button data-action="open-file-location"
                             data-export-id="<?php echo esc_attr($export->ID); ?>"
-                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
-                        Open File Location
+                            data-tooltip="Open File Location"
+                            class="bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm">
+                        <span class="material-symbols-outlined">folder_open</span>
                     </button>
                 <?php endif; ?>
             </td>
@@ -479,18 +481,20 @@ class ExportHandler {
                 <table id="queue-table" class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
                     <thead>
                         <tr class="bg-esper-yellow">
-                            <th class="font-normal text-black text-left">
-                                <input type="checkbox" class="queue-select-all" checked>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-2 py-2 w-12">
+                                <div class="flex justify-center">
+                                    <input type="checkbox" class="queue-select-all" checked>
+                                </div>
                             </th>
-                            <th class="font-normal text-black text-left">Job</th>
-                            <th class="font-normal text-black text-left">Session</th>
-                            <th class="font-normal text-black text-left">Take</th>
-                            <th class="font-normal text-black text-left">Jpegs</th>
-                            <th class="font-normal text-black text-left">Raws</th>
-                            <th class="font-normal text-black text-left">Images To Export</th>
-                            <th class="font-normal text-black text-left">Remaining</th>
-                            <th class="font-normal text-black text-left">Status</th>
-                            <th class="font-normal text-black text-left">Actions</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Job</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Session</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Take</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Jpegs</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Raws</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Images To Export</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Remaining</th>
+                            <th class="font-normal text-black text-left border-r border-esper-yellow px-4 py-2">Status</th>
+                            <th class="font-normal text-black text-left px-4 py-2">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -501,7 +505,7 @@ class ExportHandler {
                             echo $this->renderQueueRow();
                         }
                     } else {
-                        echo '<tr><td colspan="10" class="text-center text-white">No items in queue</td></tr>';
+                        echo '<tr><td colspan="10" class="text-center text-white px-4 py-2">No items in queue</td></tr>';
                     }
                     wp_reset_postdata();
                     ?>
@@ -530,38 +534,42 @@ class ExportHandler {
         $counts           = $this->calculateImageCounts($total_images);
         $status           = get_field('status');
         ?>
-        <tr class="border-b border-esper-yellow">
-            <td>
-                <?php if ($status === 'queued'): ?>
-                    <input type="checkbox" class="queue-item-select" checked data-queue-id="<?php echo esc_attr(get_the_ID()); ?>">
-                <?php endif; ?>
+        <tr class="border-b border-esper-yellow hover:bg-esper-yellow hover:bg-opacity-25 transition <?php echo $status === 'queued' ? 'bg-esper-yellow bg-opacity-10' : ''; ?>">
+            <td class="border-r border-esper-yellow px-2 py-2 w-12">
+                <div class="flex justify-center">
+                    <?php if ($status === 'queued'): ?>
+                        <input type="checkbox" class="queue-item-select" checked data-queue-id="<?php echo esc_attr(get_the_ID()); ?>">
+                    <?php endif; ?>
+                </div>
             </td>
-            <td><?php echo esc_html($job_title); ?></td>
-            <td><?php echo esc_html($session_title); ?></td>
-            <td><?php echo esc_html($take_title); ?></td>
-            <td><?php echo esc_html($counts['jpegs']); ?></td>
-            <td><?php echo esc_html($counts['raws']); ?></td>
-            <td><?php echo esc_html($total_images); ?></td>
-            <td><?php echo esc_html($remaining); ?></td>
-            <td><?php echo esc_html($status); ?></td>
-            <td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($job_title); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($session_title); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($take_title); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($counts['jpegs']); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($counts['raws']); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($total_images); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($remaining); ?></td>
+            <td class="border-r border-esper-yellow px-4 py-2"><?php echo esc_html($status); ?></td>
+            <td class="px-4 py-2 flex space-x-1">
                 <?php if ($status === 'completed'): ?>
                     <button data-action="open-file-location"
                             data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
-                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
-                        Open File Location
+                            data-tooltip="Open File Location"
+                            class="bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm">
+                        <span class="material-symbols-outlined">folder_open</span>
                     </button>
                 <?php elseif ($status === 'queued'): ?>
                     <button data-action="process-single"
                             data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
-                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm mr-2">
+                            class="bg-esper-yellow text-black px-3 py-1 rounded text-sm">
                         Process
                     </button>
                 <?php endif; ?>
                 <button data-action="remove-from-queue"
                         data-queue-id="<?php echo esc_attr(get_the_ID()); ?>"
-                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                    Remove
+                        data-tooltip="Remove"
+                        class="bg-red-500 hover:bg-red-600 text-black px-2 py-1 rounded flex items-center text-sm">
+                    <span class="material-symbols-outlined">remove</span>
                 </button>
             </td>
         </tr>
