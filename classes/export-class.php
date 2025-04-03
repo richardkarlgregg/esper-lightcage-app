@@ -350,31 +350,33 @@ class ExportHandler {
         <div class="mb-4">
             <h3 class="text-lg font-semibold text-white mb-4">Export Summary</h3>
             <p class="text-white mb-4">Job: <?php echo esc_html($job_title); ?></p>
-            <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
-                <thead>
-                    <tr class="bg-esper-yellow">
-                        <th class="font-normal text-black text-left">Job</th>
-                        <th class="font-normal text-black text-left">Session</th>
-                        <th class="font-normal text-black text-left">Take</th>
-                        <th class="font-normal text-black text-left">Cameras</th>
-                        <th class="font-normal text-black text-left">Images</th>
-                        <th class="font-normal text-black text-left">Jpegs</th>
-                        <th class="font-normal text-black text-left">Raws</th>
-                        <th class="font-normal text-black text-left">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                if (!empty($exports)) {
-                    foreach ($exports as $export) {
-                        echo $this->renderExportRow($export, $job_title);
+            <div class="h-96 overflow-y-scroll scrollbar">
+                <table class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
+                    <thead>
+                        <tr class="bg-esper-yellow">
+                            <th class="font-normal text-black text-left">Job</th>
+                            <th class="font-normal text-black text-left">Session</th>
+                            <th class="font-normal text-black text-left">Take</th>
+                            <th class="font-normal text-black text-left">Cameras</th>
+                            <th class="font-normal text-black text-left">Images</th>
+                            <th class="font-normal text-black text-left">Jpegs</th>
+                            <th class="font-normal text-black text-left">Raws</th>
+                            <th class="font-normal text-black text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    if (!empty($exports)) {
+                        foreach ($exports as $export) {
+                            echo $this->renderExportRow($export, $job_title);
+                        }
+                    } else {
+                        echo '<tr><td colspan="8" class="text-center text-white">No exports found</td></tr>';
                     }
-                } else {
-                    echo '<tr><td colspan="8" class="text-center text-white">No exports found</td></tr>';
-                }
-                ?>
-                </tbody>
-            </table>
+                    ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();
@@ -473,37 +475,39 @@ class ExportHandler {
                 <button data-action="clear-queued" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">Clear Queued</button>
                 <button data-action="clear-completed" class="bg-esper-yellow text-black px-4 py-2 rounded text-sm">Clear Completed</button>
             </div>
-            <table id="queue-table" class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
-                <thead>
-                    <tr class="bg-esper-yellow">
-                        <th class="font-normal text-black text-left">
-                            <input type="checkbox" class="queue-select-all" checked>
-                        </th>
-                        <th class="font-normal text-black text-left">Job</th>
-                        <th class="font-normal text-black text-left">Session</th>
-                        <th class="font-normal text-black text-left">Take</th>
-                        <th class="font-normal text-black text-left">Jpegs</th>
-                        <th class="font-normal text-black text-left">Raws</th>
-                        <th class="font-normal text-black text-left">Images To Export</th>
-                        <th class="font-normal text-black text-left">Remaining</th>
-                        <th class="font-normal text-black text-left">Status</th>
-                        <th class="font-normal text-black text-left">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                if ($queue_query->have_posts()) {
-                    while ($queue_query->have_posts()) {
-                        $queue_query->the_post();
-                        echo $this->renderQueueRow();
+            <div class="h-96 overflow-y-scroll scrollbar">
+                <table id="queue-table" class="w-full text-xs border border-esper-yellow" cellpadding="5" cellspacing="0">
+                    <thead>
+                        <tr class="bg-esper-yellow">
+                            <th class="font-normal text-black text-left">
+                                <input type="checkbox" class="queue-select-all" checked>
+                            </th>
+                            <th class="font-normal text-black text-left">Job</th>
+                            <th class="font-normal text-black text-left">Session</th>
+                            <th class="font-normal text-black text-left">Take</th>
+                            <th class="font-normal text-black text-left">Jpegs</th>
+                            <th class="font-normal text-black text-left">Raws</th>
+                            <th class="font-normal text-black text-left">Images To Export</th>
+                            <th class="font-normal text-black text-left">Remaining</th>
+                            <th class="font-normal text-black text-left">Status</th>
+                            <th class="font-normal text-black text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php
+                    if ($queue_query->have_posts()) {
+                        while ($queue_query->have_posts()) {
+                            $queue_query->the_post();
+                            echo $this->renderQueueRow();
+                        }
+                    } else {
+                        echo '<tr><td colspan="10" class="text-center text-white">No items in queue</td></tr>';
                     }
-                } else {
-                    echo '<tr><td colspan="10" class="text-center text-white">No items in queue</td></tr>';
-                }
-                wp_reset_postdata();
-                ?>
-                </tbody>
-            </table>
+                    wp_reset_postdata();
+                    ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <?php
         return ob_get_clean();
