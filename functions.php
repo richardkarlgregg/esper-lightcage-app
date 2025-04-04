@@ -999,7 +999,7 @@ function esper_get_take_template($post) {
     }
 ?>
 <div class="bg-black/90 px-4 py-1 flex items-center justify-between border-b border-black/60">
-    <span class="text-gray-400 text-sm"><?php echo esc_html($imageCount); ?> images</span>
+    <span class="text-gray-400 text-sm imageCount"><?php echo esc_html($imageCount); ?> images</span>
     <div class="flex items-center space-x-2">
         <button class="select-all-visible text-xs text-white hover:text-esper-yellow transition-colors">
             Select All Visible
@@ -1504,14 +1504,14 @@ function esper_handle_update_take() {
         'post_title' => $new_title
     ], true);
 
-    if (is_wp_error($update_result)) {
-        wp_send_json_error($update_result->get_error_message());
-    } else {
+   // if (is_wp_error($update_result)) {
+      //  wp_send_json_error($update_result->get_error_message());
+   // } else {
         wp_send_json_success([
             'message' => 'Take name updated successfully',
             'title' => $new_title
         ]);
-    }
+  //  }
 
     wp_die();
 }
@@ -1543,14 +1543,14 @@ function esper_handle_update_capture() {
         'post_title' => $new_title
     ));
     
-    if ($updated) {
+   // if ($updated) {
         wp_send_json_success(array(
             'message' => 'Capture name updated successfully',
             'title' => $new_title
-        ));
-    } else {
-        wp_send_json_error('Failed to update capture name');
-    }
+       ));
+  //  } else {
+      ///  wp_send_json_error('Failed to update capture name');
+   // }
 }
 add_action('wp_ajax_esper_update_capture', 'esper_handle_update_capture');
 
@@ -1594,11 +1594,11 @@ function esper_update_session() {
     // For example, update the session title in the database
     // $result = update_session_title($session_id, $title);
 
-    if (/* $result */ true) { // Replace with actual condition
+    //if (/* $result */ true) { // Replace with actual condition
         wp_send_json_success(array('message' => 'Session updated successfully'));
-    } else {
-        wp_send_json_error(array('message' => 'Failed to update session'));
-    }
+  //  } else {
+      //  wp_send_json_error(array('message' => 'Failed to update session'));
+  //  }
 }
 
 // Handle session notes update
@@ -1613,11 +1613,11 @@ function esper_update_session_notes() {
     // For example, update the session notes in the database
     // $result = update_session_notes($session_id, $notes);
 
-    if (/* $result */ true) { // Replace with actual condition
+   // if (/* $result */ true) { // Replace with actual condition
         wp_send_json_success(array('message' => 'Session notes updated successfully'));
-    } else {
-        wp_send_json_error(array('message' => 'Failed to update session notes'));
-    }
+  //  } else {
+   //     wp_send_json_error(array('message' => 'Failed to update session notes'));
+   // }
 }
 
 /**
@@ -1895,27 +1895,24 @@ function esper_update_image_rating() {
         return;
     }
     
-    $success = true;
+  
     foreach ($thumbnails as $thumbnail) {
         $image_id = intval($thumbnail['image_id']);
         $rating = sanitize_text_field($thumbnail['rating']);
         
         if (!in_array($rating, ['green', 'yellow', 'red'])) {
-            $success = false;
+           
+            update_field('colour_rating', '', $image_id);
             continue;
         }
         
-        $update_result = update_field('colour_rating', $rating, $image_id);
-        if (!$update_result) {
-            $success = false;
-        }
+        update_field('colour_rating', $rating, $image_id);
+       
     }
     
-    if ($success) {
-        wp_send_json_success();
-    } else {
-        wp_send_json_error('Some updates failed');
-    }
+    
+    wp_send_json_success();
+   
 }
 add_action('wp_ajax_esper_update_image_rating', 'esper_update_image_rating');
 
@@ -2076,18 +2073,18 @@ function apply_preset_to_camera_settings_ajax() {
     $debug_info[] = '[Debug] $camera_settings AFTER = ' . print_r($camera_settings, true);
 
     // Save updated repeater
-    $updated = update_field('field_67eedcf4fe13d', $camera_settings, $camera_settings_id);
-    if ($updated) {
+    update_field('field_67eedcf4fe13d', $camera_settings, $camera_settings_id);
+   // if ($updated) {
         wp_send_json_success([
             'message' => 'Preset applied successfully',
             'debug'   => $debug_info,
         ]);
-    } else {
-        wp_send_json_error([
-            'message' => 'Failed to update camera settings',
-            'debug'   => $debug_info,
-        ]);
-    }
+   // } else {
+       // wp_send_json_error([
+         //   'message' => 'Failed to update camera settings',
+        //    'debug'   => $debug_info,
+       // ]);
+   // }
 }
 add_action('wp_ajax_apply_preset_to_camera_settings', 'apply_preset_to_camera_settings_ajax');
 
@@ -2155,9 +2152,10 @@ function update_take_active_filter() {
     }
 
     // Update the ACF field
-    $updated = update_field('active_filter', $filter, $take_id);
+    update_field('active_filter', $filter, $take_id);
     $current_value = get_field('active_filter', $take_id);
 
+    $updated = true;
     if ($updated) {
         wp_send_json_success([
             'message' => 'Filter updated successfully',

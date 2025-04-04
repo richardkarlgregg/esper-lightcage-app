@@ -15,6 +15,8 @@ export default class UIManager {
             e.preventDefault();
             e.stopPropagation();
 
+            let currentScreen = store.navigationManager.getCurrentScreen();
+
             const action = $(this).data('action');
             switch (action) {
                 case 'openScreen':
@@ -25,9 +27,43 @@ export default class UIManager {
                     break;
                 case 'back':
                     store.navigationManager.popScreen();
+ 
+                    currentScreen = store.navigationManager.getCurrentScreen();
+                    console.log('currentScreen');
+                    console.log(currentScreen);
+                    if (currentScreen) {
+                        if ( currentScreen.postType !== 'export' ) {
+                            $('#sideMenu span').addClass('opacity-25');
+                            $('[data-action="jobManager"]').removeClass('opacity-25');
+                            $('#sidebar').show();
+                            $('#divider').show();   
+                        } else {
+                            $('#sideMenu span').addClass('opacity-25');
+                            $('[data-action="export"]').removeClass('opacity-25');
+                            $('#sidebar').hide();
+                            $('#divider').hide();  
+                        }
+                    }
+    
                     break;
                 case 'forward':
                     store.navigationManager.forwardScreen();
+                    currentScreen = store.navigationManager.getCurrentScreen();
+                    console.log('currentScreen');
+                    console.log(currentScreen);
+                    if (currentScreen) {
+                        if ( currentScreen.postType !== 'export' ) {
+                            $('#sideMenu span').addClass('opacity-25');
+                            $('[data-action="jobManager"]').removeClass('opacity-25');
+                            $('#sidebar').show();
+                            $('#divider').show();   
+                        } else {
+                            $('#sideMenu span').addClass('opacity-25');
+                            $('[data-action="export"]').removeClass('opacity-25');
+                            $('#sidebar').hide();
+                            $('#divider').hide();  
+                        }
+                    }
                     break;
                 case 'export':
                     console.log('Show export manager');

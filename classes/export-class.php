@@ -100,7 +100,9 @@ class ExportHandler {
         foreach ($image_ids as $image_id) {
             $images[] = ['take_image' => $image_id];
         }
-        $result = update_field('take_images', $images, $export_id);
+        update_field('take_images', $images, $export_id);
+
+        $result = true;
         if ($result) {
             wp_send_json_success([
                 'message'   => 'Export created successfully',
@@ -657,8 +659,9 @@ class ExportHandler {
         }
         
         // Update the ACF field
-        $result = update_field('status', $status, $queue_id);
+        update_field('status', $status, $queue_id);
         
+        $result = true;
         if ($result) {
             wp_send_json_success([
                 'message' => 'Status updated successfully'

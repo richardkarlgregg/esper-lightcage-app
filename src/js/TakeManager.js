@@ -258,6 +258,7 @@ export default class TakeManager {
             <div class="context-menu bg-black border border-white border-opacity-20 rounded-lg shadow-lg p-2 hidden">
                 <div class="text-white text-sm mb-2">Set Rating:</div>
                 <div class="flex space-x-2 mb-2">
+                    <button class="rating-btn bg-black border border-white border-opacity-50 w-8 h-8 rounded-full" data-rating="none"></button>
                     <button class="rating-btn bg-green-500 hover:bg-green-600 w-8 h-8 rounded-full" data-rating="green"></button>
                     <button class="rating-btn bg-yellow-500 hover:bg-yellow-600 w-8 h-8 rounded-full" data-rating="yellow"></button>
                     <button class="rating-btn bg-red-500 hover:bg-red-600 w-8 h-8 rounded-full" data-rating="red"></button>
@@ -408,9 +409,11 @@ export default class TakeManager {
                         thumbnailsData.forEach((data) => {
                             const $thumb = $thumbnails.filter(`[data-image-id="${data.image_id}"]`);
                             $thumb.find('.rating-indicator').remove();
-                            $thumb.find('div').first().append(`
-                                <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${data.rating}-500"></div>
-                            `);
+                            if ( data.rating !== 'none' ) {
+                                $thumb.find('div').first().append(`
+                                    <div class="rating-indicator absolute top-2 right-2 w-3 h-3 rounded-full bg-${data.rating}-500"></div>
+                                `);
+                            }
                         });
                     } else {
                         console.error('Failed to update ratings:', response);
@@ -428,6 +431,14 @@ export default class TakeManager {
                 $contextMenu.addClass('hidden');
             }
         });
+
+        function updateImageCount() {
+            // Count the number of visible thumbnail elements
+            var visibleThumbs = $('.filmstrip-scroll .flex-none:visible').length;
+            
+            // Update all elements with the class "imageCount" with the visible count
+            $('.imageCount').text(visibleThumbs + ' images');
+        }
 
         /**
          * Click on thumbnail to handle multi-select or single-select
@@ -575,14 +586,7 @@ export default class TakeManager {
                     }
                 });
 
-                // Update "X images" text
-                const visibleThumbs = document.querySelectorAll('.filmstrip-scroll .flex-none[style=""]')
-                    .length;
-                const countDisplay = document
-                    .querySelector('.filmstrip-scroll')
-                    .closest('.h-full')
-                    .querySelector('.text-gray-400');
-                countDisplay.textContent = `${visibleThumbs} images`;
+                updateImageCount();
             });
         });
 
@@ -614,5 +618,7 @@ export default class TakeManager {
               defaultFilter.click();  // triggers the existing handler for "All"
             }
          // });
+
+         updateImageCount();
     }
 }

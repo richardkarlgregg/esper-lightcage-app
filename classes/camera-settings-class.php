@@ -750,13 +750,13 @@ function update_acf_field_callback() {
     }
 
     // Update the repeater field with the modified rows.
-    $updated = update_field( 'field_67eedcf4fe13d', $rows, $cameraSettingsPostID );
+    update_field( 'field_67eedcf4fe13d', $rows, $cameraSettingsPostID );
 
-    if ( $updated ) {
+   // if ( $updated ) {
         wp_send_json_success( 'Field updated successfully.' );
-    } else {
-        wp_send_json_error( 'Error updating field.' );
-    }
+   // } else {
+      //  wp_send_json_error( 'Error updating field.' );
+    //}
 
     wp_die();
 }
