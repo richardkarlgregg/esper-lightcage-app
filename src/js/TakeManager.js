@@ -589,14 +589,22 @@ export default class TakeManager {
        
 
         /**
-         * Select all visible thumbnails
+         * Select all visible thumbnails and update their selected state via Ajax.
          */
         $('.select-all-visible').on('click', () => {
             const $visibleThumbs = $('.filmstrip-scroll .flex-none').filter(function() {
                 return $(this).css('display') !== 'none';
             });
             $visibleThumbs.each(function() {
-                $(this).find('div').first().addClass('ring-2 ring-esper-yellow');
+                // Add visual selection classes.
+                const $thumbDiv = $(this).find('div').first();
+                $thumbDiv.addClass('ring-2 ring-esper-yellow');
+
+                // Get the image ID from the data attribute.
+                const imageId = $(this).data('image-id');
+                
+                // Update the selected state via Ajax.
+                updateSelectedState(imageId, true);
             });
         });
 
