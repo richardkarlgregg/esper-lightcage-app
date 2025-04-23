@@ -1232,28 +1232,62 @@ function esper_get_content() {
                     ( new StageComposer( $post->ID ) )->render();
                     $composer_html = ob_get_clean();
                 
-                    // inject it into the first panel
-                    $content = '
-                    <div class="h-full grid grid-cols-4 gap-4">
-                      <!-- Left column: Panels (2 rows) -->
-                      <div class="col-span-3 grid grid-rows-2 gap-4">
-                        <!-- FIRST PANEL: now contains your StageComposer -->
-                        <div class="bg-white bg-opacity-10 p-4">
-                          ' . $composer_html . '
-                        </div>
-                
-                        <!-- SECOND PANEL: still placeholder -->
-                        <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-                          <span class="opacity-25 uppercase">Light Settings Here</span>
-                        </div>
-                      </div>
-                
-                      <!-- Right column: Sidebar -->
-                      <div class="col-span-1 bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-                        <span class="opacity-25 uppercase">Light Settings Here</span>
-                      </div>
-                    </div>';
-                break;
+                    // ── 1.  Create the modelling-light widget markup  ────────────────────────────
+$modeling_light_html = '
+<div id="modeling-light">
+  <div class="bulb" id="bulb-a">
+      <span class="percent">0.00%</span>
+  </div>
+  <div class="bulb" id="bulb-b">
+      <span class="percent">0.00%</span>
+  </div>
+  <div class="bulb" id="bulb-c">
+      <span class="percent">0.00%</span>
+  </div>
+
+  <!-- Control strip -->
+  <div class="controls">
+     <div class="ctrl" data-target="bulb-a">
+        <label>A</label>
+        <input class="range"  type="range" min="0" max="100" step="0.01" value="0">
+        <input class="number" type="number" min="0" max="100" step="0.01" value="0">
+     </div>
+     <div class="ctrl" data-target="bulb-b">
+        <label>B</label>
+        <input class="range"  type="range" min="0" max="100" step="0.01" value="0">
+        <input class="number" type="number" min="0" max="100" step="0.01" value="0">
+     </div>
+     <div class="ctrl" data-target="bulb-c">
+        <label>C</label>
+        <input class="range"  type="range" min="0" max="100" step="0.01" value="0">
+        <input class="number" type="number" min="0" max="100" step="0.01" value="0">
+     </div>
+  </div>
+</div>
+';
+
+// ── 2.  Build the page grid  ─────────────────────────────────────────────────
+$content = '
+<div class="h-full grid grid-cols-4 gap-4">
+  <!-- Left column -->
+  <div class="col-span-3 grid grid-rows-2 gap-4">
+    <!-- FIRST PANEL: StageComposer -->
+    <div class="bg-white bg-opacity-10 p-4">' . $composer_html . '</div>
+
+    <!-- SECOND PANEL: still placeholder -->
+    <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+      <span class="opacity-25 uppercase">Light Settings Here</span>
+    </div>
+  </div>
+
+  <!-- Right column: Sidebar now contains modelling-light widget -->
+  <div class="col-span-1 bg-white bg-opacity-10 p-4 flex flex-col items-center justify-start">
+    ' . $modeling_light_html . '
+  </div>
+</div>';
+
+                    
+         
                 
                 break;
                 default:

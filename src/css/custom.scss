@@ -18,3 +18,54 @@
 .cursor-col-resize {
     cursor: col-resize;
 }
+
+#modeling-light{
+    position:relative;
+    width:220px;height:250px;
+    margin:2rem auto;
+    background:#2e2e2e;
+    border-radius:20% 20% 40% 40%;
+    box-shadow:inset 0 5px 10px rgba(0,0,0,.6);
+}
+.bulb{
+    position:absolute;
+    width:95px;height:95px;
+    background:#d7d7d7;
+    border-radius:50%;
+    box-shadow:inset 0 4px 10px rgba(0,0,0,.4);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:background .2s;
+}
+#bulb-a{top:18px;left:15px;}
+#bulb-b{top:18px;right:15px;}
+#bulb-c{bottom:15px;left:calc(50% - 47.5px);}
+
+.bulb input[type=range]{
+    position:absolute;
+    left:0;right:0;bottom:-40px;
+    width:100%;
+    opacity:0;           /* hidden until bulb is active */
+    transition:opacity .15s;
+}
+.bulb.active input[type=range]{opacity:1;}
+
+.bulb .percent{
+    font:600 1.2rem/1 sans-serif;
+    pointer-events:none;
+    color:#000;
+    text-shadow:0 0 3px rgba(255,255,255,.4);
+}
+
+/* Position bulbs exactly as before … */
+
+.controls{
+    position:absolute;
+    left:0; right:0; bottom:-80px;
+    display:flex; justify-content:space-around; gap:.5rem;
+  }
+  .ctrl{display:flex; flex-direction:column; align-items:center; width:80px;}
+  .ctrl label{font-weight:600; color:#ddd; margin-bottom:.25rem; font-size:.8rem;}
+  .ctrl .range{width:100%;}
+  .ctrl .number{width:60px;margin-top:.25rem;text-align:center;background:#222;color:#fff;border:1px solid #555;border-radius:4px;}
+  

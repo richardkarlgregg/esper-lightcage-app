@@ -13,7 +13,7 @@ class StageComposer {
     protected $light_settings_id;
 
     /** meta key we store our JSON under on the light_settings post */
-    protected $meta_key = 'stages_json';
+    protected $meta_key = 'composer_stages';
 
     /** array of saved rows */
     protected $rows;
@@ -37,7 +37,7 @@ class StageComposer {
         //add_action( 'wp_ajax_nopriv_stage_composer_save', [ $this, 'ajax_save' ] );
     }
 
-    protected function get_light_settings_id() {
+    public function get_light_settings_id() {
         if ( ! $this->capture_id ) {
             return false;
         }
@@ -163,11 +163,81 @@ class StageComposer {
                     </tr>
                 </thead>
                 <tbody>
+                <?php if ( ! empty( $this->rows ) ) : ?>
+                    <?php foreach ( $this->rows as $i => $row ) : ?>
+                        <tr>
+                            <td class="stage-number"><?php echo sprintf( 'Stage %02d', $i + 1 ); ?></td>
+                            <td>
+                                <button class="move-up" title="Up">↑</button>
+                                <button class="move-down" title="Down">↓</button>
+                                <button class="remove-stage" title="Remove">✕</button>
+                            </td>
+                            <?php foreach ( $this->baseFields as $f ) :
+                                $slug = $f['field_slug'];
+                                $value = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
+                            ?>
+                                <td>
+                                <?php
+                                switch ( $f['type'] ) {
+                                    case 'radio':
+                                        foreach ( $f['options'] as $val => $label ) {
+                                            printf(
+                                                '<label><input type="radio" name="%1$s[]" value="%2$s"%3$s> %4$s</label> ',
+                                                esc_attr( $slug ),
+                                                esc_attr( $val ),
+                                                checked( $value, $val, false ),
+                                                esc_html( $label )
+                                            );
+                                        }
+                                        break;
+    
+                                    case 'select':
+                                        echo '<select name="' . esc_attr( $slug ) . '[]">';
+                                        foreach ( $f['options'] as $val => $label ) {
+                                            printf(
+                                                '<option value="%1$s"%2$s>%3$s</option>',
+                                                esc_attr( $val ),
+                                                selected( $value, $val, false ),
+                                                esc_html( $label )
+                                            );
+                                        }
+                                        echo '</select>';
+                                        break;
+    
+                                    case 'range':
+                                        printf(
+                                            '<input type="range" name="%1$s[]" min="%2$d" max="%3$d" step="%4$d" value="%5$s">
+                                             <span class="brightness-label">%5$s%%</span>',
+                                            esc_attr( $slug ),
+                                            intval( $f['attributes']['min'] ),
+                                            intval( $f['attributes']['max'] ),
+                                            intval( $f['attributes']['step'] ),
+                                            esc_attr( $value !== '' ? $value : 70 )
+                                        );
+                                        break;
+    
+                                    case 'number':
+                                        printf(
+                                            '<input type="number" name="%1$s[]" step="%2$s" min="%3$s" value="%4$s"> s',
+                                            esc_attr( $slug ),
+                                            esc_attr( $f['attributes']['step'] ),
+                                            esc_attr( $f['attributes']['min'] ),
+                                            esc_attr( $value !== '' ? $value : 5.0 )
+                                        );
+                                        break;
+                                }
+                                ?>
+                                </td>
+                            <?php endforeach; ?>
+                            <td><button class="add-below" title="Add Below">＋</button></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
                 </tbody>
             </table>
             <button id="add-stage" class="button" style="margin-top:.5em;">Add Stage</button>
         </div>
-
+    
         <!-- hidden template row -->
         <table style="display:none;">
             <tbody>
@@ -181,9 +251,9 @@ class StageComposer {
                     <?php foreach ( $this->baseFields as $f ) : ?>
                         <td>
                         <?php
-                        switch( $f['type'] ) {
+                        switch ( $f['type'] ) {
                             case 'radio':
-                                foreach( $f['options'] as $val => $label ) {
+                                foreach ( $f['options'] as $val => $label ) {
                                     printf(
                                         '<label><input type="radio" name="%1$s[]" value="%2$s"> %3$s</label> ',
                                         esc_attr( $f['field_slug'] ),
@@ -192,9 +262,10 @@ class StageComposer {
                                     );
                                 }
                                 break;
+    
                             case 'select':
-                                echo '<select name="'. esc_attr( $f['field_slug'] ) .'[]">';
-                                foreach( $f['options'] as $val => $label ) {
+                                echo '<select name="' . esc_attr( $f['field_slug'] ) . '[]">';
+                                foreach ( $f['options'] as $val => $label ) {
                                     printf(
                                         '<option value="%1$s">%2$s</option>',
                                         esc_attr( $val ),
@@ -203,6 +274,7 @@ class StageComposer {
                                 }
                                 echo '</select>';
                                 break;
+    
                             case 'range':
                                 printf(
                                     '<input type="range" name="%1$s[]" min="%2$d" max="%3$d" step="%4$d" value="70">
@@ -213,6 +285,7 @@ class StageComposer {
                                     intval( $f['attributes']['step'] )
                                 );
                                 break;
+    
                             case 'number':
                                 printf(
                                     '<input type="number" name="%1$s[]" step="%2$s" min="%3$s" value="5.0"> s',
@@ -231,28 +304,60 @@ class StageComposer {
         </table>
         <?php
     }
+    
 }
 
 // Register AJAX callbacks for both logged-in and anonymous users
 add_action( 'wp_ajax_stage_composer_save',     'stage_composer_ajax_save' );
 add_action( 'wp_ajax_nopriv_stage_composer_save', 'stage_composer_ajax_save' );
 
-/**
- * AJAX handler proxy: instantiates StageComposer and calls ajax_save().
- */
-function stage_composer_ajax_save() {
+// Register both logged-in and no-priv hooks
+add_action( 'wp_ajax_stage_composer_save',        'stage_composer_ajax_save' );
+add_action( 'wp_ajax_nopriv_stage_composer_save', 'stage_composer_ajax_save' );
 
-   check_ajax_referer( 'esper_ajax_nonce', 'nonce' );
-   
-    // Pull the capture/post ID from the request
-    $capture_id = isset( $_POST['capture_id'] ) ? intval( $_POST['capture_id'] ) : 0;
-    if ( ! $capture_id ) {
-        wp_send_json_error( 'Missing post_id', 400 );
+// Register AJAX callbacks
+add_action( 'wp_ajax_stage_composer_save',        'stage_composer_ajax_save' );
+add_action( 'wp_ajax_nopriv_stage_composer_save', 'stage_composer_ajax_save' );
+
+function stage_composer_ajax_save() {
+    $debug = [];
+
+    // 1) Nonce
+    if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'esper_ajax_nonce' ) ) {
+        wp_send_json_error( [ 'message' => 'Invalid nonce', 'debug' => $debug ], 403 );
     }
 
-    // Instantiate with the capture ID
+    // 2) Capture ID
+    $capture_id = isset( $_POST['capture_id'] ) ? intval( $_POST['capture_id'] ) : 0;
+    if ( ! $capture_id ) {
+        wp_send_json_error( [ 'message' => 'Missing capture_id', 'debug' => $debug ], 400 );
+    }
+
+    // 3) Decode payload
+    if ( empty( $_POST['data'] ) ) {
+        wp_send_json_error( [ 'message' => 'No data provided', 'debug' => $debug ], 400 );
+    }
+    $rows = json_decode( wp_unslash( $_POST['data'] ), true );
+    if ( ! is_array( $rows ) ) {
+        wp_send_json_error( [ 'message' => 'Invalid data format', 'debug' => $debug ], 400 );
+    }
+
+    // 4) Find the light_settings post
     $composer = new StageComposer( $capture_id );
-    // Delegate to the class method
-    wp_send_json_success();
-    // ajax_save() will handle permission checks and send JSON response
+    $light_id = $composer->get_light_settings_id();
+    $debug['$light_id'] = $light_id;
+    if ( ! $light_id ) {
+        wp_send_json_error( [ 'message' => 'No light_settings found', 'debug' => $debug ], 404 );
+    }
+
+    // 5) Save to meta_key 'composer_stages'
+    $updated = update_post_meta( $light_id, 'composer_stages', $rows );
+    if ( ! $updated ) {
+        wp_send_json_error( [ 'message' => 'Failed to update composer_stages', 'debug' => $debug ], 500 );
+    }
+
+    // 6) Return success
+    wp_send_json_success( [ 'message' => 'Saved to composer_stages', 'debug' => $debug ] );
 }
+
+

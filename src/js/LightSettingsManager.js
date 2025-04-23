@@ -7,17 +7,6 @@ export default class LightSettingsManager {
     }
 
     init() {
-        // Once the wrapper is injected, populate saved rows exactly once
-        $(document).on('ready ajaxComplete', () => {
-            const $wrapper = $('#stage-composer-wrapper');
-            if ( ! $wrapper.length || $wrapper.data('lsm-initialized') ) return;
-            $wrapper.data('lsm-initialized', true);
-
-            // Load initial saved stages
-            (store.stages || []).forEach(stage => this.addRow(stage));
-            this.refreshNumbers();
-        });
-
         // Delegate all clicks and inputs from document
 
         // Add Stage button
@@ -144,6 +133,7 @@ export default class LightSettingsManager {
             },
             success: (response) => {
                 if (response.success) {
+                    console.log(response);
                     alert('Stages saved!');
                 } else {
                     alert(`Error: ${response.data}`);
@@ -156,3 +146,93 @@ export default class LightSettingsManager {
 
     }
 }
+
+
+/**
+ * Modeling-Light controller
+ * – Direct drag on bulb          (left↔right to dim/brighten)
+ * – Slider + numeric input       (stay in sync)
+ * – Auto-initialises any #modeling-light added later via AJAX/DOM
+ *   without duplicate bindings.
+ * Requires jQuery (WP core has it).
+ */
+(function ($) {
+    /* ───────────────── helper ───────────────── */
+    const pctToClr = p => `hsl(55,100%,${20 + 70 * (p / 100)}%)`;
+  
+    /* ───────────────── widget init ───────────── */
+    function init($root) {
+      if (!$root.length || $root.data('ml-ready')) return;
+      $root.data('ml-ready', true);
+  
+      /* paint bulbs */
+      $root.find('.bulb').each((_i, el) => updateBulb($(el), 0));
+  
+      /* ========== drag on bulb ========== */
+      let $drag = null, startX = 0, startVal = 0;
+      $root.on('pointerdown', '.bulb', e => {
+        if (e.button !== 0) return;                      // left click only
+        e.preventDefault();
+        $drag = $(e.currentTarget);
+        startX = e.clientX;
+        startVal = parseFloat($drag.data('val') || 0);
+        $drag.addClass('dragging');
+        $drag[0].setPointerCapture(e.pointerId);
+      });
+      $root.on('pointermove', e => {
+        if (!$drag) return;
+        const dx = e.clientX - startX;
+        const newVal = Math.min(100, Math.max(0, startVal + dx / 2)); // 2px = 1 %
+        sync($drag.attr('id'), newVal);
+      });
+      $root.on('pointerup pointercancel', () => {
+        if ($drag) $drag.removeClass('dragging');
+        $drag = null;
+      });
+  
+      /* ========== slider / number ========== */
+      $root.on('input change', '.ctrl .range', function () {
+        sync($(this).closest('.ctrl').data('target'), parseFloat(this.value));
+      });
+      $root.on('input change', '.ctrl .number', function () {
+        let v = parseFloat(this.value);
+        if (isNaN(v)) v = 0;
+        sync($(this).closest('.ctrl').data('target'), Math.max(0, Math.min(100, v)));
+      });
+    }
+  
+    /* ───────────────── sync helpers ──────────── */
+    function updateBulb($b, v) {
+      $b.css('background', pctToClr(v))
+        .find('.percent').text(v.toFixed(2) + '%')
+        .end().data('val', v);
+    }
+  
+    function sync(id, v) {
+      const $root = $('#modeling-light');
+      updateBulb($root.find('#' + id), v);
+      const $ctrl = $root.find(`.ctrl[data-target="${id}"]`);
+      $ctrl.find('.range').val(v);
+      $ctrl.find('.number').val(v.toFixed(2));
+    }
+  
+    /* ───────────────── auto-detect widgets ───── */
+    // initialise any existing widget on DOM ready
+    $(init.bind(null, $('#modeling-light')));
+  
+    // observe future additions to the DOM
+    const obs = new MutationObserver(records => {
+      records.forEach(rec => rec.addedNodes.forEach(node => {
+        if (node.nodeType !== 1) return;
+        const $newRoot = $(node).is('#modeling-light')
+            ? $(node)
+            : $(node).find('#modeling-light');
+        init($newRoot);
+      }));
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  
+  })(jQuery);
+  
+  
+  
