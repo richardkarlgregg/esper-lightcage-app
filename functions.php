@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 require_once get_template_directory() . '/functions/custom-post-types.php';
 require_once get_template_directory() . '/classes/export-class.php';
 require_once get_template_directory() . '/classes/camera-settings-class.php';
+require_once get_template_directory() . '/classes/lighting-settings-class.php';
 
 // Theme Setup
 function esper_lightcage_setup() {
@@ -1225,22 +1226,35 @@ function esper_get_content() {
 
                 break;
                 case 'light_settings':
-                    $content = '<div class="h-full grid grid-cols-4 gap-4">
-  <!-- Left column: Panels (2 rows) -->
-  <div class="col-span-3 grid grid-rows-2 gap-4">
-    <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-      <span class="opacity-25 uppercase">Light Settings Here</span>
-    </div>
-    <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-      <span class="opacity-25 uppercase">Light Settings Here</span>
-    </div>
-  </div>
-  <!-- Right column: Sidebar -->
-  <div class="col-span-1 bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-    <span class="opacity-25 uppercase">Light Settings Here</span>
-  </div>
-</div>
-';
+                
+                    // capture the composer HTML
+                    ob_start();
+                    ( new StageComposer( $post->ID ) )->render();
+                    $composer_html = ob_get_clean();
+                
+                    // inject it into the first panel
+                    $content = '
+                    <div class="h-full grid grid-cols-4 gap-4">
+                      <!-- Left column: Panels (2 rows) -->
+                      <div class="col-span-3 grid grid-rows-2 gap-4">
+                        <!-- FIRST PANEL: now contains your StageComposer -->
+                        <div class="bg-white bg-opacity-10 p-4">
+                          ' . $composer_html . '
+                        </div>
+                
+                        <!-- SECOND PANEL: still placeholder -->
+                        <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+                          <span class="opacity-25 uppercase">Light Settings Here</span>
+                        </div>
+                      </div>
+                
+                      <!-- Right column: Sidebar -->
+                      <div class="col-span-1 bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+                        <span class="opacity-25 uppercase">Light Settings Here</span>
+                      </div>
+                    </div>';
+                break;
+                
                 break;
                 default:
                     $content = esper_get_capture_template($post);

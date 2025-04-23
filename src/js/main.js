@@ -17,6 +17,7 @@ import SessionManager from './SessionManager.js';
 import NavigationManager from './NavigationManager.js';
 import CameraSettingsManager from './CameraSettingsManager.js';
 import ExportManager from './ExportManager.js';
+import LightSettingsManager from './LightSettingsManager.js';
 
 console.log(store);
 
@@ -32,6 +33,7 @@ $(document).ready(function () {
     const navigationManager = new NavigationManager();
     const cameraSettingsManager = new CameraSettingsManager();
     const exportManager = new ExportManager();
+    const lightSettingsManager = new LightSettingsManager();
 
     // Put the instance on the store
     store.uiManager = uiManager;
@@ -44,6 +46,7 @@ $(document).ready(function () {
     store.navigationManager = navigationManager;
     store.cameraSettingsManager = cameraSettingsManager;
     store.exportManager = exportManager;
+    store.lightSettingsManager = lightSettingsManager;
 
     store.activePostID = null;
     
