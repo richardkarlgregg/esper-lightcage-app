@@ -149,90 +149,119 @@ export default class LightSettingsManager {
 
 
 /**
- * Modeling-Light controller
- * – Direct drag on bulb          (left↔right to dim/brighten)
- * – Slider + numeric input       (stay in sync)
- * – Auto-initialises any #modeling-light added later via AJAX/DOM
- *   without duplicate bindings.
- * Requires jQuery (WP core has it).
+ * Modeling-Light controller with autosave
+ *  – Drag on bulb, sliders, number boxes remain in sync
+ *  – Saves to WP/ACF via admin-ajax.php after user stops moving (debounced)
+ *
+ *  Requires:
+ *      1.  jQuery (bundled with WP)
+ *      2.  A global  `esperApi` object with:
+ *              { ajaxurl, nonce }          // you already have this for stage-composer
+ *      3.  `store.navigationManager.getPostIdByCriteria('capture')` returning capture ID
+ *
+ *  PHP side (example) – register an ajax handler “modeling_light_save”
+ *      update_post_meta( $light_id, 'light_brightness_parallel', $_POST['parallel'] );
+ *      update_post_meta( $light_id, 'light_brightness_cross',    $_POST['cross']    );
+ *      update_post_meta( $light_id, 'light_brightness_neutral',  $_POST['neutral']  );
  */
 (function ($) {
-    /* ───────────────── helper ───────────────── */
-    const pctToClr = p => `hsl(55,100%,${20 + 70 * (p / 100)}%)`;
+
+    /* ───── visual helpers ───── */
+    const toColor   = p => `hsl(55 100% ${20 + 70 * (p / 100)}%)`,
+          toOpacity = p => 0.05 + 0.95 * (p / 100),
+          toScale   = p => 0.8  + 0.7  * (p / 100),
+          clamp     = v => Math.max(0, Math.min(100, v)),
+          valOf     = $b => parseFloat($b.data('val')) || 0;
   
-    /* ───────────────── widget init ───────────── */
+    /* ───── debounce util ───── */
+    const debounce = (fn, ms = 800) => {
+        let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); };
+    };
+  
+    /* global debounced saver (shared by all widgets) */
+    const debouncedSave = debounce(saveBrightness);
+  
+    /* ───── main widget init (once per #modeling-light) ───── */
     function init($root) {
-      if (!$root.length || $root.data('ml-ready')) return;
-      $root.data('ml-ready', true);
+        if (!$root.length || $root.data('ml-ready')) return;
+        $root.data('ml-ready', true);
   
-      /* paint bulbs */
-      $root.find('.bulb').each((_i, el) => updateBulb($(el), 0));
+        // inside init($root) – remove the hard-coded 0 loop and add:
+$root.find('.ctrl .range').each(function () {
+    const id  = $(this).closest('.ctrl').data('target');
+    const val = parseFloat(this.value) || 0;
+    sync($root, id, val);           // draw bulb + glow to saved level
+});
   
-      /* ========== drag on bulb ========== */
-      let $drag = null, startX = 0, startVal = 0;
-      $root.on('pointerdown', '.bulb', e => {
-        if (e.button !== 0) return;                      // left click only
-        e.preventDefault();
-        $drag = $(e.currentTarget);
-        startX = e.clientX;
-        startVal = parseFloat($drag.data('val') || 0);
-        $drag.addClass('dragging');
-        $drag[0].setPointerCapture(e.pointerId);
-      });
-      $root.on('pointermove', e => {
-        if (!$drag) return;
-        const dx = e.clientX - startX;
-        const newVal = Math.min(100, Math.max(0, startVal + dx / 2)); // 2px = 1 %
-        sync($drag.attr('id'), newVal);
-      });
-      $root.on('pointerup pointercancel', () => {
-        if ($drag) $drag.removeClass('dragging');
-        $drag = null;
-      });
+        /* ---------------- DRAG ---------------- */
+        let $drag = null, startX = 0, startVal = 0;
+        $root.on('pointerdown', '.bulb', e => {
+            if (e.button !== 0) return;
+            $drag   = $(e.currentTarget);
+            startX  = e.clientX;
+            startVal= valOf($drag);
+            $drag[0].setPointerCapture(e.pointerId);
+        }).on('pointermove', e => {
+            if (!$drag) return;
+            const v = clamp(startVal + (e.clientX - startX) / 2);   // 2 px = 1 %
+            sync($root, $drag.attr('id'), v, true);
+        }).on('pointerup pointercancel', () => $drag = null);
   
-      /* ========== slider / number ========== */
-      $root.on('input change', '.ctrl .range', function () {
-        sync($(this).closest('.ctrl').data('target'), parseFloat(this.value));
-      });
-      $root.on('input change', '.ctrl .number', function () {
-        let v = parseFloat(this.value);
-        if (isNaN(v)) v = 0;
-        sync($(this).closest('.ctrl').data('target'), Math.max(0, Math.min(100, v)));
-      });
+        /* ------------- sliders / numbers ------------- */
+        $root.on('input change', '.ctrl .range', function () {
+            sync($root, $(this).closest('.ctrl').data('target'), parseFloat(this.value), true);
+        });
+        $root.on('input change', '.ctrl .number', function () {
+            let v = parseFloat(this.value); if (isNaN(v)) v = 0;
+            sync($root, $(this).closest('.ctrl').data('target'), clamp(v), true);
+        });
     }
   
-    /* ───────────────── sync helpers ──────────── */
-    function updateBulb($b, v) {
-      $b.css('background', pctToClr(v))
-        .find('.percent').text(v.toFixed(2) + '%')
-        .end().data('val', v);
+    /* ───── sync everything for one bulb ───── */
+    function sync($root, id, v, queueSave = false) {
+        const $bulb = $root.find('#' + id);
+        const $glow = $bulb.find('.glow');
+        const $ctrl = $root.find(`.ctrl[data-target="${id}"]`);
+  
+        $bulb.css('background', toColor(v))
+             .find('.percent').text(v.toFixed(2) + '%')
+             .end().data('val', v);
+        $glow.css({ opacity: toOpacity(v), transform: `scale(${toScale(v)})` });
+  
+        $ctrl.find('.range').val(v);
+        $ctrl.find('.number').val(v.toFixed(2));
+  
+        if (queueSave) debouncedSave();
     }
   
-    function sync(id, v) {
-      const $root = $('#modeling-light');
-      updateBulb($root.find('#' + id), v);
-      const $ctrl = $root.find(`.ctrl[data-target="${id}"]`);
-      $ctrl.find('.range').val(v);
-      $ctrl.find('.number').val(v.toFixed(2));
+    /* ───── AJAX save to WP/ACF ───── */
+    function saveBrightness() {
+        const $root = $('#modeling-light');
+        if (!$root.length) return;
+  
+        const payload = {
+            parallel : valOf($root.find('#bulb-a')),
+            cross    : valOf($root.find('#bulb-b')),
+            neutral  : valOf($root.find('#bulb-c'))
+        };
+  
+        const captureId = store.navigationManager
+                               .getPostIdByCriteria('capture');
+  
+        $.post(esperApi.ajaxurl, {
+            action     : 'modeling_light_save',
+            nonce      : esperApi.nonce,
+            capture_id : captureId,
+            ...payload                      // parallel, cross, neutral
+        }).fail(() => console.error('modeling-light save failed'));
     }
   
-    /* ───────────────── auto-detect widgets ───── */
-    // initialise any existing widget on DOM ready
-    $(init.bind(null, $('#modeling-light')));
-  
-    // observe future additions to the DOM
-    const obs = new MutationObserver(records => {
-      records.forEach(rec => rec.addedNodes.forEach(node => {
-        if (node.nodeType !== 1) return;
-        const $newRoot = $(node).is('#modeling-light')
-            ? $(node)
-            : $(node).find('#modeling-light');
-        init($newRoot);
-      }));
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
+    /* ───── auto-initialise widgets ───── */
+    $( () => init($('#modeling-light')) );
+    new MutationObserver(m => m.forEach(r => r.addedNodes.forEach(n => {
+        if (n.nodeType !== 1) return;
+        init($(n).is('#modeling-light') ? $(n) : $(n).find('#modeling-light'));
+    }))).observe(document.body, { childList: true, subtree: true });
   
   })(jQuery);
-  
-  
   

@@ -1232,39 +1232,62 @@ function esper_get_content() {
                     ( new StageComposer( $post->ID ) )->render();
                     $composer_html = ob_get_clean();
                 
-                    // ── 1.  Create the modelling-light widget markup  ────────────────────────────
+                    // 4) Find the light_settings post
+    $composer = new StageComposer( $post->ID );
+    $light_settings_id = $composer->get_light_settings_id();
+
+ 
+$val_parallel = (float) get_post_meta( $light_settings_id, 'light_brightness_parallel', true );
+$val_cross    = (float) get_post_meta( $light_settings_id, 'light_brightness_cross',    true );
+$val_neutral  = (float) get_post_meta( $light_settings_id, 'light_brightness_neutral',  true );
+
+/* helper to print both “67.23” and “67.23%” once */
+function ml_val( $v, $percent = false ){
+    $v = $v === '' ? 0 : (float) $v;
+    return $percent ? number_format( $v, 2 ) . '%' : number_format( $v, 2 );
+}
+
 $modeling_light_html = '
 <div id="modeling-light">
-  <div class="bulb" id="bulb-a">
-      <span class="percent">0.00%</span>
-  </div>
-  <div class="bulb" id="bulb-b">
-      <span class="percent">0.00%</span>
-  </div>
-  <div class="bulb" id="bulb-c">
-      <span class="percent">0.00%</span>
+
+  <!-- bulbs -->
+  <div class="bulb" id="bulb-a" data-type="Parallel" data-val="'. ml_val($val_parallel) .'">
+      <span class="label">A</span>
+      <span class="percent">'. ml_val($val_parallel, true) .'</span>
+      <span class="glow"></span>
   </div>
 
-  <!-- Control strip -->
-  <div class="controls">
-     <div class="ctrl" data-target="bulb-a">
-        <label>A</label>
-        <input class="range"  type="range" min="0" max="100" step="0.01" value="0">
-        <input class="number" type="number" min="0" max="100" step="0.01" value="0">
-     </div>
-     <div class="ctrl" data-target="bulb-b">
-        <label>B</label>
-        <input class="range"  type="range" min="0" max="100" step="0.01" value="0">
-        <input class="number" type="number" min="0" max="100" step="0.01" value="0">
-     </div>
-     <div class="ctrl" data-target="bulb-c">
-        <label>C</label>
-        <input class="range"  type="range" min="0" max="100" step="0.01" value="0">
-        <input class="number" type="number" min="0" max="100" step="0.01" value="0">
-     </div>
+  <div class="bulb" id="bulb-b" data-type="Cross" data-val="'. ml_val($val_cross) .'">
+      <span class="label">B</span>
+      <span class="percent">'. ml_val($val_cross, true) .'</span>
+      <span class="glow"></span>
   </div>
-</div>
-';
+
+  <div class="bulb" id="bulb-c" data-type="Neutral" data-val="'. ml_val($val_neutral) .'">
+      <span class="label">C</span>
+      <span class="percent">'. ml_val($val_neutral, true) .'</span>
+      <span class="glow"></span>
+  </div>
+
+  <!-- control strip -->
+  <div class="controls">
+      <div class="ctrl" data-target="bulb-a">
+          <label>A&nbsp;–&nbsp;Parallel</label>
+          <input class="range"  type="range"  min="0" max="100" step="0.01" value="'. ml_val($val_parallel) .'">
+          <input class="number" type="number" min="0" max="100" step="0.01" value="'. ml_val($val_parallel) .'">
+      </div>
+      <div class="ctrl" data-target="bulb-b">
+          <label>B&nbsp;–&nbsp;Cross</label>
+          <input class="range"  type="range"  min="0" max="100" step="0.01" value="'. ml_val($val_cross) .'">
+          <input class="number" type="number" min="0" max="100" step="0.01" value="'. ml_val($val_cross) .'">
+      </div>
+      <div class="ctrl" data-target="bulb-c">
+          <label>C&nbsp;–&nbsp;Neutral</label>
+          <input class="range"  type="range"  min="0" max="100" step="0.01" value="'. ml_val($val_neutral) .'">
+          <input class="number" type="number" min="0" max="100" step="0.01" value="'. ml_val($val_neutral) .'">
+      </div>
+  </div>
+</div>';
 
 // ── 2.  Build the page grid  ─────────────────────────────────────────────────
 $content = '

@@ -360,4 +360,25 @@ function stage_composer_ajax_save() {
     wp_send_json_success( [ 'message' => 'Saved to composer_stages', 'debug' => $debug ] );
 }
 
+add_action( 'wp_ajax_modeling_light_save',        'ml_save' );
+add_action( 'wp_ajax_nopriv_modeling_light_save', 'ml_save' );
+function ml_save() {
+    check_ajax_referer( 'esper_ajax_nonce', 'nonce' );
+
+    $cap = intval( $_POST['capture_id'] ?? 0 );
+    if ( ! $cap ) wp_send_json_error( 'No capture_id', 400 );
+
+    // 4) Find the light_settings post
+    $composer = new StageComposer( $cap );
+    $ls_id= $composer->get_light_settings_id();
+    
+    if ( ! $ls_id ) wp_send_json_error( 'No light_settings', 404 );
+
+    update_post_meta( $ls_id, 'light_brightness_parallel', $_POST['parallel']  );
+    update_post_meta( $ls_id, 'light_brightness_cross',    $_POST['cross']     );
+    update_post_meta( $ls_id, 'light_brightness_neutral',  $_POST['neutral']   );
+
+    wp_send_json_success();
+}
+
 
