@@ -1,0 +1,429 @@
+import $ from 'jquery';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+
+let renderer, scene, camera, controls, lightGroup, lights = [], originalOpacities = {}, composer, bloomPass;
+let rotationGroup; // Parent group for sphere and lights
+let wireframeMesh; // The sphere mesh
+
+// NEW: Rotation control variables
+let sphereRotationEnabled = true;
+const rotationSpeed = 0.002; // Adjust rotation speed
+let rotationTimeout;
+
+export function initThreeJS() {
+    const container = document.getElementById('sphere');
+    if (!container) {
+        console.error("❌ #sphere div not found!");
+        return;
+    }
+    if (renderer) {
+        console.warn("⚠️ Three.js scene already initialized.");
+        return;
+    }
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.setClearAlpha(0);
+    renderer.autoClear = false;
+    container.appendChild(renderer.domElement);
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 5, 12);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.enableZoom = true;
+    controls.enablePan = true;
+    controls.addEventListener('change', () => {
+        stopSphereRotation();
+        clearTimeout(rotationTimeout);
+        rotationTimeout = setTimeout(() => {
+            // Optionally restart rotation after inactivity.
+            // startSphereRotation();
+        }, 2000);
+    });
+
+    // Create a parent group that will contain both the sphere and its lights.
+    rotationGroup = new THREE.Group();
+    scene.add(rotationGroup);
+
+    // Create the wireframe sphere and add it to the rotationGroup.
+    const sphereGeometry = new THREE.IcosahedronGeometry(5, 1);
+    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0xAAAAAA, opacity: 0.25, transparent: true });
+    wireframeMesh = new THREE.LineSegments(new THREE.WireframeGeometry(sphereGeometry), wireframeMaterial);
+    // Place the sphere on the bloom layer.
+    wireframeMesh.layers.enable(1);
+    rotationGroup.add(wireframeMesh);
+
+    // Create and add lights to a separate group.
+    lightGroup = new THREE.Group();
+    createLights(sphereGeometry);
+    // Add the lights group to the rotationGroup so both spin together.
+    rotationGroup.add(lightGroup);
+
+    // Initialize post-processing.
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.4, 0.25, 0.2);
+    //composer.addPass(bloomPass);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+
+        // Rotate the entire group if rotation is enabled.
+        if (sphereRotationEnabled && rotationGroup) {
+            rotationGroup.rotation.y += rotationSpeed;
+        }
+        composer.render();
+    }
+    animate();
+
+    window.addEventListener('resize', onWindowResize);
+}
+
+function onWindowResize() {
+    if (!renderer) return;
+    const container = document.getElementById('sphere');
+    if (!container) return;
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    composer.setSize(container.clientWidth, container.clientHeight);
+}
+
+function createLights(sphereGeometry) {
+    const vertexArray = sphereGeometry.attributes.position.array;
+    const uniquePositions = new Set();
+
+    // Add lights at vertices.
+    for (let i = 0; i < vertexArray.length; i += 3) {
+        const x = vertexArray[i];
+        const y = vertexArray[i + 1];
+        const z = vertexArray[i + 2];
+        const key = `${x.toFixed(4)},${y.toFixed(4)},${z.toFixed(4)}`;
+        if (!uniquePositions.has(key)) {
+            uniquePositions.add(key);
+            createLight(x, y, z, lights.length + 1, 1.0);
+        }
+    }
+
+    // Add lights at midpoints of edges.
+    const uniqueEdges = new Set();
+    const edges = new THREE.EdgesGeometry(sphereGeometry).attributes.position.array;
+    for (let i = 0; i < edges.length; i += 6) {
+        const ax = edges[i], ay = edges[i + 1], az = edges[i + 2];
+        const bx = edges[i + 3], by = edges[i + 4], bz = edges[i + 5];
+        const mx = (ax + bx) / 2;
+        const my = (ay + by) / 2;
+        const mz = (az + bz) / 2;
+        const edgeKey = `${mx.toFixed(4)},${my.toFixed(4)},${mz.toFixed(4)}`;
+        if (!uniqueEdges.has(edgeKey)) {
+            uniqueEdges.add(edgeKey);
+            createLight(mx, my, mz, lights.length + 1, 0.5);
+        }
+    }
+}
+
+function createLight(x, y, z, intensity) {
+    const index = lights.length;
+    // Create a small sphere to represent the light.
+    const sphereGeo = new THREE.SphereGeometry(0.1, 16, 16);
+    const sphereMat = new THREE.MeshBasicMaterial({ color: 0xFFC715, opacity: intensity, transparent: true });
+    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+    sphere.position.set(x, y, z);
+    // Place the light sphere on the bloom layer.
+    sphere.layers.enable(1);
+    lightGroup.add(sphere);
+
+    lights.push({ index, sphere, x, y, z });
+    originalOpacities[index] = intensity;
+
+    // Optional: Create a numbered label for the light.
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.font = "8px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(index, 32, 32);
+    const texture = new THREE.CanvasTexture(canvas);
+    // Optionally set texture filtering.
+    texture.format = THREE.RGBAFormat;
+    texture.minFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+
+    const labelMaterial = new THREE.SpriteMaterial({ map: texture });
+    const label = new THREE.Sprite(labelMaterial);
+    label.position.set(x, y + 0.5, z);
+    // Keep the label on the default layer so it’s excluded from bloom.
+    label.layers.set(0);
+    //lightGroup.add(label);
+}
+
+export function focusOnLight(lightId) {
+    // Pause automatic rotation
+    stopSphereRotation();
+
+    // Animate the rotation group back to its default rotation (assumed 0 here)
+    const defaultRotation = 0;
+    const initialRotation = rotationGroup.rotation.y;
+    let rotationProgress = 0;
+    function animateRotationBack() {
+        rotationProgress += 0.05;
+        rotationGroup.rotation.y = THREE.MathUtils.lerp(initialRotation, defaultRotation, rotationProgress);
+        if (rotationProgress < 1) {
+            requestAnimationFrame(animateRotationBack);
+        }
+    }
+    animateRotationBack();
+
+    // Find the selected light for focus.
+    const selectedLight = lights.find(l => l.index === lightId);
+    if (!selectedLight) {
+        console.error(`❌ Light with ID ${lightId} not found!`);
+        return;
+    }
+
+    // Calculate target positions for camera and controls.
+    const targetPosition = new THREE.Vector3(selectedLight.x, selectedLight.y, selectedLight.z);
+    const cameraTarget = targetPosition.clone().add(new THREE.Vector3(0, 2, 5));
+    let cameraProgress = 0;
+    function animateFocus() {
+        cameraProgress += 0.05;
+        camera.position.lerpVectors(camera.position, cameraTarget, cameraProgress);
+        controls.target.lerpVectors(controls.target, targetPosition, cameraProgress);
+        controls.update();
+        if (cameraProgress < 1) {
+            requestAnimationFrame(animateFocus);
+        }
+    }
+    animateFocus();
+}
+
+export function dimLightsExcept(selectedId) {
+    lights.forEach(({ sphere, index }) => {
+        sphere.material.opacity = (index === selectedId) ? 1.0 : 0.25;
+    });
+    console.log(`💡 Light ${selectedId} sphere is now at full opacity, others dimmed.`);
+}
+
+export function resetLights() {
+    lights.forEach(({ sphere, index }) => {
+        if (originalOpacities.hasOwnProperty(index)) {
+            sphere.material.opacity = originalOpacities[index];
+        }
+    });
+    console.log("🔄 All lights restored to original opacity.");
+}
+
+export function destroyThreeJS() {
+    if (!renderer) {
+        console.warn("⚠️ Three.js already removed.");
+        return;
+    }
+    console.log("🗑️ Removing Three.js scene...");
+    renderer.dispose();
+    renderer.domElement.remove();
+    if (scene) {
+        scene.traverse((object) => {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(mat => mat.dispose());
+                } else {
+                    object.material.dispose();
+                }
+            }
+        });
+    }
+    renderer = null;
+    scene = null;
+    camera = null;
+    controls = null;
+    lightGroup = null;
+    lights = [];
+    console.log("✅ Three.js scene removed successfully.");
+}
+
+// NEW: Functions to control sphere (rotation group) rotation.
+export function startSphereRotation() {
+    sphereRotationEnabled = true;
+    console.log('Sphere rotation started');
+}
+export function stopSphereRotation() {
+    sphereRotationEnabled = false;
+    console.log('Sphere rotation stopped');
+}
+export function toggleSphereRotation() {
+    sphereRotationEnabled = !sphereRotationEnabled;
+    console.log('Sphere rotation toggled to ' + sphereRotationEnabled);
+}
+
+// Utility: Sleep function for delays.
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
+  /**
+   * NEW: addCubeAndSpawnLightsAndScreenshot
+   * - Accepts activeStageId and captureId so that the images are saved in:
+   *     stages/stage-<activeStageId>/captures/<captureId>/
+   * - Uses 5 fixed camera angles and 5 randomly selected lights (from the existing lights array).
+   * - For each shot, it spawns a spotlight at the light’s position (targeting the central object),
+   *   renders a screenshot, uploads it to the server, and then updates a progress UI.
+   * - The progress bar and text are updated based on the total number of shots.
+   * - Returns a promise that resolves when all shots are complete.
+   */
+  export async function addCubeAndSpawnLightsAndScreenshot(activeStageId, captureId, progressCallback) {
+    // Stop automatic rotation.
+    stopSphereRotation();
+  
+    // Hide all light spheres.
+    lights.forEach(lightObj => { lightObj.sphere.visible = false; });
+  
+    // Store original camera state.
+    const originalCameraPosition = camera.position.clone();
+    const originalControlsTarget = controls.target.clone();
+  
+    // Fixed distance and fixed camera direction vectors.
+    const fixedDistance = 3;
+    const cameraDirections = [
+      new THREE.Vector3(0, 1, 1),
+      new THREE.Vector3(2, 1, 1),
+      new THREE.Vector3(-2, 1, 1),
+      new THREE.Vector3(0, 2, 1),
+      new THREE.Vector3(0, 1, 0.5)
+    ];
+  
+    // Set initial camera.
+    camera.position.copy(
+      cameraDirections[0].clone().normalize().multiplyScalar(fixedDistance)
+    );
+    controls.target.set(0, 0, 0);
+    controls.update();
+  
+    // Randomize central geometry.
+    const geometries = [
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.SphereGeometry(0.5, 32, 32),
+      new THREE.ConeGeometry(0.5, 1, 32),
+      new THREE.TorusGeometry(0.5, 0.2, 16, 100)
+    ];
+    const randomIndex = Math.floor(Math.random() * geometries.length);
+    const selectedGeometry = geometries[randomIndex];
+    const centralMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const centralMesh = new THREE.Mesh(selectedGeometry, centralMaterial);
+    centralMesh.position.set(0, 0, 0);
+    scene.add(centralMesh);
+  
+    // Add ambient light.
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+  
+    if (lights.length < 5) {
+      console.error("Not enough lights available in lights array.");
+      return;
+    }
+  
+    // Randomly select 5 lights.
+    const shuffled = lights.slice().sort(() => 0.5 - Math.random());
+    const selectedLights = shuffled.slice(0, 5);
+  
+    // Total number of shots.
+    const totalShots = cameraDirections.length * selectedLights.length;
+    let shotCounter = 0;
+  
+    // Outer loop: For each fixed camera angle.
+    for (let j = 0; j < cameraDirections.length; j++) {
+      const newCamPos = cameraDirections[j].clone().normalize().multiplyScalar(fixedDistance);
+      camera.position.copy(newCamPos);
+      controls.target.set(0, 0, 0);
+      controls.update();
+      await sleep(500);
+  
+      // Inner loop: For each selected light.
+      for (let i = 0; i < selectedLights.length; i++) {
+        const sel = selectedLights[i];
+        console.log(`Angle ${j + 1}: Processing light ${sel.index}`);
+  
+        // Spawn spotlight.
+        const spotLight = new THREE.SpotLight(0xffffff, 1);
+        spotLight.position.set(sel.x, sel.y, sel.z);
+        spotLight.angle = Math.PI / 6;
+        spotLight.penumbra = 0.2;
+        spotLight.target = centralMesh;
+        scene.add(spotLight.target);
+        scene.add(spotLight);
+        await sleep(1000);
+  
+        // Capture screenshot.
+        renderer.render(scene, camera);
+        const dataURL = renderer.domElement.toDataURL("image/png");
+  
+        
+        // Upload image.
+        try {
+            shotCounter++;
+            await uploadCaptureImage(activeStageId, captureId, shotCounter, dataURL);
+          console.log(`Uploaded screenshot for angle ${j + 1}, light ${sel.index}`);
+        } catch (err) {
+          console.error("Error uploading image:", err);
+        }
+  
+        // Remove spotlight.
+        scene.remove(spotLight);
+        scene.remove(spotLight.target);
+        
+        if (progressCallback) {
+          progressCallback(shotCounter, totalShots);
+        }
+        await sleep(300);
+      }
+      await sleep(500);
+    }
+  
+    // Restore camera state.
+    camera.position.copy(originalCameraPosition);
+    controls.target.copy(originalControlsTarget);
+    controls.update();
+  
+    // Show light spheres.
+    lights.forEach(lightObj => { lightObj.sphere.visible = true; });
+  
+    return { success: true, totalShots, shotCounter };
+  }
+  
+  
+  /**
+   * NEW: Upload captured image to the server.
+   * Sends a POST request with activeStageId, captureId, angleIndex, lightId, and imageData.
+   */
+function uploadCaptureImage(activeStageId, captureId, shotIndex, imageData) {
+    return $.ajax({
+      url: "stages_loader.php?action=saveCaptureImage&activeStageId=" + activeStageId,
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        captureId: captureId,
+        shotIndex: shotIndex,
+        imageData: imageData
+      }),
+      dataType: "json"
+    });
+  }
+  
+  
+  
+  

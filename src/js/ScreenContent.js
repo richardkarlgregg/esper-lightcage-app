@@ -3,6 +3,9 @@ import 'jquery-ui/ui/widgets/datepicker';
 
 import store from './Store.js';
 
+import { initThreeJS, destroyThreeJS, startSphereRotation, focusOnLight, resetLights, dimLightsExcept, addCubeAndSpawnLightsAndScreenshot } from './threeScene';
+
+
 export default class ScreenContent {
     constructor() {
         this.init();
@@ -36,6 +39,7 @@ async loadPostContent(postId, postType, context) {
         });
 
         console.log('Server response:', response);
+        destroyThreeJS();
 
         if (response.success) {
             switch (postType) {
@@ -47,6 +51,12 @@ async loadPostContent(postId, postType, context) {
                     // Initialize capture handlers
                     store.captureManager.initCaptureHandlers();
                     this.initMainContentHandlers();
+
+                        if ( context == 'light_settings') {
+                           
+                            initThreeJS();
+                            
+                        }
                     break;
 
                 case 'take': {
@@ -61,6 +71,7 @@ async loadPostContent(postId, postType, context) {
                     store.takeManager.initializeResizeHandlers($('#content'));
                     store.takeManager.initializeThumbnailHandlers($('#content'));
                     break;
+
                 }
 
                 case 'job':
@@ -72,6 +83,7 @@ async loadPostContent(postId, postType, context) {
                     // Initialize job-specific handlers
                     this.initMainContentHandlers();
                     break;
+                
 
                 default:
                     $('#content')

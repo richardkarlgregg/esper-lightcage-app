@@ -2,6 +2,8 @@ import $ from 'jquery';
 import 'jquery-ui/ui/widgets/datepicker';
 import store from './Store.js';
 
+import { initThreeJS, destroyThreeJS, startSphereRotation, focusOnLight, resetLights, dimLightsExcept, addCubeAndSpawnLightsAndScreenshot } from './threeScene';
+
 export default class UIManager {
     constructor() {
         this.init();

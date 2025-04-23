@@ -1293,14 +1293,17 @@ $modeling_light_html = '
 $content = '
 <div class="h-full grid grid-cols-4 gap-4">
   <!-- Left column -->
-  <div class="col-span-3 grid grid-rows-2 gap-4">
-    <!-- FIRST PANEL: StageComposer -->
+  <div class="col-span-3 grid grid-rows-2 gap-4"> 
+  <!-- FIRST PANEL: StageComposer -->
+  <div class="relative bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+        <div class="absolute w-full h-full" id="sphere"></div>
+      <span class="hidden opacity-25 uppercase">Add composer here and add the geospehere 3d viewer above and get it to interact with composer and modeling light controls.</span>
+    </div>
+    <!-- SECOND PANEL: still placeholder -->
     <div class="bg-white bg-opacity-10 p-4">' . $composer_html . '</div>
 
-    <!-- SECOND PANEL: still placeholder -->
-    <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-      <span class="opacity-25 uppercase">Add composer here and add the geospehere 3d viewer above and get it to interact with composer and modeling light controls.</span>
-    </div>
+    
+   
   </div>
 
   <!-- Right column: Sidebar now contains modelling-light widget -->
