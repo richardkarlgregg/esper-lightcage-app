@@ -1299,7 +1299,7 @@ $content = '
 
     <!-- SECOND PANEL: still placeholder -->
     <div class="bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
-      <span class="opacity-25 uppercase">Light Settings Here</span>
+      <span class="opacity-25 uppercase">Add composer here and add the geospehere 3d viewer above and get it to interact with composer and modeling light controls.</span>
     </div>
   </div>
 

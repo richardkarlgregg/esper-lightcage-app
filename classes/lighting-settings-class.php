@@ -81,7 +81,7 @@ class StageComposer {
                 'field_slug' => 'direction',
                 'type'       => 'select',
                 'options'    => [
-                    'GI'     => 'GI',
+                    'GI'     => 'Global-Illumination',
                     'LEFT'   => 'Left',
                     'RIGHT'  => 'Right',
                     'TOP'    => 'Top',
@@ -141,169 +141,120 @@ class StageComposer {
 
     }
 
-    /**
-     * Renders the entire composer: header + table + template row + buttons.
-     */
-    public function render() {
-        ?>
-        <div id="stage-composer-wrapper">
-            <div class="composer-header" style="margin-bottom:1em;">
-                <strong>Stage Composer</strong>
-                <button id="save-stages" class="button button-primary" style="float:right;">Save Stages</button>
-            </div>
-            <table id="stage-composer" class="widefat">
-                <thead>
-                    <tr>
-                        <th>Stage</th>
-                        <th>Edit</th>
-                        <?php foreach ( $this->baseFields as $f ) : ?>
-                            <th><?php echo esc_html( $f['field_name'] ); ?></th>
-                        <?php endforeach; ?>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ( ! empty( $this->rows ) ) : ?>
-                    <?php foreach ( $this->rows as $i => $row ) : ?>
-                        <tr>
-                            <td class="stage-number"><?php echo sprintf( 'Stage %02d', $i + 1 ); ?></td>
-                            <td>
-                                <button class="move-up" title="Up">↑</button>
-                                <button class="move-down" title="Down">↓</button>
-                                <button class="remove-stage" title="Remove">✕</button>
-                            </td>
-                            <?php foreach ( $this->baseFields as $f ) :
-                                $slug = $f['field_slug'];
-                                $value = isset( $row[ $slug ] ) ? $row[ $slug ] : '';
-                            ?>
-                                <td>
-                                <?php
-                                switch ( $f['type'] ) {
-                                    case 'radio':
-                                        foreach ( $f['options'] as $val => $label ) {
-                                            printf(
-                                                '<label><input type="radio" name="%1$s[]" value="%2$s"%3$s> %4$s</label> ',
-                                                esc_attr( $slug ),
-                                                esc_attr( $val ),
-                                                checked( $value, $val, false ),
-                                                esc_html( $label )
-                                            );
-                                        }
-                                        break;
+/**
+ * Output one <tr>.  
+ * $row   – associative array [slug ⇒ value] (empty for template)  
+ * $i     – index (null for template)  
+ * $tmpl  – true = hidden template row
+ */
+private function render_row( array $row, ?int $i, bool $tmpl = false ) {
+
+    $rowKey = $tmpl ? '__INDEX__' : $i;   // <─── unique key / placeholder
+    echo '<tr' . ( $tmpl ? ' id="sc-row-tpl"' : '' ) . ' class="border-b border-esper-yellow">';
+
+        /* stage # or blank (template) */
+        echo '<td class="stage-number break-wordsx border-r border-esper-yellow">';
+            echo $tmpl ? '' : 'Stage&nbsp;' . str_pad( $i + 1, 2, '0', STR_PAD_LEFT );
+        echo '</td>';
+
+        /* edit buttons */
+        echo '
+        <td class="break-wordsx border-r border-esper-yellow">
+          <button class="move-up"   title="Up">↑</button>
+          <button class="move-down" title="Down">↓</button>
+          <button class="remove-stage" title="Remove">✕</button>
+        </td>';
+
+        foreach ( $this->baseFields as $f ) {
+
+            $slug  = $f['field_slug'];
+            $name  = esc_attr( $slug ) . '[' . $rowKey . ']';   // ← here
+            $val   = $row[ $slug ] ?? '';
     
-                                    case 'select':
-                                        echo '<select name="' . esc_attr( $slug ) . '[]">';
-                                        foreach ( $f['options'] as $val => $label ) {
-                                            printf(
-                                                '<option value="%1$s"%2$s>%3$s</option>',
-                                                esc_attr( $val ),
-                                                selected( $value, $val, false ),
-                                                esc_html( $label )
-                                            );
-                                        }
-                                        echo '</select>';
-                                        break;
+            echo '<td class="break-wordsx border-r border-esper-yellow">';
     
-                                    case 'range':
-                                        printf(
-                                            '<input type="range" name="%1$s[]" min="%2$d" max="%3$d" step="%4$d" value="%5$s">
-                                             <span class="brightness-label">%5$s%%</span>',
-                                            esc_attr( $slug ),
-                                            intval( $f['attributes']['min'] ),
-                                            intval( $f['attributes']['max'] ),
-                                            intval( $f['attributes']['step'] ),
-                                            esc_attr( $value !== '' ? $value : 70 )
-                                        );
-                                        break;
+            /* RADIO */
+            if ( $f['type'] === 'radio' ) {
+                echo '<div class="w-48">';
+                foreach ( $f['options'] as $v => $label ) {
+                    echo '<label>';
+                    echo '<input type="radio" name="'. $name .'" value="'. esc_attr( $v ) .'"'
+                       . ( $tmpl ? '' : checked( $val, $v, false ) ) .'> '. esc_html( $label );
+                    echo '</label> ';
+                }
+                echo '</div>';
+            }
     
-                                    case 'number':
-                                        printf(
-                                            '<input type="number" name="%1$s[]" step="%2$s" min="%3$s" value="%4$s"> s',
-                                            esc_attr( $slug ),
-                                            esc_attr( $f['attributes']['step'] ),
-                                            esc_attr( $f['attributes']['min'] ),
-                                            esc_attr( $value !== '' ? $value : 5.0 )
-                                        );
-                                        break;
-                                }
-                                ?>
-                                </td>
-                            <?php endforeach; ?>
-                            <td><button class="add-below" title="Add Below">＋</button></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
-            <button id="add-stage" class="button" style="margin-top:.5em;">Add Stage</button>
-        </div>
+            /* SELECT */
+            elseif ( $f['type'] === 'select' ) {
+                echo '<select class="w-full bg-black border p-2 border-white border-opacity-25 text-white"'
+                   . ' name="'. $name .'">';
+                   foreach ( $f['options'] as $v => $label ) {
+                       echo '<option value="'. esc_attr( $v ) .'"'
+                          . ( $tmpl ? '' : selected( $val, $v, false ) ) .'>'
+                          . esc_html( $label ) .'</option>';
+                   }
+                echo '</select>';
+            }
     
-        <!-- hidden template row -->
-        <table style="display:none;">
-            <tbody>
-                <tr id="sc-row-tpl">
-                    <td class="stage-number"></td>
-                    <td>
-                        <button class="move-up" title="Up">↑</button>
-                        <button class="move-down" title="Down">↓</button>
-                        <button class="remove-stage" title="Remove">✕</button>
-                    </td>
-                    <?php foreach ( $this->baseFields as $f ) : ?>
-                        <td>
-                        <?php
-                        switch ( $f['type'] ) {
-                            case 'radio':
-                                foreach ( $f['options'] as $val => $label ) {
-                                    printf(
-                                        '<label><input type="radio" name="%1$s[]" value="%2$s"> %3$s</label> ',
-                                        esc_attr( $f['field_slug'] ),
-                                        esc_attr( $val ),
-                                        esc_html( $label )
-                                    );
-                                }
-                                break;
+            /* RANGE */
+            elseif ( $f['type'] === 'range' ) {
+                $v = $tmpl ? 70 : ( $val !== '' ? $val : 70 );
+                echo '<input type="range" name="'. $name .'" min="'. $f['attributes']['min'] .'"'
+                   . ' max="'. $f['attributes']['max'] .'" step="'. $f['attributes']['step'] .'" value="'. $v .'">';
+                echo '<span class="brightness-label">'. $v .'%</span>';
+            }
     
-                            case 'select':
-                                echo '<select name="' . esc_attr( $f['field_slug'] ) . '[]">';
-                                foreach ( $f['options'] as $val => $label ) {
-                                    printf(
-                                        '<option value="%1$s">%2$s</option>',
-                                        esc_attr( $val ),
-                                        esc_html( $label )
-                                    );
-                                }
-                                echo '</select>';
-                                break;
+            /* NUMBER */
+            elseif ( $f['type'] === 'number' ) {
+                $v = $tmpl ? 5.0 : ( $val !== '' ? $val : 5.0 );
+                echo '<input class="w-1/2 bg-black border p-2 border-white border-opacity-25 text-white"'
+                   . ' type="number" name="'. $name .'" step="'. $f['attributes']['step'] .'"'
+                   . ' min="'. $f['attributes']['min'] .'" value="'. $v .'"> s';
+            }
     
-                            case 'range':
-                                printf(
-                                    '<input type="range" name="%1$s[]" min="%2$d" max="%3$d" step="%4$d" value="70">
-                                     <span class="brightness-label">70%%</span>',
-                                    esc_attr( $f['field_slug'] ),
-                                    intval( $f['attributes']['min'] ),
-                                    intval( $f['attributes']['max'] ),
-                                    intval( $f['attributes']['step'] )
-                                );
-                                break;
+            echo '</td>';
+        }
     
-                            case 'number':
-                                printf(
-                                    '<input type="number" name="%1$s[]" step="%2$s" min="%3$s" value="5.0"> s',
-                                    esc_attr( $f['field_slug'] ),
-                                    esc_attr( $f['attributes']['step'] ),
-                                    esc_attr( $f['attributes']['min'] )
-                                );
-                                break;
-                        }
-                        ?>
-                        </td>
-                    <?php endforeach; ?>
-                    <td><button class="add-below" title="Add Below">＋</button></td>
-                </tr>
-            </tbody>
-        </table>
-        <?php
-    }
+        echo '<td><button class="add-below" title="Add Below">＋</button></td></tr>';
+
+    echo '</tr>';
+}
+
+/* ====================== MAIN RENDER ====================== */
+public function render() { ?>
+<div id="stage-composer-wrapper">
+  <div class="composer-header mb-4"><strong>Stage Composer</strong></div>
+
+  <table id="stage-composer" class="table-fixedx settings-set w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">
+    <thead>
+      <tr class="bg-esper-yellow">
+        <th class="sync-col w-11 font-normal text-center text-black text-left">Stage</th><th class="sync-col w-11 font-normal text-center text-black text-left">Edit</th>
+        <?php foreach ( $this->baseFields as $f ) : ?>
+          <th class="sync-col w-11 font-normal text-center text-black text-left"><?php echo esc_html( $f['field_name'] ); ?></th>
+        <?php endforeach; ?>
+        <th class="sync-col w-11 font-normal text-center text-black text-left"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach ( $this->rows as $i => $row ) $this->render_row( $row, $i, false ); ?>
+    </tbody>
+  </table>
+
+  <div class="w-full flex justify-between mt-3">
+    <button id="add-stage"  class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">Add Stage</button>
+    <button id="save-stages" class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded button-primary">Save Stages</button>
+  </div>
+ 
+</div>
+
+<!-- hidden template -->
+<table style="display:none"><tbody>
+  <?php $this->render_row( [], null, true ); ?>
+</tbody></table>
+<?php }
+
+
     
 }
 
@@ -311,21 +262,18 @@ class StageComposer {
 add_action( 'wp_ajax_stage_composer_save',     'stage_composer_ajax_save' );
 add_action( 'wp_ajax_nopriv_stage_composer_save', 'stage_composer_ajax_save' );
 
-// Register both logged-in and no-priv hooks
-add_action( 'wp_ajax_stage_composer_save',        'stage_composer_ajax_save' );
-add_action( 'wp_ajax_nopriv_stage_composer_save', 'stage_composer_ajax_save' );
-
-// Register AJAX callbacks
-add_action( 'wp_ajax_stage_composer_save',        'stage_composer_ajax_save' );
-add_action( 'wp_ajax_nopriv_stage_composer_save', 'stage_composer_ajax_save' );
 
 function stage_composer_ajax_save() {
     $debug = [];
+
+    
 
     // 1) Nonce
     if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'esper_ajax_nonce' ) ) {
         wp_send_json_error( [ 'message' => 'Invalid nonce', 'debug' => $debug ], 403 );
     }
+
+    
 
     // 2) Capture ID
     $capture_id = isset( $_POST['capture_id'] ) ? intval( $_POST['capture_id'] ) : 0;
@@ -342,19 +290,23 @@ function stage_composer_ajax_save() {
         wp_send_json_error( [ 'message' => 'Invalid data format', 'debug' => $debug ], 400 );
     }
 
+    
+
     // 4) Find the light_settings post
     $composer = new StageComposer( $capture_id );
     $light_id = $composer->get_light_settings_id();
     $debug['$light_id'] = $light_id;
+
+   
     if ( ! $light_id ) {
         wp_send_json_error( [ 'message' => 'No light_settings found', 'debug' => $debug ], 404 );
     }
 
+    $debug['rpws'] = $rows;
+    //wp_send_json_success( [ 'message' => 'Saved to composer_stages', 'debug' => $debug ] );
+
     // 5) Save to meta_key 'composer_stages'
-    $updated = update_post_meta( $light_id, 'composer_stages', $rows );
-    if ( ! $updated ) {
-        wp_send_json_error( [ 'message' => 'Failed to update composer_stages', 'debug' => $debug ], 500 );
-    }
+    update_field('composer_stages', $rows, $light_id );
 
     // 6) Return success
     wp_send_json_success( [ 'message' => 'Saved to composer_stages', 'debug' => $debug ] );
@@ -371,7 +323,7 @@ function ml_save() {
     // 4) Find the light_settings post
     $composer = new StageComposer( $cap );
     $ls_id= $composer->get_light_settings_id();
-    
+
     if ( ! $ls_id ) wp_send_json_error( 'No light_settings', 404 );
 
     update_post_meta( $ls_id, 'light_brightness_parallel', $_POST['parallel']  );

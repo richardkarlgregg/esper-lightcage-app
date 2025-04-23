@@ -69,54 +69,61 @@ export default class LightSettingsManager {
 
     refreshNumbers() {
         $('#stage-composer tbody tr').each((i, tr) => {
-            $(tr).find('.stage-number').text(
-                `Stage ${String(i + 1).padStart(2, '0')}`
-            );
+            // update label
+            $(tr).find('.stage-number').text(`Stage ${String(i + 1).padStart(2,'0')}`);
+      
+            // fix every [__INDEX__] => [i]
+            $(tr).find(':input').each(function(){
+                const name = $(this).attr('name');
+                if (name && name.includes('__INDEX__')) {
+                    $(this).attr('name', name.replace('__INDEX__', i));
+                }
+            });
         });
-    }
+      }
+      
 
-    addRow(data = {}) {
-        // Always grab fresh template
+      addRow(data = {}) {
+
         const tpl  = $('#sc-row-tpl').prop('outerHTML');
         const $row = $(tpl).removeAttr('id');
-
-        // Populate LED radios
-        if ( data.led ) {
-            $row.find(`input[name="led[]"][value="${data.led}"]`)
-                .prop('checked', true);
+    
+        /* LED radios ------------- */
+        if (data.led) {
+            $row.find(`input[type=radio][value="${data.led}"]`).prop('checked', true);
         }
-
-        // Populate Direction select
-        if ( data.direction ) {
-            $row.find('select[name="direction[]"]').val(data.direction);
+    
+        /* Direction -------------- */
+        if (data.direction) {
+            $row.find('select[name^="direction"]').val(data.direction);
         }
-
-        // Populate Brightness range
-        const brightness = data.brightness != null ? data.brightness : 70;
-        $row.find('input[name="brightness[]"]')
-            .val(brightness)
-            .trigger('input');
-
-        // Populate Flash Duration number
-        const duration = data.flash_duration != null ? data.flash_duration : 5.0;
-        $row.find('input[name="flash_duration[]"]')
-            .val(duration);
-
-        // Append to table body
+    
+        /* Brightness ------------- */
+        const b = data.brightness != null ? data.brightness : 70;
+        $row.find('input[name^="brightness"]')
+            .val(b).trigger('input');
+    
+        /* Flash duration --------- */
+        const d = data.flash_duration != null ? data.flash_duration : 5.0;
+        $row.find('input[name^="flash_duration"]').val(d);
+    
         $('#stage-composer tbody').append($row);
+        this.refreshNumbers();                 // ensure placeholders are numbered
     }
+    
 
     saveStages() {
-        const $rows = $('#stage-composer tbody tr');
-        const data = $rows.map((i, tr) => {
-            const $tr = $(tr);
-            return {
-                led:            $tr.find('input[name="led[]"]:checked').val() || '',
-                direction:      $tr.find('select[name="direction[]"]').val(),
-                brightness:     $tr.find('input[name="brightness[]"]').val(),
-                flash_duration: $tr.find('input[name="flash_duration[]"]').val(),
-            };
-        }).get();
+        this.refreshNumbers(); // make sure names are led[0], led[1] …
+
+    const data = $('#stage-composer tbody tr').map((i, tr) => {
+        const $tr = $(tr);
+        return {
+            led:            $tr.find('input[type=radio][name^="led"]:checked').val() || '',
+            direction:      $tr.find('select[name^="direction"]').val(),
+            brightness:     $tr.find('input[name^="brightness"]').val(),
+            flash_duration: $tr.find('input[name^="flash_duration"]').val(),
+        };
+    }).get();
 
         console.log(data);
 
@@ -134,7 +141,7 @@ export default class LightSettingsManager {
             success: (response) => {
                 if (response.success) {
                     console.log(response);
-                    alert('Stages saved!');
+                    store.notificationManager.showSuccess('Stages updated successfully.');
                 } else {
                     alert(`Error: ${response.data}`);
                 }
