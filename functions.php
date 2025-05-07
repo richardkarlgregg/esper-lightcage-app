@@ -1241,7 +1241,7 @@ $val_parallel = (float) get_post_meta( $light_settings_id, 'light_brightness_par
 $val_cross    = (float) get_post_meta( $light_settings_id, 'light_brightness_cross',    true );
 $val_neutral  = (float) get_post_meta( $light_settings_id, 'light_brightness_neutral',  true );
 
-/* helper to print both “67.23” and “67.23%” once */
+/* helper to print both "67.23" and "67.23%" once */
 function ml_val( $v, $percent = false ){
     $v = $v === '' ? 0 : (float) $v;
     return $percent ? number_format( $v, 2 ) . '%' : number_format( $v, 2 );
@@ -1291,29 +1291,26 @@ $modeling_light_html = '
 
 // ── 2.  Build the page grid  ─────────────────────────────────────────────────
 $content = '
-<div class="h-full grid grid-cols-4 gap-4">
+<div class="h-full grid grid-cols-6 gap-4">
   <!-- Left column -->
-  <div class="col-span-3 grid grid-rows-2 gap-4"> 
+  <div class="col-span-4 grid grid-rows-1 gap-4"> 
   <!-- FIRST PANEL: StageComposer -->
-  <div class="relative bg-white bg-opacity-10 p-4 flex flex-wrap items-center justify-center">
+  <div class="relative bg-whitx bg-opacity-10x p-4 flex flex-wrap items-center justify-center">
         <div class="absolute w-full h-full" id="sphere"></div>
-      <span class="hidden opacity-25 uppercase">Add composer here and add the geospehere 3d viewer above and get it to interact with composer and modeling light controls.</span>
+      
     </div>
-    <!-- SECOND PANEL: still placeholder -->
-    <div class="bg-white bg-opacity-10 p-4">' . $composer_html . '</div>
 
-    
    
   </div>
 
   <!-- Right column: Sidebar now contains modelling-light widget -->
-  <div class="col-span-1 bg-white bg-opacity-10 p-4 flex flex-col items-center justify-start">
+  <div class="col-span-2 bg-whitex bg-opacity-10x p-4 flex flex-col items-center justify-start">
     ' . $modeling_light_html . '
+
+     ' . $composer_html . '
   </div>
 </div>';
 
-                    
-         
                 
                 break;
                 default:

@@ -19,6 +19,9 @@ module.exports = {
         maxHeight: {
           '96': '24rem',  // same as h-96
         },
+        height: {
+          'screen/2': '50vh',  // Add h-screen/2 utility
+        },
       },
     },
     variants: {
