@@ -184,6 +184,8 @@ export default class LightSettingsManager {
  */
 (function ($) {
 
+    window.setRegionBrightness('front', 50);
+
     /* ───── visual helpers ───── */
     const toColor   = p => `hsl(55 100% ${20 + 70 * (p / 100)}%)`,
           toOpacity = p => 0.05 + 0.95 * (p / 100),
@@ -245,6 +247,14 @@ $root.find('.ctrl .range').each(function () {
              .find('.percent').text(v.toFixed(2) + '%')
              .end().data('val', v);
         $glow.css({ opacity: toOpacity(v), transform: `scale(${toScale(v)})` });
+
+        /* NEW: broadcast to the 3-D scene */
+       const map = { 'bulb-a': 'parallel', 'bulb-b': 'cross', 'bulb-c': 'neutral' };
+        if (window.setLightTypeBrightness) {
+            window.setLightTypeBrightness(map[id], v);
+
+           
+        }
   
         $ctrl.find('.range').val(v);
         $ctrl.find('.number').val(v.toFixed(2));

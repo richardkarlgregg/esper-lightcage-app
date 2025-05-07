@@ -10,9 +10,22 @@ let rotationGroup; // Parent group for sphere and lights
 let wireframeMesh; // The sphere mesh
 
 // NEW: Rotation control variables
-let sphereRotationEnabled = true;
+let sphereRotationEnabled = false;
 const rotationSpeed = 0.001; // Adjust rotation speed
 let rotationTimeout;
+
+const regionNames   = ['left', 'right', 'top', 'bottom', 'front', 'back'];
+const regionLights = Object.create(null);
+let regionLightsVisible = true;   // default ON                  // { left: PointLight, … }
+const typePercent   = { parallel: 100, cross: 100, neutral: 100 };   // current slider levels
+const MASTER_GAIN   = 100;                    // tweak overall brightness
+let beamHelper;
+
+// individual gain (0‒1) for each of the six region lights
+const regionGain = {
+     left: 1, right: 1, top: 1,
+     bottom: 1, front: 1, back: 1
+};
 
 export function initThreeJS() {
     const container = document.getElementById('sphere');
@@ -29,8 +42,8 @@ export function initThreeJS() {
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    //renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    //renderer.toneMappingExposure = 1.0;
     renderer.setClearAlpha(0);
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
@@ -55,6 +68,7 @@ export function initThreeJS() {
     // Create a parent group that will contain both the sphere and its lights.
     rotationGroup = new THREE.Group();
     scene.add(rotationGroup);
+    createRegionLights();
 
     // Create the wireframe sphere and add it to the rotationGroup.
     const sphereGeometry = new THREE.IcosahedronGeometry(5, 1);
@@ -70,6 +84,20 @@ export function initThreeJS() {
     // Add the lights group to the rotationGroup so both spin together.
     rotationGroup.add(lightGroup);
 
+    // === centre cube =========================================================
+const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+const cubeMat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+const cube    = new THREE.Mesh(cubeGeo, cubeMat);
+rotationGroup.add(cube);
+
+// soft ambient so the cube is visible even without spotlights
+scene.add(new THREE.AmbientLight(0xffffff, 0.1));
+
+// dummy object the spot-lights will look at
+const centreTarget = new THREE.Object3D();
+centreTarget.position.set(0, 0, 0);
+scene.add(centreTarget);
+
     // Initialize post-processing.
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
@@ -84,6 +112,10 @@ export function initThreeJS() {
         if (sphereRotationEnabled && rotationGroup) {
             rotationGroup.rotation.y += rotationSpeed;
         }
+
+        // Update helper to reflect any changes
+  //.update();
+
         composer.render();
     }
     animate();
@@ -193,6 +225,91 @@ function createLightCluster(x, y, z, intensity) {
     lights.push(cluster);                 // one entry per *cluster*
     originalOpacities[cluster.id] = intensity;
   }
+  
+  function createRegionLights() {
+    const R = 6;                            // radius just outside the sphere
+    const positions = {
+      left  : new THREE.Vector3(-R, 0, 0),
+      right : new THREE.Vector3( R, 0, 0),
+      top   : new THREE.Vector3( 0, R, 0),
+      bottom: new THREE.Vector3( 0,-R, 0),
+      front : new THREE.Vector3( 0, 0, R),
+      back  : new THREE.Vector3( 0, 0,-R)
+    };
+  
+    const gizmoGeo = new THREE.SphereGeometry(0.15, 12, 12);
+    const gizmoMat = new THREE.MeshBasicMaterial({ color: 0xffffff, emissive: 0xffffff });
+  
+    Object.entries(positions).forEach(([name, pos]) => {
+      // ─── real light ───────────────────────────
+      const beam = new THREE.SpotLight(0xffffff, 1, 8, Math.PI / 8);
+      beam.position.copy(pos);
+      beam.target.position.set(0, 0, 0);
+      scene.add(beam); 
+      scene.add( beam.target );
+// 2. Create and add the helper
+//beamHelper = new THREE.SpotLightHelper( beam );
+//scene.add( beamHelper );
+  
+      // ─── visible gizmo sphere ────────────────
+      const gizmo = new THREE.Mesh(gizmoGeo, gizmoMat.clone());
+      gizmo.position.copy(pos);
+      rotationGroup.add(gizmo);
+  
+      regionLights[name] = { beam, gizmo };
+    });
+  
+    updateRegionLightIntensities();    // set initial brightness/visibility
+  }
+  
+
+  function updateRegionLightIntensities() {
+    const mix = (typePercent.parallel + typePercent.cross + typePercent.neutral) / 300;
+    const baseI = regionLightsVisible ? mix * MASTER_GAIN : 0;
+  
+    Object.values(regionLights).forEach(({ beam, gizmo }) => {
+        const name = Object.keys(regionLights).find(k => regionLights[k].beam === beam);
+        beam.intensity = baseI * (regionGain[name] ?? 1);
+        gizmo.visible  = regionLightsVisible;
+    });
+  }
+  
+  /**
+ * Set brightness for one or more region lights.
+ *
+ * @param {string|string[]|Object<string,number>} regions
+ *        • "left" – single region  
+ *        • ["left","right"] – array  
+ *        • { left: 80, top: 30 } – map
+ * @param {number=} percent  Optional when the first arg is a map.
+ *                           Range 0‒100 (will be clamped)
+ *
+ * Examples
+ *   setRegionBrightness('front',  60);
+ *   setRegionBrightness(['left','right'], 20);
+ *   setRegionBrightness({ top: 100, bottom: 0 });
+ */
+export function setRegionBrightness(regions, percent) {
+    const apply = (name, p) => {
+      if (regionGain[name] !== undefined)
+        regionGain[name] = THREE.MathUtils.clamp(p, 0, 100) / 100;
+    };
+  
+    if (typeof regions === 'string') {
+      apply(regions, percent);
+    } else if (Array.isArray(regions)) {
+      regions.forEach(r => apply(r, percent));
+    } else if (regions && typeof regions === 'object') {
+      Object.entries(regions).forEach(([name, p]) => apply(name, p));
+    }
+
+    console.log(regionGain);
+  
+    updateRegionLightIntensities();          // re-compute the real intensities
+  }
+  
+  // expose to non-ESM scripts (matches your pattern)
+  if (typeof window !== 'undefined') window.setRegionBrightness = setRegionBrightness;
   
 
 /**
@@ -472,6 +589,41 @@ function uploadCaptureImage(activeStageId, captureId, shotIndex, imageData) {
     });
   }
   
+  // ─── add near the other exports ───
+/**
+ * Change brightness for all bulbs of a given type.
+ * @param {'parallel'|'cross'|'neutral'} type
+ * @param {number} percent   // 0‒100
+ */
+export function setLightTypeBrightness(type, percent) {
+    if (!(type in typePercent)) return;
+  
+    typePercent[type] = THREE.MathUtils.clamp(percent, 0, 100);
+  
+    // still tint the little mesh bulbs so the UI looks alive
+    const idx = { parallel: 0, cross: 1, neutral: 2 }[type];
+    const opacity = 0.05 + 0.95 * (percent / 100);
+  
+    lights.forEach(cl => {
+      const s = cl.spheres[idx];
+      if (s) s.material.opacity = opacity;
+    });
+  
+    // recompute the six real lights
+    updateRegionLightIntensities();
+  }
   
   
+  /* make it available to non-ESM scripts that run in WP */
+  if (typeof window !== 'undefined') window.setLightTypeBrightness = setLightTypeBrightness;
   
+  export function showRegionLights()  { regionLightsVisible = true;  updateRegionLightIntensities(); }
+export function hideRegionLights()  { regionLightsVisible = false; updateRegionLightIntensities(); }
+
+if (typeof window !== 'undefined') {
+  window.showRegionLights = showRegionLights;
+  window.hideRegionLights = hideRegionLights;
+}
+  
+// 50 % brightness on the front light only
+//setRegionBrightness('front', 50);
