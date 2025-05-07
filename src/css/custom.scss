@@ -21,26 +21,24 @@
 
 #modeling-light{
     position:relative;
-    width:220px;height:250px;
+    width:300px;height:300px;
     margin:2rem auto;
-    background:#2e2e2e;
-    border-radius:20% 20% 40% 40%;
-    box-shadow:inset 0 5px 10px rgba(0,0,0,.6);
+    
 }
 /* bulb layout unchanged – add realistic glow + labels */
 .bulb           {position:absolute;width:95px;height:95px;border-radius:50%;
     background:#3b3b3b;box-shadow:inset 0 3px 7px rgba(0,0,0,.6);
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     cursor:pointer;transition:background .15s;}
-.bulb .label    {font:700 1.2rem/1 sans-serif;color:#fff;text-shadow:0 0 4px #000;}
-.bulb .percent  {font-size:.7rem;color:#ffe;text-shadow:0 0 4px #000;margin-top:.25rem;}
+.bulb .label    {font:700 1.2rem/1 sans-serif;color:#fff;text-shadow:0 0 4px #000; display:none;}
+.bulb .percent  {font-size:.7rem;color:#ffe;text-shadow:0 0 4px #000;margin-top:.25rem; display: none;}
 .bulb .glow     {content:'';position:absolute;inset:0;border-radius:50%;
     background:hsl(55 100% 70%);filter:blur(25px);opacity:0;pointer-events:none;
     transition:opacity .1s, transform .1s;}
 
-#bulb-a{top:18px;left:15px;}  /* keep your triangle layout */
-#bulb-b{top:18px;right:15px;}
-#bulb-c{bottom:15px;left:calc(50% - 47.5px);}
+#bulb-a{top:58px;left:42px;}  /* keep your triangle layout */
+#bulb-b{top:58px;right:43px;}
+#bulb-c{bottom:43px;left:calc(50% - 47.5px);}
 
 /* control strip (unchanged except wider label) */
 .controls{position:absolute;left:0;right:0;bottom:-90px;

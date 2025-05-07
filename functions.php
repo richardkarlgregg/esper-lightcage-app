@@ -1269,6 +1269,11 @@ $modeling_light_html = '
       <span class="glow"></span>
   </div>
 
+  <!-- Add the image here -->
+  <div class="flex justify-center my-4">
+    <img src="' . get_stylesheet_directory_uri() . '/assets/images/Light-Front.png" alt="Light Front" class="max-w-xs w-full h-auto" />
+  </div>
+
   <!-- control strip -->
   <div class="controls">
       <div class="ctrl" data-target="bulb-a">
