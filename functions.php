@@ -1248,7 +1248,7 @@ function ml_val( $v, $percent = false ){
 }
 
 $modeling_light_html = '
-<div id="modeling-light">
+<div id="modeling-light" class="absolute right-0 top-0 z-50 mr-10 mt-6">
 
   <!-- bulbs -->
   <div class="bulb" id="bulb-a" data-type="Parallel" data-val="'. ml_val($val_parallel) .'">
@@ -1296,25 +1296,40 @@ $modeling_light_html = '
 
 // ── 2.  Build the page grid  ─────────────────────────────────────────────────
 $content = '
-<div class="h-full grid grid-cols-6 gap-4">
-  <!-- Left column -->
-  <div class="col-span-4 grid grid-rows-1 gap-4"> 
-  <!-- FIRST PANEL: StageComposer -->
-  <div class="relative bg-whitx bg-opacity-10x p-4 flex flex-wrap items-center justify-center">
-        <div class="absolute w-full h-full" id="sphere"></div>
-      
-    </div>
 
-   
-  </div>
 
-  <!-- Right column: Sidebar now contains modelling-light widget -->
-  <div class="col-span-2 bg-whitex bg-opacity-10x p-4 flex flex-col items-center justify-start">
+
+    <div class="relative w-full h-screen p-4 flex flex-wrap items-center justify-center overflow-hidden"> 
+
+    <div class="flex items-start justify-between mb-4 p-12 absolute top-0 left-0 z-50">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-2 group relative">
+                            <h2 class="text-2xl font-bold text-white">Advanced Light Settings</h2>
+    
+                        </div>
+                        <div class="text-gray-400 text-sm">
+
+                            <div class="flex flex-wrap mt-3">
+                                <div class="flex items-center cursor-pointer mr-4 bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded" data-action="back"><span class="material-symbols-outlined w-6 h-6 mr-2 text-black flex-none">arrow_back_ios</span> Back</div>
+
+                            </div>
+                            
+
+                        </div>
+                    </div>
+          
+                </div>
+    
     ' . $modeling_light_html . '
 
      ' . $composer_html . '
-  </div>
-</div>';
+        <div class="absolute h-full w-full" id="sphere"></div>
+    </div>
+
+
+
+   
+';
 
                 
                 break;

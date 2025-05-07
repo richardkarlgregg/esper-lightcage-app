@@ -225,7 +225,7 @@ private function render_row( array $row, ?int $i, bool $tmpl = false ) {
 
 /* ====================== MAIN RENDER ====================== */
 public function render() { ?>
-<div id="stage-composer-wrapper" class="mt-12">
+<div id="stage-composer-wrapper" class="hidden absolute top-0 overflow-x-scroll h-screen/2 right-0 z-50 mt-96">
   <div class="composer-header mb-4"><strong>Stage Composer</strong></div>
 
   <?php if (empty($this->rows)) : ?>
