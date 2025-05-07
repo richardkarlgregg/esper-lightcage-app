@@ -60,7 +60,7 @@ class StageComposer {
     }
 
     /**
-     * Define the four “columns” in the table.
+     * Define the four "columns" in the table.
      *
      * @return array
      */
@@ -160,9 +160,11 @@ private function render_row( array $row, ?int $i, bool $tmpl = false ) {
         /* edit buttons */
         echo '
         <td class="break-wordsx border-r border-esper-yellow">
-          <button class="move-up"   title="Up">↑</button>
-          <button class="move-down" title="Down">↓</button>
-          <button class="remove-stage" title="Remove">✕</button>
+          <div class="flex gap-2">
+            <button data-tooltip="Move Up" class="move-up bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm" title="Move Up"><span class="material-symbols-outlined">arrow_upward</span></button>
+            <button data-tooltip="Move Down" class="move-down bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm" title="Move Down"><span class="material-symbols-outlined">arrow_downward</span></button>
+            <button data-tooltip="Remove Stage" class="remove-stage bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm" title="Remove Stage"><span class="material-symbols-outlined">delete</span></button>
+          </div>
         </td>';
 
         foreach ( $this->baseFields as $f ) {
