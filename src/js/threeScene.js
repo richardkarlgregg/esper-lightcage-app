@@ -11,7 +11,7 @@ let wireframeMesh; // The sphere mesh
 
 // NEW: Rotation control variables
 let sphereRotationEnabled = true;
-const rotationSpeed = 0.002; // Adjust rotation speed
+const rotationSpeed = 0.001; // Adjust rotation speed
 let rotationTimeout;
 
 export function initThreeJS() {
@@ -113,7 +113,7 @@ function createLights(sphereGeometry) {
         const key = `${x.toFixed(4)},${y.toFixed(4)},${z.toFixed(4)}`;
         if (!uniquePositions.has(key)) {
             uniquePositions.add(key);
-            createLight(x, y, z, lights.length + 1, 1.0);
+            createLightCluster(x, y, z, 1.0);
         }
     }
 
@@ -129,7 +129,7 @@ function createLights(sphereGeometry) {
         const edgeKey = `${mx.toFixed(4)},${my.toFixed(4)},${mz.toFixed(4)}`;
         if (!uniqueEdges.has(edgeKey)) {
             uniqueEdges.add(edgeKey);
-            createLight(mx, my, mz, lights.length + 1, 0.5);
+            createLightCluster(mx, my, mz, 0.5);
         }
     }
 }
@@ -172,6 +172,54 @@ function createLight(x, y, z, intensity) {
     //lightGroup.add(label);
 }
 
+function createLightCluster(x, y, z, intensity) {
+    const base     = new THREE.Vector3(x, y, z);
+    const { tangent, normal } = getTangentBasis(base);
+  
+    const spread   = 0.25;                        // radius of the triangle
+    const offsets  = [
+      tangent.clone().multiplyScalar(spread),                         // vertex #1
+      tangent.clone().applyAxisAngle(normal,  2 * Math.PI / 3).multiplyScalar(spread), // vertex #2 (120°)
+      tangent.clone().applyAxisAngle(normal,  4 * Math.PI / 3).multiplyScalar(spread)  // vertex #3 (240°)
+    ];
+  
+    const cluster = { id: lights.length, spheres: [] };
+  
+    offsets.forEach(off => {
+      const p = base.clone().add(off);
+      cluster.spheres.push(addLightSphere(p, intensity));
+    });
+  
+    lights.push(cluster);                 // one entry per *cluster*
+    originalOpacities[cluster.id] = intensity;
+  }
+  
+
+/**
+ * Return two unit vectors that form an orthonormal basis of the plane
+ * tangent to the sphere at point p (so they’re perpendicular to p).
+ */
+function getTangentBasis(p) {
+    const normal = p.clone().normalize();           // ⟂ to the plane
+    // Pick any vector that is *not* parallel to the normal
+    let tangent = new THREE.Vector3(0, 1, 0).cross(normal);
+    if (tangent.lengthSq() < 1e-6) tangent = new THREE.Vector3(1, 0, 0).cross(normal);
+    tangent.normalize();
+    const bitangent = normal.clone().cross(tangent).normalize();
+    return { tangent, bitangent, normal };
+  }
+  
+  /** Single sphere that represents one light “bulb” */
+  function addLightSphere(pos, opacity = 1) {
+    const geo  = new THREE.SphereGeometry(0.08, 16, 16);
+    const mat  = new THREE.MeshBasicMaterial({ color: 0xffc715, transparent: true, opacity });
+    const s    = new THREE.Mesh(geo, mat);
+    s.position.copy(pos);
+    s.layers.enable(1);           // bloom
+    lightGroup.add(s);
+    return s;
+  }
+
 export function focusOnLight(lightId) {
     // Pause automatic rotation
     stopSphereRotation();
@@ -213,20 +261,20 @@ export function focusOnLight(lightId) {
 }
 
 export function dimLightsExcept(selectedId) {
-    lights.forEach(({ sphere, index }) => {
-        sphere.material.opacity = (index === selectedId) ? 1.0 : 0.25;
+    lights.forEach(cl => {
+      cl.spheres.forEach(s => {
+        s.material.opacity = (cl.id === selectedId) ? 1.0 : 0.25;
+      });
     });
-    console.log(`💡 Light ${selectedId} sphere is now at full opacity, others dimmed.`);
-}
-
-export function resetLights() {
-    lights.forEach(({ sphere, index }) => {
-        if (originalOpacities.hasOwnProperty(index)) {
-            sphere.material.opacity = originalOpacities[index];
-        }
+  }
+  
+  export function resetLights() {
+    lights.forEach(cl => {
+      cl.spheres.forEach(s => {
+        s.material.opacity = originalOpacities[cl.id];
+      });
     });
-    console.log("🔄 All lights restored to original opacity.");
-}
+  }
 
 export function destroyThreeJS() {
     if (!renderer) {
