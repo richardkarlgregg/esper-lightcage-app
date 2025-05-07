@@ -215,8 +215,8 @@ private function render_row( array $row, ?int $i, bool $tmpl = false ) {
     
             echo '</td>';
         }
-    
-        echo '<td><button class="add-below" title="Add Below">＋</button></td></tr>';
+
+        echo '<td><button data-tooltip="Add Below" class="bg-esper-yellow text-black px-2 py-1 rounded flex items-center text-sm add-below" title="Add Below"><span class="material-symbols-outlined">add_row_below</span></button></td></tr>';
 
     echo '</tr>';
 }
