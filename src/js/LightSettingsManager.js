@@ -31,8 +31,16 @@ export default class LightSettingsManager {
         // Remove row
         $(document).on('click', '#stage-composer-wrapper .remove-stage', e => {
             e.preventDefault();
+            // Hide any visible tooltips
+            $('.tooltip').fadeOut(100);
             $(e.currentTarget).closest('tr').remove();
             this.refreshNumbers();
+
+            // Check if any stages remain
+            if ($('#stage-composer tbody tr').length === 0) {
+                $('#stage-composer').addClass('hidden');
+                $('#no-stages-message').show();
+            }
         });
 
         // Move up
@@ -84,6 +92,9 @@ export default class LightSettingsManager {
       
 
       addRow(data = {}) {
+        // Hide no stages message and show table
+        $('#no-stages-message').hide();
+        $('#stage-composer').removeClass('hidden');
 
         const tpl  = $('#sc-row-tpl').prop('outerHTML');
         const $row = $(tpl).removeAttr('id');
@@ -166,7 +177,7 @@ export default class LightSettingsManager {
  *              { ajaxurl, nonce }          // you already have this for stage-composer
  *      3.  `store.navigationManager.getPostIdByCriteria('capture')` returning capture ID
  *
- *  PHP side (example) – register an ajax handler “modeling_light_save”
+ *  PHP side (example) – register an ajax handler "modeling_light_save"
  *      update_post_meta( $light_id, 'light_brightness_parallel', $_POST['parallel'] );
  *      update_post_meta( $light_id, 'light_brightness_cross',    $_POST['cross']    );
  *      update_post_meta( $light_id, 'light_brightness_neutral',  $_POST['neutral']  );
@@ -252,8 +263,7 @@ $root.find('.ctrl .range').each(function () {
             neutral  : valOf($root.find('#bulb-c'))
         };
   
-        const captureId = store.navigationManager
-                               .getPostIdByCriteria('capture');
+        const captureId = store.navigationManager.getPostIdByCriteria('capture');
   
         $.post(esperApi.ajaxurl, {
             action     : 'modeling_light_save',

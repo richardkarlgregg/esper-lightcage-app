@@ -228,7 +228,14 @@ public function render() { ?>
 <div id="stage-composer-wrapper">
   <div class="composer-header mb-4"><strong>Stage Composer</strong></div>
 
-  <table id="stage-composer" class="table-fixedx settings-set w-full text-xs border border-esper-yellow" border="1" cellpadding="5" cellspacing="0">
+  <?php if (empty($this->rows)) : ?>
+    <div id="no-stages-message" class="text-white text-center py-8">
+      <span class="material-symbols-outlined text-4xl mb-2 block">lightbulb</span>
+      No stages found, please add some.
+    </div>
+  <?php endif; ?>
+
+  <table id="stage-composer" class="table-fixedx settings-set w-full text-xs border border-esper-yellow <?php echo empty($this->rows) ? 'hidden' : ''; ?>" border="1" cellpadding="5" cellspacing="0">
     <thead>
       <tr class="bg-esper-yellow">
         <th class="sync-col w-11 font-normal text-center text-black text-left">Stage</th><th class="sync-col w-11 font-normal text-center text-black text-left">Edit</th>
@@ -243,9 +250,15 @@ public function render() { ?>
     </tbody>
   </table>
 
-  <div class="w-full flex justify-between mt-3">
-    <button id="add-stage"  class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">Add Stage</button>
-    <button id="save-stages" class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded button-primary">Save Stages</button>
+  <div class="w-full flex justify-between mt-6">
+    <button id="add-stage" class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded">
+      <span class="material-symbols-outlined mr-2">add_circle</span>
+      Add Stage
+    </button>
+    <button id="save-stages" class="flex items-center cursor-pointer bg-esper-yellow hover:bg-esper-yellow/80 text-black px-4 py-2 rounded button-primary">
+      <span class="material-symbols-outlined mr-2">save</span>
+      Save Stages
+    </button>
   </div>
  
 </div>
