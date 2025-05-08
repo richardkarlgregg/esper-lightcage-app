@@ -305,6 +305,11 @@ export default class LightSettingsManager {
             window.setRegionBrightness(region, 0);
         });
 
+        // Show all regions again
+        if (window.setClusterRegionVisibility) {
+            window.setClusterRegionVisibility(regions, true);
+        }
+
         // Restore original modeling light values and visuals
         if (window.setLightTypeBrightness) {
             window.setLightTypeBrightness('parallel', this.originalModelingLight.parallel);
@@ -380,14 +385,22 @@ export default class LightSettingsManager {
             window.setRegionBrightness(region, 0);
         });
 
+        // Hide all regions first
+        if (window.setClusterRegionVisibility) {
+            window.setClusterRegionVisibility(regions, false);
+        }
+
         // Set brightness based on direction
         if (direction === 'GI') {
-            // Global illumination - set all regions to same brightness
+            // Global illumination - set all regions to same brightness and show all
             regions.forEach(region => {
                 window.setRegionBrightness(region, brightness);
             });
+            if (window.setClusterRegionVisibility) {
+                window.setClusterRegionVisibility(regions, true);
+            }
         } else {
-            // Set specific region brightness
+            // Set specific region brightness and show only that region
             const regionMap = {
                 'FRONT': 'front',
                 'BACK': 'back',
@@ -399,6 +412,9 @@ export default class LightSettingsManager {
             const region = regionMap[direction];
             if (region) {
                 window.setRegionBrightness(region, brightness);
+                if (window.setClusterRegionVisibility) {
+                    window.setClusterRegionVisibility(region, true);
+                }
             }
         }
 

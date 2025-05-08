@@ -27,6 +27,11 @@ const regionGain = {
      bottom: 1, front: 1, back: 1
 };
 
+// --- cluster visibility by region -------------------------------------------
+const regionClusters = {           // cluster-IDs that belong to each side
+  left: [], right: [], top: [], bottom: [], front: [], back: []
+};
+
 export function initThreeJS() {
     const container = document.getElementById('sphere');
     if (!container) {
@@ -224,6 +229,18 @@ function createLightCluster(x, y, z, intensity) {
   
     lights.push(cluster);                 // one entry per *cluster*
     originalOpacities[cluster.id] = intensity;
+
+    // ── remember which side of the sphere this cluster lives on ──────────────
+ const region = getRegionForPosition(base.x, base.y, base.z);
+ regionClusters[region].push(cluster.id);
+  }
+
+  function getRegionForPosition(x, y, z) {
+    const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
+  
+    if (ax >= ay && ax >= az) return (x >= 0) ? 'right'  : 'left';
+    if (ay >= ax && ay >= az) return (y >= 0) ? 'top'    : 'bottom';
+    /* otherwise */           return (z >= 0) ? 'front'  : 'back';
   }
   
   function createRegionLights() {
@@ -627,3 +644,29 @@ if (typeof window !== 'undefined') {
   
 // 50 % brightness on the front light only
 //setRegionBrightness('front', 50);
+
+/**
+ * Show / hide bulb-clusters that lie in one or more regions.
+ *
+ * @param {string|string[]} regions  e.g. "front" | ["left","right"]
+ * @param {boolean}         visible  true = show, false = hide
+ */
+export function setClusterRegionVisibility(regions, visible) {
+  const list = (typeof regions === 'string') ? [regions] : regions;
+  list.forEach(region => {
+    (regionClusters[region] || []).forEach(id => {
+      lights[id].spheres.forEach(s => { s.visible = visible; });
+    });
+  });
+}
+
+/** Convenience helpers */
+export const showClusterRegions = (r) => setClusterRegionVisibility(r, true);
+export const hideClusterRegions = (r) => setClusterRegionVisibility(r, false);
+
+/* Expose to vanilla scripts (like you did elsewhere) */
+if (typeof window !== 'undefined') {
+  window.setClusterRegionVisibility = setClusterRegionVisibility;
+  window.showClusterRegions         = showClusterRegions;
+  window.hideClusterRegions         = hideClusterRegions;
+}
