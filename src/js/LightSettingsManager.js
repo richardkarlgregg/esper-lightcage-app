@@ -73,6 +73,16 @@ export default class LightSettingsManager {
             $(e.currentTarget).closest('tr').after($new);
             this.refreshNumbers();
         });
+
+        $(document).on('click', '.stage-summary', function (e) {
+
+            //  Ignore clicks on any button inside the icon-bar
+            if ($(e.target).closest('.icon-bar button').length) return;
+    
+            const $group = $(this).closest('.stage-group');
+            $group.toggleClass('open');
+            $group.find('.stage-details').toggle();      // show / hide row
+        });
     }
 
     refreshNumbers() {

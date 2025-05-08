@@ -1299,7 +1299,7 @@ $content = '
 
 
 
-    <div class="relative w-full h-screen p-4 flex flex-wrap items-center justify-center overflow-hidden"> 
+    <div class="relative w-full h-full p-4 flex flex-wrap items-center justify-center overflow-hidden"> 
 
     <div class="flex items-start justify-between mb-4 p-12 absolute top-0 left-0 z-50">
                     <div class="flex-1">
