@@ -3,6 +3,9 @@ import store from './Store.js';
 
 export default class LightSettingsManager {
     constructor() {
+        this.isPlaying = false;
+        this.currentStageIndex = 0;
+        this.playbackTimeout = null;
         this.init();
     }
 
@@ -20,6 +23,22 @@ export default class LightSettingsManager {
         $(document).on('click', '#stage-composer-wrapper #save-stages', e => {
             e.preventDefault();
             this.saveStages();
+        });
+
+        // Playback controls
+        $(document).on('click', '#play-timeline', e => {
+            e.preventDefault();
+            this.startPlayback();
+        });
+
+        $(document).on('click', '#pause-timeline', e => {
+            e.preventDefault();
+            this.pausePlayback();
+        });
+
+        $(document).on('click', '#stop-timeline', e => {
+            e.preventDefault();
+            this.stopPlayback();
         });
 
         // Brightness slider update
@@ -233,6 +252,76 @@ export default class LightSettingsManager {
                 alert('Failed to save stages.');
             }
         });
+    }
+
+    startPlayback() {
+        if (this.isPlaying) return;
+        
+        this.isPlaying = true;
+        $('#play-timeline').addClass('hidden');
+        $('#pause-timeline').removeClass('hidden');
+        
+        this.playNextStage();
+    }
+
+    pausePlayback() {
+        if (!this.isPlaying) return;
+        
+        this.isPlaying = false;
+        $('#play-timeline').removeClass('hidden');
+        $('#pause-timeline').addClass('hidden');
+        
+        if (this.playbackTimeout) {
+            clearTimeout(this.playbackTimeout);
+            this.playbackTimeout = null;
+        }
+    }
+
+    stopPlayback() {
+        this.pausePlayback();
+        this.currentStageIndex = 0;
+        // Remove all active classes
+        $('#stage-timeline .stage-card').removeClass('border-2 border-white bg-esper-yellow bg-opacity-50');
+    }
+
+    playNextStage() {
+        if (!this.isPlaying) return;
+
+        const $cards = $('#stage-timeline .stage-card');
+        if ($cards.length === 0) {
+            this.stopPlayback();
+            return;
+        }
+
+        // Update active stage
+        this.updateActiveStage();
+
+        // Get current stage duration
+        const $currentCard = $cards.eq(this.currentStageIndex);
+        const duration = parseFloat($currentCard.find('input[name^="flash_duration"]').val()) * 1000; // Convert to milliseconds
+
+        // Move to next stage
+        this.currentStageIndex = (this.currentStageIndex + 1) % $cards.length;
+
+        // Schedule next stage
+        this.playbackTimeout = setTimeout(() => {
+            this.playNextStage();
+        }, duration);
+    }
+
+    updateActiveStage() {
+        // Remove active class from all cards
+        $('#stage-timeline .stage-card').removeClass('border-2 border-white bg-esper-yellow bg-opacity-50');
+        
+        // Add active class to current card
+        const $currentCard = $('#stage-timeline .stage-card').eq(this.currentStageIndex);
+        $currentCard.addClass('border-2 border-white bg-esper-yellow bg-opacity-50');
+
+        // Scroll to active card
+        const $timeline = $('#stage-timeline');
+        $timeline.animate({
+            scrollLeft: $currentCard.offset().left - $timeline.offset().left + $timeline.scrollLeft()
+        }, 300);
     }
 }
 

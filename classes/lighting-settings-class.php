@@ -487,7 +487,21 @@ private function render_row( array $row, ?int $i, bool $tmpl = false ) {
 /* ========================== MAIN RENDER ========================== */
 public function render() { ?>
     <div id="stage-composer-wrapper" class="absolute bottom-0 left-0 w-full z-50 bg-black/60">
-      <div class="flex justify-end px-4 py-2">
+      <div class="flex justify-end items-center gap-2 px-4 py-2">
+        <div class="flex items-center gap-2">
+          <button id="play-timeline" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
+            <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+            Play
+          </button>
+          <button id="pause-timeline" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm hidden">
+            <span class="material-symbols-outlined text-[18px]">pause</span>
+            Pause
+          </button>
+          <button id="stop-timeline" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
+            <span class="material-symbols-outlined text-[18px]">stop</span>
+            Stop
+          </button>
+        </div>
         <button id="add-stage" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
           <span class="material-symbols-outlined text-[18px]">add</span>
           Add Stage
