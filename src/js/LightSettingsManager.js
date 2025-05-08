@@ -410,39 +410,36 @@ export default class LightSettingsManager {
                 'CROSS': 'cross',
                 'NEUTRAL': 'neutral'
             };
-            
-            // Reset previous LED type to 0 if it exists
-            if (this.previousLedType && this.previousLedType !== ledType) {
-                const previousType = modelingLightMap[this.previousLedType];
-                if (previousType) {
-                    window.setLightTypeBrightness(previousType, 0);
-                    
-                    // Reset previous bulb visuals
-                    const $root = $('#modeling-light');
-                    if ($root.length) {
-                        const bulbMap = {
-                            'PARALLEL': '#bulb-a',
-                            'CROSS': '#bulb-b',
-                            'NEUTRAL': '#bulb-c'
-                        };
-                        const $prevBulb = $root.find(bulbMap[this.previousLedType]);
-                        if ($prevBulb.length) {
-                            const $glow = $prevBulb.find('.glow');
-                            $prevBulb.css('background', this.toColor(0))
-                                     .find('.percent').text('0%')
-                                     .end().data('val', 0);
-                            $glow.css({ opacity: this.toOpacity(0), transform: `scale(${this.toScale(0)})` });
 
-                            // Reset the corresponding slider and number input
-                            const $ctrl = $root.find(`.ctrl[data-target="${$prevBulb.attr('id')}"]`);
-                            if ($ctrl.length) {
-                                $ctrl.find('.range').val(0);
-                                $ctrl.find('.number').val('0.00');
-                            }
+            // Reset ALL modeling lights to 0 first
+            Object.values(modelingLightMap).forEach(type => {
+                window.setLightTypeBrightness(type, 0);
+                
+                // Reset all bulb visuals
+                const $root = $('#modeling-light');
+                if ($root.length) {
+                    const bulbMap = {
+                        'parallel': '#bulb-a',
+                        'cross': '#bulb-b',
+                        'neutral': '#bulb-c'
+                    };
+                    const $bulb = $root.find(bulbMap[type]);
+                    if ($bulb.length) {
+                        const $glow = $bulb.find('.glow');
+                        $bulb.css('background', this.toColor(0))
+                             .find('.percent').text('0%')
+                             .end().data('val', 0);
+                        $glow.css({ opacity: this.toOpacity(0), transform: `scale(${this.toScale(0)})` });
+
+                        // Reset the corresponding slider and number input
+                        const $ctrl = $root.find(`.ctrl[data-target="${$bulb.attr('id')}"]`);
+                        if ($ctrl.length) {
+                            $ctrl.find('.range').val(0);
+                            $ctrl.find('.number').val('0.00');
                         }
                     }
                 }
-            }
+            });
             
             // Set the selected LED type to the stage brightness
             const modelingType = modelingLightMap[ledType];
@@ -450,10 +447,9 @@ export default class LightSettingsManager {
                 window.setLightTypeBrightness(modelingType, brightness);
             }
 
-            // Update modeling light visuals
+            // Update modeling light visuals for active bulb
             const $root = $('#modeling-light');
             if ($root.length) {
-                // Update the active bulb and its controls
                 const bulbMap = {
                     'PARALLEL': '#bulb-a',
                     'CROSS': '#bulb-b',

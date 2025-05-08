@@ -254,7 +254,7 @@ function createLightCluster(x, y, z, intensity) {
       // ─── visible gizmo sphere ────────────────
       const gizmo = new THREE.Mesh(gizmoGeo, gizmoMat.clone());
       gizmo.position.copy(pos);
-      rotationGroup.add(gizmo);
+      //rotationGroup.add(gizmo);
   
       regionLights[name] = { beam, gizmo };
     });
