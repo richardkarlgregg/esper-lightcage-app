@@ -67,6 +67,14 @@ export default class LightSettingsManager {
             this.refreshNumbers();
         });
 
+        // Mouse wheel horizontal scroll
+        $('#stage-timeline').on('wheel', function(e) {
+            if (e.originalEvent.deltaY !== 0) {
+                e.preventDefault();
+                $(this).scrollLeft($(this).scrollLeft() + e.originalEvent.deltaY);
+            }
+        });
+
         $(document).on('click', '.stage-summary', function (e) {
 
             //  Ignore clicks on any button inside the icon-bar
@@ -183,6 +191,11 @@ export default class LightSettingsManager {
         $card.append($grid);
         $timeline.append($card);
         this.refreshNumbers();
+
+        // Scroll to the new card with smooth animation
+        $timeline.animate({
+            scrollLeft: $card.offset().left - $timeline.offset().left + $timeline.scrollLeft()
+        }, 500);
     }
 
     saveStages() {
