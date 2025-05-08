@@ -282,6 +282,12 @@ export default class LightSettingsManager {
         this.currentStageIndex = 0;
         // Remove all active classes
         $('#stage-timeline .stage-card').removeClass('border-2 border-white bg-esper-yellow bg-opacity-50');
+        
+        // Reset all regions to 0
+        const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+        regions.forEach(region => {
+            window.setRegionBrightness(region, 0);
+        });
     }
 
     playNextStage() {
@@ -296,9 +302,39 @@ export default class LightSettingsManager {
         // Update active stage
         this.updateActiveStage();
 
-        // Get current stage duration
+        // Get current stage settings
         const $currentCard = $cards.eq(this.currentStageIndex);
+        const direction = $currentCard.find('select[name^="direction"]').val();
+        const brightness = parseInt($currentCard.find('input[name^="brightness"]').val());
         const duration = parseFloat($currentCard.find('input[name^="flash_duration"]').val()) * 1000; // Convert to milliseconds
+
+        // Reset all regions to 0 first
+        const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+        regions.forEach(region => {
+            window.setRegionBrightness(region, 0);
+        });
+
+        // Set brightness based on direction
+        if (direction === 'GI') {
+            // Global illumination - set all regions to same brightness
+            regions.forEach(region => {
+                window.setRegionBrightness(region, brightness);
+            });
+        } else {
+            // Set specific region brightness
+            const regionMap = {
+                'FRONT': 'front',
+                'BACK': 'back',
+                'LEFT': 'left',
+                'RIGHT': 'right',
+                'TOP': 'top',
+                'BOTTOM': 'bottom'
+            };
+            const region = regionMap[direction];
+            if (region) {
+                window.setRegionBrightness(region, brightness);
+            }
+        }
 
         // Move to next stage
         this.currentStageIndex = (this.currentStageIndex + 1) % $cards.length;
