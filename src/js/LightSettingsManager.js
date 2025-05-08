@@ -95,8 +95,8 @@ export default class LightSettingsManager {
     refreshNumbers() {
         $('#stage-timeline .stage-card').each((i, card) => {
             const $card = $(card);
-            const $title = $card.find('.stage-summary strong');
-            $title.text(`S${String(i + 1).padStart(2, '0')}`);
+            const stageNumber = `S${String(i + 1).padStart(2, '0')}`;
+            $card.find('.bg-esper-yellow').contents().first().replaceWith(stageNumber);
             
             // Update input names
             $card.find(':input').each(function() {
@@ -110,19 +110,21 @@ export default class LightSettingsManager {
 
     addRow(data = {}) {
         const $timeline = $('#stage-timeline');
+        const nextIndex = $timeline.find('.stage-card').length;
+        const stageNumber = `S${String(nextIndex + 1).padStart(2, '0')}`;
         
         // Create new card
         const $card = $('<div class="stage-card shrink-0 border border-esper-yellow rounded-sm min-w-[220px]">');
         
         // Add header
         $card.append(`
-            <div class="h-5 bg-esper-yellow flex items-center justify-between px-1 text-[10px] font-bold text-black">
-                <strong>S01</strong>
-                <div class="icon-bar flex gap-1">
-                    <button class="move-up" title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>
-                    <button class="move-down" title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>
-                    <button class="add-below" title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>
-                    <button class="remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>
+            <div class="h-7 bg-esper-yellow flex items-center justify-between px-1 text-[10px] font-bold text-black">
+                ${stageNumber}
+                <div class="icon-bar flex items-center gap-1">
+                    <button class="hidden flex items-center move-up" title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>
+                    <button class="hidden flex items-center move-down" title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>
+                    <button class="flex items-center add-below" title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>
+                    <button class="flex items-center remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>
                 </div>
             </div>
         `);
