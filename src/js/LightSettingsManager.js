@@ -12,7 +12,9 @@ export default class LightSettingsManager {
             neutral: 0
         };
         this.previousLedType = null;
+        this.saveTimeout = null;
         this.init();
+        this.render();
     }
 
     init() {
@@ -23,6 +25,91 @@ export default class LightSettingsManager {
             e.preventDefault();
             this.addRow();
             this.refreshNumbers();
+            this.debouncedSave();
+        });
+
+        // Timeline scrubber
+        $(document).on('input', '#timeline-scrubber', e => {
+            if (this.isPlaying) return; // Don't allow scrubbing while playing
+            
+            const $scrubber = $(e.currentTarget);
+            const value = parseInt($scrubber.val());
+            const $cards = $('#stage-timeline .stage-card');
+            const totalStages = $cards.length;
+            
+            if (totalStages === 0) return;
+            
+            // Calculate which stage to show based on scrubber position
+            const stageIndex = Math.floor((value / 100) * totalStages);
+            this.currentStageIndex = Math.min(stageIndex, totalStages - 1);
+            
+            // Update the stage display
+            this.updateActiveStage();
+            
+            // Get current stage settings
+            const $currentCard = $cards.eq(this.currentStageIndex);
+            const direction = $currentCard.find('select[name^="direction"]').val();
+            const brightness = parseInt($currentCard.find('input[name^="brightness"]').val());
+            
+            // Reset all regions to 0 first
+            const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
+            regions.forEach(region => {
+                window.setRegionBrightness(region, 0);
+            });
+
+            // Hide all regions first
+            if (window.setClusterRegionVisibility) {
+                window.setClusterRegionVisibility(regions, false);
+            }
+
+            // Set brightness based on direction
+            if (direction === 'GI') {
+                // Global illumination - set all regions to same brightness and show all
+                regions.forEach(region => {
+                    window.setRegionBrightness(region, brightness);
+                });
+                if (window.setClusterRegionVisibility) {
+                    window.setClusterRegionVisibility(regions, true);
+                }
+            } else {
+                // Set specific region brightness and show only that region
+                const regionMap = {
+                    'FRONT': 'front',
+                    'BACK': 'back',
+                    'LEFT': 'left',
+                    'RIGHT': 'right',
+                    'TOP': 'top',
+                    'BOTTOM': 'bottom'
+                };
+                const region = regionMap[direction];
+                if (region) {
+                    window.setRegionBrightness(region, brightness);
+                    if (window.setClusterRegionVisibility) {
+                        window.setClusterRegionVisibility(region, true);
+                    }
+                }
+            }
+
+            // Update modeling light based on LED selection
+            if (window.setLightTypeBrightness) {
+                const ledType = $currentCard.find('input[type=radio][name^="led"]:checked').val();
+                const modelingLightMap = {
+                    'PARALLEL': 'parallel',
+                    'CROSS': 'cross',
+                    'NEUTRAL': 'neutral'
+                };
+
+                // Reset ALL modeling lights to 0 first
+                Object.values(modelingLightMap).forEach(type => {
+                    window.setLightTypeBrightness(type, 0);
+                });
+                
+                // Set the selected LED type to the stage brightness
+                const modelingType = modelingLightMap[ledType];
+                if (modelingType) {
+                    window.setLightTypeBrightness(modelingType, brightness);
+                }
+            }
         });
 
         // Save Stages button
@@ -52,6 +139,7 @@ export default class LightSettingsManager {
             const $input = $(e.currentTarget);
             const $card = $input.closest('.stage-card');
             $card.find('.text-right').text(`${$input.val()}%`);
+            this.debouncedSave();
         });
 
         // Remove stage
@@ -59,6 +147,7 @@ export default class LightSettingsManager {
             e.preventDefault();
             $(e.currentTarget).closest('.stage-card').remove();
             this.refreshNumbers();
+            this.debouncedSave();
         });
 
         // Move up
@@ -69,6 +158,7 @@ export default class LightSettingsManager {
             if ($prev.length) {
                 $prev.before($card);
                 this.refreshNumbers();
+                this.debouncedSave();
             }
         });
 
@@ -80,6 +170,7 @@ export default class LightSettingsManager {
             if ($next.length) {
                 $next.after($card);
                 this.refreshNumbers();
+                this.debouncedSave();
             }
         });
 
@@ -90,6 +181,20 @@ export default class LightSettingsManager {
             this.addRow();
             $card.after($('#stage-timeline .stage-card:last'));
             this.refreshNumbers();
+            this.debouncedSave();
+        });
+
+        // Add change handlers for all inputs
+        $(document).on('change', '#stage-composer-wrapper select', () => {
+            this.debouncedSave();
+        });
+
+        $(document).on('change', '#stage-composer-wrapper input[type=radio]', () => {
+            this.debouncedSave();
+        });
+
+        $(document).on('change', '#stage-composer-wrapper input[type=number]', () => {
+            this.debouncedSave();
         });
 
         // Mouse wheel horizontal scroll
@@ -101,7 +206,6 @@ export default class LightSettingsManager {
         });
 
         $(document).on('click', '.stage-summary', function (e) {
-
             //  Ignore clicks on any button inside the icon-bar
             if ($(e.target).closest('.icon-bar button').length) return;
     
@@ -114,15 +218,16 @@ export default class LightSettingsManager {
     render() {
         const $wrapper = $('#stage-composer-wrapper');
         
-        // Add the header with Add Stage button
-        $wrapper.prepend(`
-            <div class="flex justify-end px-4 py-2">
-                <button id="add-stage" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
-                    <span class="material-symbols-outlined text-[18px]">add</span>
-                    Add Stage
-                </button>
-            </div>
-        `);
+        // Add the scrubber next to the existing buttons
+        const $buttonContainer = $wrapper.find('.flex.items-center.gap-2').first();
+        if ($buttonContainer.length) {
+            $buttonContainer.after(`
+                <div class="flex-1 flex items-center gap-2 ml-4">
+                    <input type="range" id="timeline-scrubber" class="flex-1" min="0" max="100" value="0" step="1">
+                    <span id="timeline-position" class="text-sm">0%</span>
+                </div>
+            `);
+        }
     }
 
     refreshNumbers() {
@@ -249,7 +354,7 @@ export default class LightSettingsManager {
             },
             success: (response) => {
                 if (response.success) {
-                    store.notificationManager.showSuccess('Stages updated successfully.');
+                    //store.notificationManager.showSuccess('Stages updated successfully.');
                 } else {
                     alert(`Error: ${response.data}`);
                 }
@@ -276,6 +381,7 @@ export default class LightSettingsManager {
         this.isPlaying = true;
         $('#play-timeline').addClass('hidden');
         $('#pause-timeline').removeClass('hidden');
+        $('#timeline-scrubber').prop('disabled', true);
         
         this.playNextStage();
     }
@@ -286,6 +392,7 @@ export default class LightSettingsManager {
         this.isPlaying = false;
         $('#play-timeline').removeClass('hidden');
         $('#pause-timeline').addClass('hidden');
+        $('#timeline-scrubber').prop('disabled', false);
         
         if (this.playbackTimeout) {
             clearTimeout(this.playbackTimeout);
@@ -296,6 +403,8 @@ export default class LightSettingsManager {
     stopPlayback() {
         this.pausePlayback();
         this.currentStageIndex = 0;
+        $('#timeline-scrubber').val(0);
+        $('#timeline-position').text('0%');
         // Remove all active classes
         $('#stage-timeline .stage-card').removeClass('border-2 border-white bg-esper-yellow bg-opacity-50');
         
@@ -523,6 +632,19 @@ export default class LightSettingsManager {
     toScale(p) {
         return 0.8 + 0.7 * (p / 100);
     }
+
+    // Add debounce utility
+    debounce(func, wait) {
+        return (...args) => {
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // Create debounced save method
+    debouncedSave = this.debounce(function() {
+        this.saveStages();
+    }, 1000); // Wait 1 second after last change before saving
 }
 
 

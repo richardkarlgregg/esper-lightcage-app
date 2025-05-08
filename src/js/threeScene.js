@@ -4,10 +4,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 let renderer, scene, camera, controls, lightGroup, lights = [], originalOpacities = {}, composer, bloomPass;
 let rotationGroup; // Parent group for sphere and lights
 let wireframeMesh; // The sphere mesh
+let sculptureModel; // The loaded sculpture model
 
 // NEW: Rotation control variables
 let sphereRotationEnabled = false;
@@ -90,18 +92,42 @@ export function initThreeJS() {
     rotationGroup.add(lightGroup);
 
     // === centre cube =========================================================
-const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
-const cubeMat = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-const cube    = new THREE.Mesh(cubeGeo, cubeMat);
-rotationGroup.add(cube);
+    // Load the sculpture model
+    const loader = new GLTFLoader();
+    loader.load(
+        '/wp-content/themes/esper-lightcage-app/assets/models/sculpture_bust_of_roza_loewenfeld/scene.gltf',
+        (gltf) => {
+            sculptureModel = gltf.scene;
+            
+            // Scale the model to fit nicely in the scene
+            const box = new THREE.Box3().setFromObject(sculptureModel);
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const scale = 2 / maxDim; // Scale to be about 2 units in size
+            sculptureModel.scale.set(scale, scale, scale);
+            
+            // Center the model
+            const center = box.getCenter(new THREE.Vector3());
+            sculptureModel.position.sub(center.multiplyScalar(scale));
+            
+            // Add the model to the rotation group
+            rotationGroup.add(sculptureModel);
+        },
+        (xhr) => {
+            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+        },
+        (error) => {
+            console.error('An error happened loading the model:', error);
+        }
+    );
 
-// soft ambient so the cube is visible even without spotlights
-scene.add(new THREE.AmbientLight(0xffffff, 0.1));
+    // soft ambient so the sculpture is visible even without spotlights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.1));
 
-// dummy object the spot-lights will look at
-const centreTarget = new THREE.Object3D();
-centreTarget.position.set(0, 0, 0);
-scene.add(centreTarget);
+    // dummy object the spot-lights will look at
+    const centreTarget = new THREE.Object3D();
+    centreTarget.position.set(0, 0, 0);
+    scene.add(centreTarget);
 
     // Initialize post-processing.
     composer = new EffectComposer(renderer);
@@ -204,7 +230,7 @@ function createLight(x, y, z, intensity) {
     const labelMaterial = new THREE.SpriteMaterial({ map: texture });
     const label = new THREE.Sprite(labelMaterial);
     label.position.set(x, y + 0.5, z);
-    // Keep the label on the default layer so it’s excluded from bloom.
+    // Keep the label on the default layer so it's excluded from bloom.
     label.layers.set(0);
     //lightGroup.add(label);
 }
@@ -331,7 +357,7 @@ export function setRegionBrightness(regions, percent) {
 
 /**
  * Return two unit vectors that form an orthonormal basis of the plane
- * tangent to the sphere at point p (so they’re perpendicular to p).
+ * tangent to the sphere at point p (so they're perpendicular to p).
  */
 function getTangentBasis(p) {
     const normal = p.clone().normalize();           // ⟂ to the plane
@@ -343,7 +369,7 @@ function getTangentBasis(p) {
     return { tangent, bitangent, normal };
   }
   
-  /** Single sphere that represents one light “bulb” */
+  /** Single sphere that represents one light "bulb" */
   function addLightSphere(pos, opacity = 1) {
     const geo  = new THREE.SphereGeometry(0.08, 16, 16);
     const mat  = new THREE.MeshBasicMaterial({ color: 0xffc715, transparent: true, opacity });
@@ -463,7 +489,7 @@ function sleep(ms) {
    * - Accepts activeStageId and captureId so that the images are saved in:
    *     stages/stage-<activeStageId>/captures/<captureId>/
    * - Uses 5 fixed camera angles and 5 randomly selected lights (from the existing lights array).
-   * - For each shot, it spawns a spotlight at the light’s position (targeting the central object),
+   * - For each shot, it spawns a spotlight at the light's position (targeting the central object),
    *   renders a screenshot, uploads it to the server, and then updates a progress UI.
    * - The progress bar and text are updated based on the total number of shots.
    * - Returns a promise that resolves when all shots are complete.
