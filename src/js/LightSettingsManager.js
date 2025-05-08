@@ -78,6 +78,20 @@ export default class LightSettingsManager {
         });
     }
 
+    render() {
+        const $wrapper = $('#stage-composer-wrapper');
+        
+        // Add the header with Add Stage button
+        $wrapper.prepend(`
+            <div class="flex justify-end px-4 py-2">
+                <button id="add-stage" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    Add Stage
+                </button>
+            </div>
+        `);
+    }
+
     refreshNumbers() {
         $('#stage-timeline .stage-card').each((i, card) => {
             const $card = $(card);

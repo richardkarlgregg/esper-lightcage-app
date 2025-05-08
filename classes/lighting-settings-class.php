@@ -147,7 +147,7 @@ class StageComposer {
 private function render_stage_card( array $row, int $i ): void {
 
     $idx   = $i;
-    $title = 'S' . str_pad( $i + 1, 2, '0', STR_PAD_LEFT );   // “S01”, “S02” …
+    $title = 'S' . str_pad( $i + 1, 2, '0', STR_PAD_LEFT );   // "S01", "S02" …
 
     echo '<div class="stage-card shrink-0 border border-esper-yellow rounded-sm min-w-[220px]">';
 
@@ -486,16 +486,22 @@ private function render_row( array $row, ?int $i, bool $tmpl = false ) {
 /* ====================== MAIN RENDER ====================== */
 /* ========================== MAIN RENDER ========================== */
 public function render() { ?>
-    <div id="stage-composer-wrapper" class="absolute bottom-0 left-0 w-full overflow-x-auto z-50 bg-black/60">
-  
-      <div id="stage-timeline" class="flex gap-2 px-4 py-0">
+    
+
+    <div id="stage-composer-wrapper" class="absolute bottom-0 left-0 w-full z-50 bg-black/60">
+    <div class="flex justify-end px-4 py-2">
+      <button id="add-stage" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        Add Stage
+      </button>
+    </div>
+      <div id="stage-timeline" class="flex gap-2 px-4 py-0 w-full overflow-x-auto">
         <?php foreach ( $this->rows as $i => $row ) $this->render_stage_card( $row, $i ); ?>
       </div>
   
       <div class="hidden flex justify-between px-4 py-3">
-        <!-- “Add Stage” / “Save Stages” buttons – unchanged -->
+        <!-- "Add Stage" / "Save Stages" buttons – unchanged -->
       </div>
-  
     </div><?php
   }
   
