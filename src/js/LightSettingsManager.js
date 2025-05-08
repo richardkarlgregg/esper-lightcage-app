@@ -299,13 +299,8 @@ export default class LightSettingsManager {
         // Remove all active classes
         $('#stage-timeline .stage-card').removeClass('border-2 border-white bg-esper-yellow bg-opacity-50');
         
-        // Reset all regions to 0
-        const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-        regions.forEach(region => {
-            window.setRegionBrightness(region, 0);
-        });
-
         // Show all regions again
+        const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
         if (window.setClusterRegionVisibility) {
             window.setClusterRegionVisibility(regions, true);
         }
@@ -326,7 +321,7 @@ export default class LightSettingsManager {
                 };
 
                 // Reset all bulbs and sliders first
-                $root.find('.bulb').each(() => {
+                $root.find('.bulb').each(function() {
                     const $bulb = $(this);
                     const $glow = $bulb.find('.glow');
                     $bulb.css('background', this.toColor(0))
