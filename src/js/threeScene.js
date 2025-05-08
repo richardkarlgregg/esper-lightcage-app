@@ -10,6 +10,7 @@ let renderer, scene, camera, controls, lightGroup, lights = [], originalOpacitie
 let rotationGroup; // Parent group for sphere and lights
 let wireframeMesh; // The sphere mesh
 let sculptureModel; // The loaded sculpture model
+let axesRenderer, axesScene, axesCamera; // For the axes helper
 
 // NEW: Rotation control variables
 let sphereRotationEnabled = false;
@@ -20,7 +21,7 @@ const regionNames   = ['left', 'right', 'top', 'bottom', 'front', 'back'];
 const regionLights = Object.create(null);
 let regionLightsVisible = true;   // default ON                  // { left: PointLight, … }
 const typePercent   = { parallel: 100, cross: 100, neutral: 100 };   // current slider levels
-const MASTER_GAIN   = 100;                    // tweak overall brightness
+const MASTER_GAIN   = 200;                    // tweak overall brightness
 let beamHelper;
 
 // individual gain (0‒1) for each of the six region lights
@@ -44,6 +45,27 @@ export function initThreeJS() {
         console.warn("⚠️ Three.js scene already initialized.");
         return;
     }
+
+    // Create axes helper scene
+    axesScene = new THREE.Scene();
+    axesCamera = new THREE.OrthographicCamera(-2, 2, 2, -2, 0.1, 1000);
+    axesCamera.position.set(2, 2, 2);
+    axesCamera.lookAt(0, 0, 0);
+    
+    const orientationAxes = new THREE.AxesHelper(1.5);
+    axesScene.add(orientationAxes);
+
+    // Create axes renderer
+    axesRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    axesRenderer.setSize(100, 100); // Small size for corner
+    axesRenderer.setClearColor(0x000000, 0);
+    axesRenderer.domElement.style.position = 'absolute';
+    axesRenderer.domElement.style.bottom = '20px';
+    axesRenderer.domElement.style.left = '20px';
+    axesRenderer.domElement.style.zIndex = '1000';
+    container.appendChild(axesRenderer.domElement);
+
+    // Main scene setup
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setClearColor(0x000000, 0);
@@ -103,7 +125,7 @@ export function initThreeJS() {
             const box = new THREE.Box3().setFromObject(sculptureModel);
             const size = box.getSize(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 2 / maxDim; // Scale to be about 2 units in size
+            const scale = 3.5 / maxDim;
             sculptureModel.scale.set(scale, scale, scale);
             
             // Center the model
@@ -144,8 +166,12 @@ export function initThreeJS() {
             rotationGroup.rotation.y += rotationSpeed;
         }
 
-        // Update helper to reflect any changes
-  //.update();
+        // Update axes helper to match main camera orientation
+        // Invert the rotation to match intuitive view direction
+        orientationAxes.rotation.x = -camera.rotation.x;
+        orientationAxes.rotation.y = -camera.rotation.y;
+        orientationAxes.rotation.z = -camera.rotation.z;
+        axesRenderer.render(axesScene, axesCamera);
 
         composer.render();
     }
@@ -442,6 +468,16 @@ export function destroyThreeJS() {
         return;
     }
     console.log("🗑️ Removing Three.js scene...");
+    
+    // Clean up axes renderer
+    if (axesRenderer) {
+        axesRenderer.dispose();
+        axesRenderer.domElement.remove();
+        axesRenderer = null;
+        axesScene = null;
+        axesCamera = null;
+    }
+
     renderer.dispose();
     renderer.domElement.remove();
     if (scene) {
