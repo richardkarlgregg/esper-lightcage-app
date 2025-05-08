@@ -25,31 +25,24 @@ export default class LightSettingsManager {
         // Brightness slider update
         $(document).on('input', '#stage-composer-wrapper input[type=range]', e => {
             const $input = $(e.currentTarget);
-            $input.siblings('.brightness-label').text(`${$input.val()}%`);
+            const $card = $input.closest('.stage-card');
+            $card.find('.text-right').text(`${$input.val()}%`);
         });
 
-        // Remove row
+        // Remove stage
         $(document).on('click', '#stage-composer-wrapper .remove-stage', e => {
             e.preventDefault();
-            // Hide any visible tooltips
-            $('.tooltip').fadeOut(100);
-            $(e.currentTarget).closest('tr').remove();
+            $(e.currentTarget).closest('.stage-card').remove();
             this.refreshNumbers();
-
-            // Check if any stages remain
-            if ($('#stage-composer tbody tr').length === 0) {
-                $('#stage-composer').addClass('hidden');
-                $('#no-stages-message').show();
-            }
         });
 
         // Move up
         $(document).on('click', '#stage-composer-wrapper .move-up', e => {
             e.preventDefault();
-            const $tr = $(e.currentTarget).closest('tr');
-            const $prev = $tr.prev();
-            if ( $prev.length ) {
-                $prev.before($tr);
+            const $card = $(e.currentTarget).closest('.stage-card');
+            const $prev = $card.prev();
+            if ($prev.length) {
+                $prev.before($card);
                 this.refreshNumbers();
             }
         });
@@ -57,10 +50,10 @@ export default class LightSettingsManager {
         // Move down
         $(document).on('click', '#stage-composer-wrapper .move-down', e => {
             e.preventDefault();
-            const $tr = $(e.currentTarget).closest('tr');
-            const $next = $tr.next();
-            if ( $next.length ) {
-                $next.after($tr);
+            const $card = $(e.currentTarget).closest('.stage-card');
+            const $next = $card.next();
+            if ($next.length) {
+                $next.after($card);
                 this.refreshNumbers();
             }
         });
@@ -68,9 +61,9 @@ export default class LightSettingsManager {
         // Add below
         $(document).on('click', '#stage-composer-wrapper .add-below', e => {
             e.preventDefault();
-            const tpl  = $('#sc-row-tpl').prop('outerHTML');
-            const $new = $(tpl).removeAttr('id');
-            $(e.currentTarget).closest('tr').after($new);
+            const $card = $(e.currentTarget).closest('.stage-card');
+            this.addRow();
+            $card.after($('#stage-timeline .stage-card:last'));
             this.refreshNumbers();
         });
 
@@ -86,67 +79,108 @@ export default class LightSettingsManager {
     }
 
     refreshNumbers() {
-        $('#stage-composer tbody tr').each((i, tr) => {
-            // update label
-            $(tr).find('.stage-number').text(`Stage ${String(i + 1).padStart(2,'0')}`);
-      
-            // fix every [__INDEX__] => [i]
-            $(tr).find(':input').each(function(){
+        $('#stage-timeline .stage-card').each((i, card) => {
+            const $card = $(card);
+            const $title = $card.find('.stage-summary strong');
+            $title.text(`S${String(i + 1).padStart(2, '0')}`);
+            
+            // Update input names
+            $card.find(':input').each(function() {
                 const name = $(this).attr('name');
                 if (name && name.includes('__INDEX__')) {
                     $(this).attr('name', name.replace('__INDEX__', i));
                 }
             });
         });
-      }
-      
-
-      addRow(data = {}) {
-        // Hide no stages message and show table
-        $('#no-stages-message').hide();
-        $('#stage-composer').removeClass('hidden');
-
-        const tpl  = $('#sc-row-tpl').prop('outerHTML');
-        const $row = $(tpl).removeAttr('id');
-    
-        /* LED radios ------------- */
-        if (data.led) {
-            $row.find(`input[type=radio][value="${data.led}"]`).prop('checked', true);
-        }
-    
-        /* Direction -------------- */
-        if (data.direction) {
-            $row.find('select[name^="direction"]').val(data.direction);
-        }
-    
-        /* Brightness ------------- */
-        const b = data.brightness != null ? data.brightness : 70;
-        $row.find('input[name^="brightness"]')
-            .val(b).trigger('input');
-    
-        /* Flash duration --------- */
-        const d = data.flash_duration != null ? data.flash_duration : 5.0;
-        $row.find('input[name^="flash_duration"]').val(d);
-    
-        $('#stage-composer tbody').append($row);
-        this.refreshNumbers();                 // ensure placeholders are numbered
     }
-    
+
+    addRow(data = {}) {
+        const $timeline = $('#stage-timeline');
+        
+        // Create new card
+        const $card = $('<div class="stage-card shrink-0 border border-esper-yellow rounded-sm min-w-[220px]">');
+        
+        // Add header
+        $card.append(`
+            <div class="h-5 bg-esper-yellow flex items-center justify-between px-1 text-[10px] font-bold text-black">
+                <strong>S01</strong>
+                <div class="icon-bar flex gap-1">
+                    <button class="move-up" title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>
+                    <button class="move-down" title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>
+                    <button class="add-below" title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>
+                    <button class="remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>
+                </div>
+            </div>
+        `);
+
+        // Add content grid
+        const $grid = $('<div class="p-2 grid grid-rows-2 gap-y-1 text-[11px] leading-none">');
+        
+        // Row 1 - LED + Direction
+        const $row1 = $('<div class="flex gap-1 items-center">');
+        
+        // LED radios
+        const $ledGroup = $('<div class="flex items-center gap-[2px]">');
+        ['CROSS', 'NEUTRAL', 'PARALLEL'].forEach((value, i) => {
+            const label = ['C', 'N', 'P'][i];
+            $ledGroup.append(`
+                <label class="flex items-center gap-[2px]">
+                    <input type="radio" value="${value}" name="led[__INDEX__]" ${data.led === value ? 'checked' : ''}>
+                    ${label}
+                </label>
+            `);
+        });
+        $row1.append($ledGroup);
+
+        // Direction select
+        $row1.append(`
+            <select name="direction[__INDEX__]" class="ml-auto bg-black border border-white/20 px-1 py-0.5">
+                <option value="GI">Global-Illumination</option>
+                <option value="LEFT">Left</option>
+                <option value="RIGHT">Right</option>
+                <option value="TOP">Top</option>
+                <option value="BOTTOM">Bottom</option>
+                <option value="FRONT">Front</option>
+                <option value="BACK">Back</option>
+            </select>
+        `);
+        $grid.append($row1);
+
+        // Row 2 - Brightness + Flash
+        const $row2 = $('<div class="flex gap-1 items-center">');
+        
+        // Brightness range
+        const brightness = data.brightness != null ? data.brightness : 70;
+        $row2.append(`
+            <input type="range" min="0" max="100" step="1" value="${brightness}" name="brightness[__INDEX__]" class="flex-1 h-1">
+            <span class="text-[10px] w-6 text-right">${brightness}%</span>
+        `);
+
+        // Flash duration
+        const duration = data.flash_duration != null ? data.flash_duration : 5.0;
+        $row2.append(`
+            <input type="number" step="0.1" min="0" value="${duration}" name="flash_duration[__INDEX__]" class="w-12 bg-black border border-white/20 px-1 py-0.5">
+            <span class="text-[10px]">s</span>
+        `);
+        $grid.append($row2);
+
+        $card.append($grid);
+        $timeline.append($card);
+        this.refreshNumbers();
+    }
 
     saveStages() {
-        this.refreshNumbers(); // make sure names are led[0], led[1] …
+        this.refreshNumbers();
 
-    const data = $('#stage-composer tbody tr').map((i, tr) => {
-        const $tr = $(tr);
-        return {
-            led:            $tr.find('input[type=radio][name^="led"]:checked').val() || '',
-            direction:      $tr.find('select[name^="direction"]').val(),
-            brightness:     $tr.find('input[name^="brightness"]').val(),
-            flash_duration: $tr.find('input[name^="flash_duration"]').val(),
-        };
-    }).get();
-
-        console.log(data);
+        const data = $('#stage-timeline .stage-card').map((i, card) => {
+            const $card = $(card);
+            return {
+                led: $card.find('input[type=radio][name^="led"]:checked').val() || '',
+                direction: $card.find('select[name^="direction"]').val(),
+                brightness: $card.find('input[name^="brightness"]').val(),
+                flash_duration: $card.find('input[name^="flash_duration"]').val(),
+            };
+        }).get();
 
         const captureId = store.navigationManager.getPostIdByCriteria('capture');
 
@@ -154,24 +188,22 @@ export default class LightSettingsManager {
             url: esperApi.ajaxurl,
             type: 'POST',
             data: {
-                action:  'stage_composer_save',
+                action: 'stage_composer_save',
                 capture_id: captureId,
                 nonce: esperApi.nonce,
-                data:    JSON.stringify(data)
+                data: JSON.stringify(data)
             },
             success: (response) => {
                 if (response.success) {
-                    console.log(response);
                     store.notificationManager.showSuccess('Stages updated successfully.');
                 } else {
                     alert(`Error: ${response.data}`);
                 }
             },
             error: () => {
-                alert('Failed to add export to queue.');
+                alert('Failed to save stages.');
             }
         });
-
     }
 }
 

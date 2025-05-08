@@ -152,15 +152,15 @@ private function render_stage_card( array $row, int $i ): void {
     echo '<div class="stage-card shrink-0 border border-esper-yellow rounded-sm min-w-[220px]">';
 
         /* ---------- 20 px header ---------- */
-        echo '<div class="h-5 bg-esper-yellow flex items-center justify-between px-1 text-[10px] font-bold text-black">';
+        echo '<div class="h-7 bg-esper-yellow flex items-center justify-between px-1 text-[10px] font-bold text-black">';
 
             echo $title;
 
-            echo '<div class="icon-bar flex gap-1">';
-                echo '<button class="move-up"      title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>';
-                echo '<button class="move-down"    title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>';
-                echo '<button class="add-below"    title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>';
-                echo '<button class="remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>';
+            echo '<div class="icon-bar flex items-center gap-1">';
+                echo '<button class="hidden flex items-center move-up"      title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>';
+                echo '<button class="hidden flex items-center move-down"    title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>';
+                echo '<button class="flex items-center add-below"    title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>';
+                echo '<button class="flex items-center remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>';
             echo '</div>';
 
         echo '</div>';
