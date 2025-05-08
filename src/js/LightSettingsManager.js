@@ -6,6 +6,12 @@ export default class LightSettingsManager {
         this.isPlaying = false;
         this.currentStageIndex = 0;
         this.playbackTimeout = null;
+        this.originalModelingLight = {
+            parallel: 0,
+            cross: 0,
+            neutral: 0
+        };
+        this.previousLedType = null;
         this.init();
     }
 
@@ -257,6 +263,16 @@ export default class LightSettingsManager {
     startPlayback() {
         if (this.isPlaying) return;
         
+        // Store original modeling light values
+        const $root = $('#modeling-light');
+        if ($root.length) {
+            this.originalModelingLight = {
+                parallel: parseFloat($root.find('#bulb-a').data('val')) || 0,
+                cross: parseFloat($root.find('#bulb-b').data('val')) || 0,
+                neutral: parseFloat($root.find('#bulb-c').data('val')) || 0
+            };
+        }
+        
         this.isPlaying = true;
         $('#play-timeline').addClass('hidden');
         $('#pause-timeline').removeClass('hidden');
@@ -288,6 +304,56 @@ export default class LightSettingsManager {
         regions.forEach(region => {
             window.setRegionBrightness(region, 0);
         });
+
+        // Restore original modeling light values and visuals
+        if (window.setLightTypeBrightness) {
+            window.setLightTypeBrightness('parallel', this.originalModelingLight.parallel);
+            window.setLightTypeBrightness('cross', this.originalModelingLight.cross);
+            window.setLightTypeBrightness('neutral', this.originalModelingLight.neutral);
+
+            // Restore modeling light visuals
+            const $root = $('#modeling-light');
+            if ($root.length) {
+                const bulbMap = {
+                    'parallel': '#bulb-a',
+                    'cross': '#bulb-b',
+                    'neutral': '#bulb-c'
+                };
+
+                // Reset all bulbs and sliders first
+                $root.find('.bulb').each(() => {
+                    const $bulb = $(this);
+                    const $glow = $bulb.find('.glow');
+                    $bulb.css('background', this.toColor(0))
+                         .find('.percent').text('0%')
+                         .end().data('val', 0);
+                    $glow.css({ opacity: this.toOpacity(0), transform: `scale(${this.toScale(0)})` });
+                });
+
+                // Reset all sliders to 0
+                $root.find('.ctrl .range').val(0);
+                $root.find('.ctrl .number').val('0.00');
+
+                // Restore original values
+                Object.entries(this.originalModelingLight).forEach(([type, value]) => {
+                    const $bulb = $root.find(bulbMap[type]);
+                    if ($bulb.length) {
+                        const $glow = $bulb.find('.glow');
+                        $bulb.css('background', this.toColor(value))
+                             .find('.percent').text(value + '%')
+                             .end().data('val', value);
+                        $glow.css({ opacity: this.toOpacity(value), transform: `scale(${this.toScale(value)})` });
+
+                        // Restore the corresponding slider and number input
+                        const $ctrl = $root.find(`.ctrl[data-target="${$bulb.attr('id')}"]`);
+                        if ($ctrl.length) {
+                            $ctrl.find('.range').val(value);
+                            $ctrl.find('.number').val(value.toFixed(2));
+                        }
+                    }
+                });
+            }
+        }
     }
 
     playNextStage() {
@@ -336,6 +402,84 @@ export default class LightSettingsManager {
             }
         }
 
+        // Update modeling light based on LED selection
+        if (window.setLightTypeBrightness) {
+            const ledType = $currentCard.find('input[type=radio][name^="led"]:checked').val();
+            const modelingLightMap = {
+                'PARALLEL': 'parallel',
+                'CROSS': 'cross',
+                'NEUTRAL': 'neutral'
+            };
+            
+            // Reset previous LED type to 0 if it exists
+            if (this.previousLedType && this.previousLedType !== ledType) {
+                const previousType = modelingLightMap[this.previousLedType];
+                if (previousType) {
+                    window.setLightTypeBrightness(previousType, 0);
+                    
+                    // Reset previous bulb visuals
+                    const $root = $('#modeling-light');
+                    if ($root.length) {
+                        const bulbMap = {
+                            'PARALLEL': '#bulb-a',
+                            'CROSS': '#bulb-b',
+                            'NEUTRAL': '#bulb-c'
+                        };
+                        const $prevBulb = $root.find(bulbMap[this.previousLedType]);
+                        if ($prevBulb.length) {
+                            const $glow = $prevBulb.find('.glow');
+                            $prevBulb.css('background', this.toColor(0))
+                                     .find('.percent').text('0%')
+                                     .end().data('val', 0);
+                            $glow.css({ opacity: this.toOpacity(0), transform: `scale(${this.toScale(0)})` });
+
+                            // Reset the corresponding slider and number input
+                            const $ctrl = $root.find(`.ctrl[data-target="${$prevBulb.attr('id')}"]`);
+                            if ($ctrl.length) {
+                                $ctrl.find('.range').val(0);
+                                $ctrl.find('.number').val('0.00');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Set the selected LED type to the stage brightness
+            const modelingType = modelingLightMap[ledType];
+            if (modelingType) {
+                window.setLightTypeBrightness(modelingType, brightness);
+            }
+
+            // Update modeling light visuals
+            const $root = $('#modeling-light');
+            if ($root.length) {
+                // Update the active bulb and its controls
+                const bulbMap = {
+                    'PARALLEL': '#bulb-a',
+                    'CROSS': '#bulb-b',
+                    'NEUTRAL': '#bulb-c'
+                };
+                const $activeBulb = $root.find(bulbMap[ledType]);
+                if ($activeBulb.length) {
+                    const $glow = $activeBulb.find('.glow');
+                    $activeBulb.css('background', this.toColor(brightness))
+                             .find('.percent').text(brightness + '%')
+                             .end().data('val', brightness);
+                    $glow.css({ opacity: this.toOpacity(brightness), transform: `scale(${this.toScale(brightness)})` });
+
+                    // Update the corresponding slider and number input
+                    const $ctrl = $root.find(`.ctrl[data-target="${$activeBulb.attr('id')}"]`);
+                    if ($ctrl.length) {
+                        $ctrl.find('.range').val(brightness);
+                        $ctrl.find('.number').val(brightness.toFixed(2));
+                    }
+                }
+            }
+
+            // Store current LED type for next iteration
+            this.previousLedType = ledType;
+        }
+
         // Move to next stage
         this.currentStageIndex = (this.currentStageIndex + 1) % $cards.length;
 
@@ -359,6 +503,19 @@ export default class LightSettingsManager {
             scrollLeft: $currentCard.offset().left - $timeline.offset().left + $timeline.scrollLeft()
         }, 300);
     }
+
+    // Visual helper functions
+    toColor(p) {
+        return `hsl(55 100% ${20 + 70 * (p / 100)}%)`;
+    }
+
+    toOpacity(p) {
+        return 0.05 + 0.95 * (p / 100);
+    }
+
+    toScale(p) {
+        return 0.8 + 0.7 * (p / 100);
+    }
 }
 
 
@@ -380,7 +537,7 @@ export default class LightSettingsManager {
  */
 (function ($) {
 
-    window.setRegionBrightness('front', 50);
+   // window.setRegionBrightness('front', 50);
 
     /* ───── visual helpers ───── */
     const toColor   = p => `hsl(55 100% ${20 + 70 * (p / 100)}%)`,
