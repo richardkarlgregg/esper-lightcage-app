@@ -314,7 +314,7 @@ export default class LightSettingsManager {
             <span class="text-[10px] w-6 text-right">${brightness}%</span>
         `);
         // Flash duration
-        const duration = data.flash_duration != null ? data.flash_duration : 5.0;
+        const duration = data.flash_duration != null ? data.flash_duration : 0.5;
         $row2.append(`
             <input type="number" step="0.1" min="0" value="${duration}" name="flash_duration[__INDEX__]" class="w-12 bg-black border border-white/20 px-1 py-0.5">
             <span class="text-[10px]">s</span>
@@ -418,6 +418,26 @@ export default class LightSettingsManager {
         const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
         if (window.setClusterRegionVisibility) {
             window.setClusterRegionVisibility(regions, true);
+            regions.forEach(region => window.setClusterRegionVisibility([region], true));
+        }
+
+        // Reset all region brightness to modeling light values
+        if (window.setRegionBrightness && this.originalModelingLight) {
+            // Map regions to modeling light types (example: parallel for all, or customize as needed)
+            const regionToType = {
+                'front': 'parallel',
+                'back': 'parallel',
+                'left': 'cross',
+                'right': 'cross',
+                'top': 'neutral',
+                'bottom': 'neutral',
+            };
+            regions.forEach(region => {
+                const type = regionToType[region];
+                if (type && this.originalModelingLight[type] !== undefined) {
+                    window.setRegionBrightness(region, this.originalModelingLight[type]);
+                }
+            });
         }
 
         // Restore original modeling light values and visuals
@@ -434,31 +454,16 @@ export default class LightSettingsManager {
                     'cross': '#bulb-b',
                     'neutral': '#bulb-c'
                 };
-
-                // Reset all bulbs and sliders first
-                $root.find('.bulb').each(function() {
-                    const $bulb = $(this);
-                    const $glow = $bulb.find('.glow');
-                    $bulb.css('background', this.toColor(0))
-                         .find('.percent').text('0%')
-                         .end().data('val', 0);
-                    $glow.css({ opacity: this.toOpacity(0), transform: `scale(${this.toScale(0)})` });
-                });
-
-                // Reset all sliders to 0
-                $root.find('.ctrl .range').val(0);
-                $root.find('.ctrl .number').val('0.00');
-
-                // Restore original values
+                const self = this;
+                // Set all bulbs and sliders to their saved values
                 Object.entries(this.originalModelingLight).forEach(([type, value]) => {
                     const $bulb = $root.find(bulbMap[type]);
                     if ($bulb.length) {
                         const $glow = $bulb.find('.glow');
-                        $bulb.css('background', this.toColor(value))
+                        $bulb.css('background', self.toColor(value))
                              .find('.percent').text(value + '%')
                              .end().data('val', value);
-                        $glow.css({ opacity: this.toOpacity(value), transform: `scale(${this.toScale(value)})` });
-
+                        $glow.css({ opacity: self.toOpacity(value), transform: `scale(${self.toScale(value)})` });
                         // Restore the corresponding slider and number input
                         const $ctrl = $root.find(`.ctrl[data-target="${$bulb.attr('id')}"]`);
                         if ($ctrl.length) {

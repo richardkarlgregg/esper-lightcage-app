@@ -59,28 +59,28 @@ $(document).ready(function () {
     store.exportManager.setupEventListeners();
 
     // Debug
-    store.screenContent.loadPostContent(202, 'job', null);
-    $('#sideMenu').show();
-    $('#sidebar').show();
-    $('#divider').show();
+   // store.screenContent.loadPostContent(202, 'job', null);
+   // $('#sideMenu').show();
+   // $('#sidebar').show();
+  //  $('#divider').show();
     
     // Load the folder tree hierarchy
-    $.post(esperApi.ajaxurl, {
-        action: 'esper_get_hierarchy',
-        nonce: esperApi.nonce,
-        job_id: 202
-    }).then(response => {
-        if (response.success && response.data.length > 0) {
-            const job = response.data.find(j => j.id === 202);
-            if (job) {
-                $('#folderTree').empty().append(store.uiManager.createFolderItem(job));
-            }
-        }
-    });
+   // $.post(esperApi.ajaxurl, {
+      //  action: 'esper_get_hierarchy',
+      //  nonce: esperApi.nonce,
+      //  job_id: 202
+   // }).then(response => {
+       // if (response.success && response.data.length > 0) {
+          //  const job = response.data.find(j => j.id === 202);
+           // if (job) {
+              //  $('#folderTree').empty().append(store.uiManager.createFolderItem(job));
+          //  }
+       // }
+   // });
 
-    store.screenContent.loadPostContent(604, 'capture', null);
-    store.screenContent.loadPostContent(604, 'capture', 'light_settings');
-    initThreeJS();
+    //store.screenContent.loadPostContent(604, 'capture', null);
+    //store.screenContent.loadPostContent(604, 'capture', 'light_settings');
+    //initThreeJS();
     //store.screenContent.loadPostContent(202, 'export', null);
 
 });
