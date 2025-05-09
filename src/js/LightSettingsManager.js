@@ -271,21 +271,25 @@ export default class LightSettingsManager {
         // Add content grid
         const $grid = $('<div class="p-2 grid grid-rows-2 gap-y-1 text-[11px] leading-none">');
         
-        // Row 1 - LED + Direction
+        // Row 1 - LED (triangle) + Direction
         const $row1 = $('<div class="flex gap-1 items-center">');
-        
-        // LED radios
-        const $ledGroup = $('<div class="flex items-center gap-[2px]">');
-        ['CROSS', 'NEUTRAL', 'PARALLEL'].forEach((value, i) => {
-            const label = ['C', 'N', 'P'][i];
-            $ledGroup.append(`
-                <label class="flex items-center gap-[2px]">
-                    <input type="radio" value="${value}" name="led[__INDEX__]" ${data.led === value ? 'checked' : ''}>
-                    ${label}
+        // LED triangle overlay
+        const ledVal = data.led || 'PARALLEL';
+        const $ledTriangle = $('<div class="led-triangle relative w-[120px] h-[110px] mx-2 my-1"></div>');
+        $ledTriangle.append('<img class="absolute inset-0 w-full h-full pointer-events-none" src="/wp-content/themes/esper-lightcage-app/assets/images/Light-Front.png" alt="LED layout">');
+        const leds = {
+            'CROSS':    { style: 'top:-15px;left:15px;', tooltip: 'Cross' },
+            'PARALLEL': { style: 'top:-15px;right:-6px;', tooltip: 'Parallel' },
+            'NEUTRAL':  { style: 'top:6px;left:4px;', tooltip: 'Neutral' },
+        };
+        Object.entries(leds).forEach(([value, opts]) => {
+            $ledTriangle.append(`
+                <label class="absolute" style="${opts.style}">
+                    <input type="radio" value="${value}" name="led[__INDEX__]" class="led-radio" data-tooltip="${opts.tooltip}" ${ledVal === value ? 'checked' : ''}>
                 </label>
             `);
         });
-        $row1.append($ledGroup);
+        $row1.append($ledTriangle);
 
         // Direction select
         $row1.append(`
@@ -303,14 +307,12 @@ export default class LightSettingsManager {
 
         // Row 2 - Brightness + Flash
         const $row2 = $('<div class="flex gap-1 items-center">');
-        
         // Brightness range
         const brightness = data.brightness != null ? data.brightness : 70;
         $row2.append(`
             <input type="range" min="0" max="100" step="1" value="${brightness}" name="brightness[__INDEX__]" class="flex-1 h-1">
             <span class="text-[10px] w-6 text-right">${brightness}%</span>
         `);
-
         // Flash duration
         const duration = data.flash_duration != null ? data.flash_duration : 5.0;
         $row2.append(`

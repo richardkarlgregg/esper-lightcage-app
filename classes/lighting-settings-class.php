@@ -171,15 +171,31 @@ private function render_stage_card( array $row, int $i ): void {
             /* ROW 1 ─ LED + Direction */
             echo '<div class="flex gap-1 items-center">';
 
-                /* LED radios (C / N / P) */
+                /* LED radios (triangle layout over image) */
+                echo '<div class="led-triangle relative w-[120px] h-[110px] mx-2 my-1">';
+                echo '<img class="hidden" src="/wp-content/themes/esper-lightcage-app/assets/images/Light-Front.png" class="absolute inset-0 w-full h-full pointer-events-none" alt="LED layout">';
+                $leds = [
+                    // Cross: top-left
+                    'CROSS'    => ['top' => '-15px', 'left' => '15px', 'tooltip' => 'Cross'],
+                    // Parallel: top-right
+                    'PARALLEL' => ['top' => '-15px', 'right' => '-6px', 'tooltip' => 'Parallel'],
+                    // Neutral: centered below the midpoint
+                    'NEUTRAL'  => ['top' => '6px', 'left' => '4px', 'tooltip' => 'Neutral'],
+                ];
                 $name = 'led[' . $idx . ']';
                 $val  = $row['led'] ?? 'CROSS';
-                foreach ( [ 'PARALLEL' => 'P', 'CROSS' => 'C', 'NEUTRAL' => 'N',  ] as $v => $lbl ) {
-                    echo '<label class="flex items-center gap-[2px]">';
-                    echo '<input type="radio" value="'. $v .'" name="'. $name .'" '. checked( $val, $v, false ) .'>';
-                    echo $lbl;
-                    echo '</label>';
+                foreach ($leds as $v => $pos) {
+                    $style = '';
+                    foreach ($pos as $k => $v2) {
+                        if ($k !== 'tooltip') $style .= "$k:$v2;";
+                    }
+                    $checked = checked($val, $v, false);
+                    $tooltip = esc_attr($pos['tooltip']);
+                    echo "<label class=\"absolute\" style=\"$style\">";
+                    echo "<input type=\"radio\" value=\"$v\" name=\"$name\" $checked data-tooltip=\"$tooltip\" class=\"led-radio\">";
+                    echo "</label>";
                 }
+                echo '</div>';
 
                 /* Direction select (tiny) */
                 echo '<select name="direction['. $idx .']" class="ml-auto bg-black border border-white/20 px-1 py-0.5">';
