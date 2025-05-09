@@ -60,8 +60,8 @@ export function initThreeJS() {
     axesRenderer.setSize(100, 100); // Small size for corner
     axesRenderer.setClearColor(0x000000, 0);
     axesRenderer.domElement.style.position = 'absolute';
-    axesRenderer.domElement.style.bottom = '20px';
-    axesRenderer.domElement.style.left = '20px';
+    axesRenderer.domElement.style.bottom = '150px';
+    axesRenderer.domElement.style.left = '30px';
     axesRenderer.domElement.style.zIndex = '1000';
     container.appendChild(axesRenderer.domElement);
 
