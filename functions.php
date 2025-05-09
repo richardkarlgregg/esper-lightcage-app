@@ -1252,19 +1252,19 @@ $modeling_light_html = '
 
   <!-- bulbs -->
   <div class="bulb" id="bulb-a" data-type="Parallel" data-val="'. ml_val($val_parallel) .'">
-      <span class="label">A</span>
+      <span class="label"></span>
       <span class="percent">'. ml_val($val_parallel, true) .'</span>
       <span class="glow"></span>
   </div>
 
   <div class="bulb" id="bulb-b" data-type="Cross" data-val="'. ml_val($val_cross) .'">
-      <span class="label">B</span>
+      <span class="label"></span>
       <span class="percent">'. ml_val($val_cross, true) .'</span>
       <span class="glow"></span>
   </div>
 
   <div class="bulb" id="bulb-c" data-type="Neutral" data-val="'. ml_val($val_neutral) .'">
-      <span class="label">C</span>
+      <span class="label"></span>
       <span class="percent">'. ml_val($val_neutral, true) .'</span>
       <span class="glow"></span>
   </div>
@@ -1277,17 +1277,17 @@ $modeling_light_html = '
   <!-- control strip -->
   <div class="controls">
       <div class="ctrl" data-target="bulb-a">
-          <label>A&nbsp;–&nbsp;Parallel</label>
+          <label>Parallel</label>
           <input class="range"  type="range"  min="0" max="100" step="0.01" value="'. ml_val($val_parallel) .'">
           <input class="number" type="number" min="0" max="100" step="0.01" value="'. ml_val($val_parallel) .'">
       </div>
       <div class="ctrl" data-target="bulb-b">
-          <label>B&nbsp;–&nbsp;Cross</label>
+          <label>Cross</label>
           <input class="range"  type="range"  min="0" max="100" step="0.01" value="'. ml_val($val_cross) .'">
           <input class="number" type="number" min="0" max="100" step="0.01" value="'. ml_val($val_cross) .'">
       </div>
       <div class="ctrl" data-target="bulb-c">
-          <label>C&nbsp;–&nbsp;Neutral</label>
+          <label>Neutral</label>
           <input class="range"  type="range"  min="0" max="100" step="0.01" value="'. ml_val($val_neutral) .'">
           <input class="number" type="number" min="0" max="100" step="0.01" value="'. ml_val($val_neutral) .'">
       </div>

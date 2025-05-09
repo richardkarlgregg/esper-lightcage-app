@@ -174,7 +174,7 @@ private function render_stage_card( array $row, int $i ): void {
                 /* LED radios (C / N / P) */
                 $name = 'led[' . $idx . ']';
                 $val  = $row['led'] ?? 'CROSS';
-                foreach ( [ 'CROSS' => 'C', 'NEUTRAL' => 'N', 'PARALLEL' => 'P' ] as $v => $lbl ) {
+                foreach ( [ 'PARALLEL' => 'P', 'CROSS' => 'C', 'NEUTRAL' => 'N',  ] as $v => $lbl ) {
                     echo '<label class="flex items-center gap-[2px]">';
                     echo '<input type="radio" value="'. $v .'" name="'. $name .'" '. checked( $val, $v, false ) .'>';
                     echo $lbl;
@@ -487,8 +487,8 @@ private function render_row( array $row, ?int $i, bool $tmpl = false ) {
 /* ========================== MAIN RENDER ========================== */
 public function render() { ?>
     <div id="stage-composer-wrapper" class="absolute bottom-0 left-0 w-full z-50 pl-12 pr-12 bg-black/60">
-      <div class="flex justify-end items-center gap-2 px-4 py-2">
-        <div class="flex items-center gap-2">
+      <div class="flex justify-end items-center gap-2 py-2">
+        <div class="flex items-center gap-2 timeline-controls <?php echo empty($this->rows) ? 'opacity-0' : 'opacity-100'; ?> transition-opacity duration-300">
           <button id="play-timeline" class="bg-esper-yellow text-black px-3 py-1 rounded flex items-center gap-1 text-sm">
             <span class="material-symbols-outlined text-[18px]">play_arrow</span>
             Play
@@ -508,7 +508,7 @@ public function render() { ?>
         </button>
       </div>
 
-      <div id="stage-timeline" class="flex gap-2 px-4 py-0 overflow-x-auto whitespace-nowrap">
+      <div id="stage-timeline" class="flex gap-2 px-4 py-0 overflow-x-auto whitespace-nowrap scrollbar">
         <?php foreach ( $this->rows as $i => $row ) $this->render_stage_card( $row, $i ); ?>
       </div>
   

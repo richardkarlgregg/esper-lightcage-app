@@ -148,6 +148,7 @@ export default class LightSettingsManager {
             $(e.currentTarget).closest('.stage-card').remove();
             this.refreshNumbers();
             this.debouncedSave();
+            this.updateTimelineControlsVisibility();
         });
 
         // Move up
@@ -326,6 +327,9 @@ export default class LightSettingsManager {
         $timeline.animate({
             scrollLeft: $card.offset().left - $timeline.offset().left + $timeline.scrollLeft()
         }, 500);
+
+        // Update timeline controls visibility
+        this.updateTimelineControlsVisibility();
     }
 
     saveStages() {
@@ -645,6 +649,19 @@ export default class LightSettingsManager {
     debouncedSave = this.debounce(function() {
         this.saveStages();
     }, 1000); // Wait 1 second after last change before saving
+
+    // Add this new method
+    updateTimelineControlsVisibility() {
+        const $timeline = $('#stage-timeline');
+        const $controls = $('.timeline-controls');
+        const hasStages = $timeline.find('.stage-card').length > 0;
+        
+        if (hasStages) {
+            $controls.removeClass('opacity-0').addClass('opacity-100');
+        } else {
+            $controls.removeClass('opacity-100').addClass('opacity-0');
+        }
+    }
 }
 
 
