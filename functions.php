@@ -1237,9 +1237,20 @@ function esper_get_content() {
     $light_settings_id = $composer->get_light_settings_id();
 
  
-$val_parallel = (float) get_post_meta( $light_settings_id, 'light_brightness_parallel', true );
-$val_cross    = (float) get_post_meta( $light_settings_id, 'light_brightness_cross',    true );
-$val_neutral  = (float) get_post_meta( $light_settings_id, 'light_brightness_neutral',  true );
+$raw_parallel = get_post_meta( $light_settings_id, 'light_brightness_parallel', true );
+$raw_cross    = get_post_meta( $light_settings_id, 'light_brightness_cross',    true );
+$raw_neutral  = get_post_meta( $light_settings_id, 'light_brightness_neutral',  true );
+
+// If all are not set (meta does not exist), default $val_parallel to 100, others to 0
+if ($raw_parallel === '' && $raw_cross === '' && $raw_neutral === '') {
+    $val_parallel = 100.0;
+    $val_cross = 0.0;
+    $val_neutral = 0.0;
+} else {
+    $val_parallel = (float) $raw_parallel;
+    $val_cross    = (float) $raw_cross;
+    $val_neutral  = (float) $raw_neutral;
+}
 
 /* helper to print both "67.23" and "67.23%" once */
 function ml_val( $v, $percent = false ){
