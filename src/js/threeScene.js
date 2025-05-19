@@ -732,3 +732,49 @@ if (typeof window !== 'undefined') {
   window.showClusterRegions         = showClusterRegions;
   window.hideClusterRegions         = hideClusterRegions;
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Single-bulb helpers  (clusterId === lights[index].id,  bulbIndex ∈ 0‥2)
+// ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Change visibility of one bulb.
+ * @param {number}  clusterId   lights[clusterId]
+ * @param {number}  bulbIndex   0, 1 or 2
+ * @param {boolean} visible
+ */
+export function setBulbVisibility(clusterId, bulbIndex, visible = true) {
+  const bulb = lights?.[clusterId]?.spheres?.[bulbIndex];
+  if (bulb) bulb.visible = visible;
+}
+
+/**
+ * Toggle one bulb on/off.
+ * @param {number} clusterId
+ * @param {number} bulbIndex
+ */
+export function toggleBulb(clusterId, bulbIndex) {
+  const bulb = lights?.[clusterId]?.spheres?.[bulbIndex];
+  if (bulb) bulb.visible = !bulb.visible;
+}
+
+/**
+ * Set opacity/brightness (0‒100 %) of one bulb.
+ * @param {number} clusterId
+ * @param {number} bulbIndex
+ * @param {number} percent     0‒100
+ */
+export function setBulbBrightness(clusterId, bulbIndex, percent) {
+  const bulb = lights?.[clusterId]?.spheres?.[bulbIndex];
+  if (bulb) {
+    bulb.material.opacity = THREE.MathUtils.clamp(percent, 0, 100) / 100;
+    bulb.visible = bulb.material.opacity > 0;          // hide if fully dimmed
+  }
+}
+
+/* Make helpers available to non-ESM scripts =================================*/
+if (typeof window !== 'undefined') {
+  window.setBulbVisibility  = setBulbVisibility;
+  window.toggleBulb         = toggleBulb;
+  window.setBulbBrightness  = setBulbBrightness;
+}
