@@ -28,6 +28,48 @@ export default class LightSettingsManager {
             this.debouncedSave();
         });
 
+        // Target toggle
+        $(document).on('click', '#stage-composer-wrapper .target-toggle', e => {
+            const $button = $(e.currentTarget);
+            const $icon = $button.find('.target-icon');
+            const currentTarget = $button.data('target');
+            const newTarget = currentTarget === 'REGION' ? 'INDIVIDUAL' : 'REGION';
+            
+            // Update the icon
+            $icon.text(newTarget === 'REGION' ? 'grid_view' : 'radio_button_checked');
+            
+            // Update the data attribute
+            $button.data('target', newTarget);
+            
+            // Update the title
+            $button.attr('title', `Toggle ${newTarget === 'REGION' ? 'Individual' : 'Region'}`);
+            
+            // Update the hidden input
+            const $stageCard = $button.closest('.stage-card');
+            $stageCard.find('input[name^="target"]').val(newTarget);
+            
+            // Toggle visibility of selects
+            const $row1 = $stageCard.find('.flex.gap-1.items-center');
+            if (newTarget === 'REGION') {
+                $row1.find('.direction-select').show();
+                $row1.find('.light-id-select').hide();
+            } else {
+                $row1.find('.direction-select').hide();
+                $row1.find('.light-id-select').show();
+            }
+            
+            // Find the parent stage card
+            const stageIndex = $stageCard.index();
+            
+            // Update the data in the rows array
+            if (typeof SC !== 'undefined' && SC.stages) {
+                SC.stages[stageIndex].target = newTarget;
+            }
+
+            // Trigger save
+            this.debouncedSave();
+        });
+
         // Timeline scrubber
         $(document).on('input', '#timeline-scrubber', e => {
             if (this.isPlaying) return; // Don't allow scrubbing while playing
@@ -262,10 +304,12 @@ export default class LightSettingsManager {
                 <div class="icon-bar flex items-center gap-1">
                     <button class="hidden flex items-center move-up" title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>
                     <button class="hidden flex items-center move-down" title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>
+                    <button class="flex items-center target-toggle" data-target="${data.target || 'REGION'}" title="Toggle Region/Individual"><span class="material-symbols-outlined text-[14px] target-icon">${data.target === 'INDIVIDUAL' ? 'radio_button_checked' : 'grid_view'}</span></button>
                     <button class="flex items-center add-below" title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>
                     <button class="flex items-center remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>
                 </div>
             </div>
+            <input type="hidden" name="target[__INDEX__]" value="${data.target || 'REGION'}" class="target-type">
         `);
 
         // Add content grid
@@ -339,11 +383,14 @@ export default class LightSettingsManager {
 
         const data = $('#stage-timeline .stage-card').map((i, card) => {
             const $card = $(card);
+            const target = $card.find('input[name^="target"]').val() || 'REGION';
             return {
                 led: $card.find('input[type=radio][name^="led"]:checked').val() || '',
-                direction: $card.find('select[name^="direction"]').val(),
+                direction: target === 'REGION' ? $card.find('select[name^="direction"]').val() : null,
+                light_id: target === 'INDIVIDUAL' ? $card.find('select[name^="light_id"]').val() : null,
                 brightness: $card.find('input[name^="brightness"]').val(),
                 flash_duration: $card.find('input[name^="flash_duration"]').val(),
+                target: target
             };
         }).get();
 

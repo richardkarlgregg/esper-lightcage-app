@@ -67,6 +67,15 @@ class StageComposer {
     protected function get_base_fields() {
         return [
             [
+                'field_name' => 'Target',
+                'field_slug' => 'target',
+                'type'       => 'select',
+                'options'    => [
+                    'REGION'     => 'Region',
+                    'INDIVIDUAL' => 'Individual',
+                ],
+            ],
+            [
                 'field_name' => 'LED',
                 'field_slug' => 'led',
                 'type'       => 'radio',
@@ -159,11 +168,14 @@ private function render_stage_card( array $row, int $i ): void {
             echo '<div class="icon-bar flex items-center gap-1">';
                 echo '<button class="hidden flex items-center move-up"      title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>';
                 echo '<button class="hidden flex items-center move-down"    title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>';
+                echo '<button class="flex items-center target-toggle" data-target="'. ($row['target'] ?? 'REGION') .'" title="Toggle Region/Individual"><span class="material-symbols-outlined text-[14px] target-icon">'. ($row['target'] === 'INDIVIDUAL' ? 'radio_button_checked' : 'grid_view') .'</span></button>';
                 echo '<button class="flex items-center add-below"    title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>';
                 echo '<button class="flex items-center remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>';
             echo '</div>';
 
         echo '</div>';
+        echo '<input type="hidden" name="target['. $idx .']" value="'. ($row['target'] ?? 'REGION') .'" class="target-type">';
+        
 
         /* ---------- two-row input grid ---------- */
         echo '<div class="p-2 grid grid-rows-2 gap-y-1 text-[11px] leading-none">';
@@ -198,9 +210,17 @@ private function render_stage_card( array $row, int $i ): void {
                 echo '</div>';
 
                 /* Direction select (tiny) */
-                echo '<select name="direction['. $idx .']" class="ml-auto bg-black border border-white/20 px-1 py-0.5">';
-                foreach ( $this->baseFields[1]['options'] as $v => $lbl ) {
+                $target = $row['target'] ?? 'REGION';
+                echo '<select name="direction['. $idx .']" class="ml-auto bg-black border border-white/20 px-1 py-0.5 direction-select" '. ($target === 'INDIVIDUAL' ? 'style="display:none;"' : '') .'>';
+                foreach ( $this->baseFields[2]['options'] as $v => $lbl ) {
                     echo '<option value="'. $v .'" '. selected( $row['direction'] ?? 'GI', $v, false ) .'>'. $lbl .'</option>';
+                }
+                echo '</select>';
+
+                /* Light ID select (tiny) */
+                echo '<select name="light_id['. $idx .']" class="ml-auto bg-black border border-white/20 px-1 py-0.5 light-id-select" '. ($target === 'REGION' ? 'style="display:none;"' : '') .'>';
+                for ($i = 1; $i <= 10; $i++) {
+                    echo '<option value="'. $i .'" '. selected( $row['light_id'] ?? 1, $i, false ) .'>Light '. $i .'</option>';
                 }
                 echo '</select>';
 
