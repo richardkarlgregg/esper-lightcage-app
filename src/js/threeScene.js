@@ -1080,7 +1080,7 @@ function showHoverInfo(obj) {
     hoverDiv = document.createElement('div');
     Object.assign(hoverDiv.style, {
       position: 'absolute',
-      bottom: '20px', left: '20px',
+      bottom: '245px', left: '46px',
       padding: '6px 10px',
       fontFamily: 'sans-serif',
       fontSize: '12px',
@@ -1090,7 +1090,9 @@ function showHoverInfo(obj) {
       pointerEvents: 'none',
       zIndex: 1200
     });
-    document.body.appendChild(hoverDiv);
+    const contentDiv = document.getElementById('content');
+    contentDiv.classList.add('relative');
+    contentDiv.appendChild(hoverDiv);
   }
 
   const clId   = obj.userData.clusterId;
@@ -1098,7 +1100,7 @@ function showHoverInfo(obj) {
   const pos    = obj.getWorldPosition(new THREE.Vector3());
 
   hoverDiv.innerHTML =
-    `Cluster ${clId}&nbsp;•&nbsp;${BULB_LABEL[bulbIx]}<br>` +
+    `Light ${clId}&nbsp;•&nbsp;${BULB_LABEL[bulbIx]}<br>` +
     `X ${pos.x.toFixed(2)} Y ${pos.y.toFixed(2)} Z ${pos.z.toFixed(2)}`;
 }
 

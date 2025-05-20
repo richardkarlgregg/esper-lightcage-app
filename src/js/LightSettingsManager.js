@@ -869,7 +869,7 @@ export default class LightSettingsManager {
         // Add overlay message to advanced light settings container
         if (!$('#color-picker-overlay').length) {
             $('.advanced-light-settings-container').append(`
-                <div id="color-picker-overlay" class="bg-black/50 flex items-center justify-center z-50 pointer-events-none mt-4">
+                <div id="color-picker-overlay" class="bg-black/50 flex z-50 pointer-events-none mt-4">
                     <div class="bg-black bg-opacity-80 text-white py-2">
                         Click on a light in the 3D scene to select it
                         <div class="text-xs text-gray-400 mt-1">Hold Ctrl to select multiple lights</div>
