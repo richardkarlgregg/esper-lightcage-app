@@ -50,14 +50,16 @@ export default class LightSettingsManager {
             const $stageCard = $button.closest('.stage-card');
             $stageCard.find('input[name^="target"]').val(newTarget);
             
-            // Toggle visibility of selects
-            const $row1 = $stageCard.find('.flex.gap-1.items-center');
+            // Toggle visibility of direction select and light ID input
+            const $directionSelect = $stageCard.find('.direction-select');
+            const $lightIdSelect = $stageCard.find('.light-id-select');
+            
             if (newTarget === 'REGION') {
-                $row1.find('.direction-select').show();
-                $row1.find('.light-id-select').hide();
+                $directionSelect.show();
+                $lightIdSelect.hide();
             } else {
-                $row1.find('.direction-select').hide();
-                $row1.find('.light-id-select').show();
+                $directionSelect.hide();
+                $lightIdSelect.show();
             }
             
             // Find the parent stage card
@@ -365,7 +367,7 @@ export default class LightSettingsManager {
                 <div class="icon-bar flex items-center gap-1">
                     <button class="hidden flex items-center move-up" title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>
                     <button class="hidden flex items-center move-down" title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>
-                    <button class="flex items-center target-toggle" data-target="${data.target || 'REGION'}" title="Toggle Region/Individual"><span class="material-symbols-outlined text-[14px] target-icon">${data.target === 'INDIVIDUAL' ? 'radio_button_checked' : 'grid_view'}</span></button>
+                    <button class="flex items-center target-toggle" data-target="${data.target || 'REGION'}" title="Toggle Region/Individual Light Targeting"><span class="material-symbols-outlined text-[14px] target-icon">${data.target === 'INDIVIDUAL' ? 'radio_button_checked' : 'grid_view'}</span></button>
                     <button class="flex items-center add-below" title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>
                     <button class="flex items-center remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>
                 </div>
@@ -376,10 +378,11 @@ export default class LightSettingsManager {
         // Add content grid
         const $grid = $('<div class="p-2 grid grid-rows-2 gap-y-1 text-[11px] leading-none">');
         
-        // Row 1 - LED (triangle) + Direction
-        const $row1 = $('<div class="flex gap-1 items-center">');
+        // Row 1 - LED (triangle) + Direction/Light ID
+        const $row1 = $('<div class="flex gap-1 justify-between items-center">');
+        
         // LED triangle overlay
-        const ledVal = data.led || 'PARALLEL';
+        const ledVal = data.led || 'CROSS';
         const $ledTriangle = $('<div class="led-triangle relative w-[120px] h-[110px] mx-2 my-1"></div>');
         $ledTriangle.append('<img class="absolute inset-0 w-full h-full pointer-events-none" src="/wp-content/themes/esper-lightcage-app/assets/images/Light-Front.png" alt="LED layout">');
         const leds = {
@@ -396,9 +399,9 @@ export default class LightSettingsManager {
         });
         $row1.append($ledTriangle);
 
-        // Direction select
+        // Direction select (for REGION mode)
         $row1.append(`
-            <select name="direction[__INDEX__]" class="ml-auto bg-black border border-white/20 px-1 py-0.5">
+            <select name="direction[__INDEX__]" class="ml-auto bg-black border border-white/20 px-1 py-0.5 direction-select" ${data.target === 'INDIVIDUAL' ? 'style="display:none;"' : ''}>
                 <option value="GI">Global-Illumination</option>
                 <option value="LEFT">Left</option>
                 <option value="RIGHT">Right</option>
@@ -408,10 +411,20 @@ export default class LightSettingsManager {
                 <option value="BACK">Back</option>
             </select>
         `);
+
+        // Light ID input (for INDIVIDUAL mode)
+        $row1.append(`
+            <div class="ml-auto light-id-select" style="display:none;">
+                <input type="text" name="light_id[__INDEX__]" value="${data.light_id || ''}" class="w-24 bg-black border border-white/20 px-1 py-0.5 w-24" placeholder="Light IDs">
+                <button class="color-picker-btn ml-1 px-1 py-0.5 border border-white/20 hover:bg-white/10">
+                    <span class="material-symbols-outlined text-[14px]">colorize</span>
+                </button>
+            </div>
+        `);
         $grid.append($row1);
 
         // Row 2 - Brightness + Flash
-        const $row2 = $('<div class="flex gap-1 items-center">');
+        const $row2 = $('<div class="flex gap-1 justify-between items-center">');
         // Brightness range
         const brightness = data.brightness != null ? data.brightness : 70;
         $row2.append(`
@@ -421,7 +434,7 @@ export default class LightSettingsManager {
         // Flash duration
         const duration = data.flash_duration != null ? data.flash_duration : 0.5;
         $row2.append(`
-            <input type="number" step="0.1" min="0" value="${duration}" name="flash_duration[__INDEX__]" class="w-12 bg-black border border-white/20 px-1 py-0.5">
+            <input type="number" step="0.1" min="0" value="${duration}" name="flash_duration[__INDEX__]" class="w-24 bg-black border border-white/20 px-1 py-0.5">
             <span class="text-[10px]">s</span>
         `);
         $grid.append($row2);
@@ -853,11 +866,11 @@ export default class LightSettingsManager {
         // Change cursor style
         $('#sphere').css('cursor', 'crosshair');
         
-        // Add overlay message
+        // Add overlay message to advanced light settings container
         if (!$('#color-picker-overlay').length) {
-            $('body').append(`
-                <div id="color-picker-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 pointer-events-none">
-                    <div class="bg-black/80 text-white px-4 py-2 rounded-lg">
+            $('.advanced-light-settings-container').append(`
+                <div id="color-picker-overlay" class="bg-black/50 flex items-center justify-center z-50 pointer-events-none mt-4">
+                    <div class="bg-black bg-opacity-80 text-white py-2">
                         Click on a light in the 3D scene to select it
                         <div class="text-xs text-gray-400 mt-1">Hold Ctrl to select multiple lights</div>
                         <div class="text-xs text-gray-400">Press ESC to cancel</div>

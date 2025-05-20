@@ -168,7 +168,7 @@ private function render_stage_card( array $row, int $i ): void {
             echo '<div class="icon-bar flex items-center gap-1">';
                 echo '<button class="hidden flex items-center move-up"      title="Up"><span class="material-symbols-outlined text-[14px]">arrow_upward</span></button>';
                 echo '<button class="hidden flex items-center move-down"    title="Down"><span class="material-symbols-outlined text-[14px]">arrow_downward</span></button>';
-                echo '<button class="flex items-center target-toggle" data-target="'. ($row['target'] ?? 'REGION') .'" title="Toggle Region/Individual"><span class="material-symbols-outlined text-[14px] target-icon">'. ($row['target'] === 'INDIVIDUAL' ? 'radio_button_checked' : 'grid_view') .'</span></button>';
+                echo '<button class="flex items-center target-toggle" data-target="'. ($row['target'] ?? 'REGION') .'" title="Toggle Region/Individual Light Targeting"><span class="material-symbols-outlined text-[14px] target-icon">'. ($row['target'] === 'INDIVIDUAL' ? 'radio_button_checked' : 'grid_view') .'</span></button>';
                 echo '<button class="flex items-center add-below"    title="Add"><span class="material-symbols-outlined text-[14px]">add_row_below</span></button>';
                 echo '<button class="flex items-center remove-stage" title="Del"><span class="material-symbols-outlined text-[14px]">delete</span></button>';
             echo '</div>';
@@ -181,7 +181,7 @@ private function render_stage_card( array $row, int $i ): void {
         echo '<div class="p-2 grid grid-rows-2 gap-y-1 text-[11px] leading-none">';
 
             /* ROW 1 ─ LED + Direction */
-            echo '<div class="flex gap-1 items-center">';
+            echo '<div class="flex gap-1 justify-between items-center">';
 
                 /* LED radios (triangle layout over image) */
                 echo '<div class="led-triangle relative w-[120px] h-[110px] mx-2 my-1">';
@@ -219,14 +219,14 @@ private function render_stage_card( array $row, int $i ): void {
 
                 /* Light ID select (tiny) */
                 echo '<div class="flex items-center gap-1 light-id-select" '. ($target === 'REGION' ? 'style="display:none;"' : '') .'>';
-                echo '<input type="text" name="light_id['. $idx .']" value="'. ($row['light_id'] ?? 1) .'" class="w-12 bg-black border border-white/20 px-1 py-0.5">';
+                echo '<input type="text" name="light_id['. $idx .']" value="'. ($row['light_id'] ?? 1) .'" class="w-24 bg-black border border-white/20 px-1 py-0.5">';
                 echo '<button class="color-picker-btn bg-black border border-white/20 p-0.5" title="Pick Light"><span class="material-symbols-outlined text-[14px]">colorize</span></button>';
                 echo '</div>';
 
             echo '</div>';
 
             /* ROW 2 ─ Brightness + Flash */
-            echo '<div class="flex gap-1 items-center">';
+            echo '<div class="flex gap-1 justify-between items-center">';
 
                 /* Brightness range */
                 $b = $row['brightness'] ?? 70;
@@ -235,7 +235,7 @@ private function render_stage_card( array $row, int $i ): void {
 
                 /* Flash duration */
                 $f = $row['flash_duration'] ?? 5.0;
-                echo '<input type="number" step="0.1" min="0" value="'. $f .'" name="flash_duration['. $idx .']" class="w-12 bg-black border border-white/20 px-1 py-0.5">';
+                echo '<input type="number" step="0.1" min="0" value="'. $f .'" name="flash_duration['. $idx .']" class="w-24 bg-black border border-white/20 px-1 py-0.5">';
                 echo '<span class="text-[10px]">s</span>';
 
             echo '</div>';

@@ -29,7 +29,7 @@ function onPointerDown(ev) {
     
     // Only focus on the bulb if we're not in color picker mode
     if (!document.querySelector('#color-picker-overlay')) {
-      focusOnBulbMesh(hitObj);
+      // focusOnBulbMesh(hitObj); // Commented out to disable cluster info overlay
     }
   }
 }
