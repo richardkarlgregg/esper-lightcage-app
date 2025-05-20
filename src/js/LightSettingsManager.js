@@ -598,9 +598,11 @@ export default class LightSettingsManager {
 
         // Get current stage settings
         const $currentCard = $cards.eq(this.currentStageIndex);
+        const target = $currentCard.find('input[name^="target"]').val() || 'REGION';
         const direction = $currentCard.find('select[name^="direction"]').val();
         const brightness = parseInt($currentCard.find('input[name^="brightness"]').val());
         const duration = parseFloat($currentCard.find('input[name^="flash_duration"]').val()) * 1000; // Convert to milliseconds
+        const ledType = $currentCard.find('input[type=radio][name^="led"]:checked').val();
 
         // Reset all regions to 0 first
         const regions = ['front', 'back', 'left', 'right', 'top', 'bottom'];
@@ -613,37 +615,75 @@ export default class LightSettingsManager {
             window.setClusterRegionVisibility(regions, false);
         }
 
-        // Set brightness based on direction
-        if (direction === 'GI') {
-            // Global illumination - set all regions to same brightness and show all
-            regions.forEach(region => {
-                window.setRegionBrightness(region, brightness);
-            });
-            if (window.setClusterRegionVisibility) {
-                window.setClusterRegionVisibility(regions, true);
-            }
-        } else {
-            // Set specific region brightness and show only that region
-            const regionMap = {
-                'FRONT': 'front',
-                'BACK': 'back',
-                'LEFT': 'left',
-                'RIGHT': 'right',
-                'TOP': 'top',
-                'BOTTOM': 'bottom'
-            };
-            const region = regionMap[direction];
-            if (region) {
-                window.setRegionBrightness(region, brightness);
+        if (target === 'REGION') {
+            // Set brightness based on direction
+            if (direction === 'GI') {
+                // Global illumination - set all regions to same brightness and show all
+                regions.forEach(region => {
+                    window.setRegionBrightness(region, brightness);
+                });
                 if (window.setClusterRegionVisibility) {
-                    window.setClusterRegionVisibility(region, true);
+                    window.setClusterRegionVisibility(regions, true);
+                }
+            } else {
+                // Set specific region brightness and show only that region
+                const regionMap = {
+                    'FRONT': 'front',
+                    'BACK': 'back',
+                    'LEFT': 'left',
+                    'RIGHT': 'right',
+                    'TOP': 'top',
+                    'BOTTOM': 'bottom'
+                };
+                const region = regionMap[direction];
+                if (region) {
+                    window.setRegionBrightness(region, brightness);
+                    if (window.setClusterRegionVisibility) {
+                        window.setClusterRegionVisibility(region, true);
+                    }
                 }
             }
+        } else {
+            // Individual light targeting
+            const lightIds = $currentCard.find('input[name^="light_id"]').val().split(',').map(id => id.trim());
+            
+            // Reset all lights first
+            if (window.setBulbBrightness) {
+                // Reset all bulbs of the selected LED type
+                const modelingLightMap = {
+                    'PARALLEL': 0,
+                    'CROSS': 1,
+                    'NEUTRAL': 2
+                };
+                const bulbIndex = modelingLightMap[ledType];
+                
+                // Reset all lights to 0 brightness
+                if (window.lights) {
+                    window.lights.forEach((cluster, clusterId) => {
+                        window.setBulbBrightness(clusterId, bulbIndex, 0);
+                    });
+                }
+            }
+
+            // Set brightness for each selected light
+            lightIds.forEach(lightId => {
+                if (window.setBulbBrightness) {
+                    const clusterId = parseInt(lightId);
+                    const modelingLightMap = {
+                        'PARALLEL': 0,
+                        'CROSS': 1,
+                        'NEUTRAL': 2
+                    };
+                    const bulbIndex = modelingLightMap[ledType];
+                    
+                    // Set brightness for the specific bulb
+                    window.setBulbBrightness(clusterId, bulbIndex, brightness);
+                }
+            });
         }
 
         // Update modeling light based on LED selection
         if (window.setLightTypeBrightness) {
-            const ledType = $currentCard.find('input[type=radio][name^="led"]:checked').val();
             const modelingLightMap = {
                 'PARALLEL': 'parallel',
                 'CROSS': 'cross',
@@ -710,9 +750,6 @@ export default class LightSettingsManager {
                     }
                 }
             }
-
-            // Store current LED type for next iteration
-            this.previousLedType = ledType;
         }
 
         // Move to next stage

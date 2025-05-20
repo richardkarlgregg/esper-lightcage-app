@@ -899,11 +899,12 @@ export function setBulbBrightness(clusterId, bulbIndex, percent) {
   }
 }
 
-/* Make helpers available to non-ESM scripts =================================*/
+/* Make helpers available to vanilla scripts =================================*/
 if (typeof window !== 'undefined') {
   window.setBulbVisibility  = setBulbVisibility;
   window.toggleBulb         = toggleBulb;
   window.setBulbBrightness  = setBulbBrightness;
+  window.lights            = lights;  // Expose lights array
 }
 
 function showClusterInfo(id, pos, bulbIdx) {

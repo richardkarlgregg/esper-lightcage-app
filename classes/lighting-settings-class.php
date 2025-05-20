@@ -219,7 +219,7 @@ private function render_stage_card( array $row, int $i ): void {
 
                 /* Light ID select (tiny) */
                 echo '<div class="flex items-center gap-1 light-id-select" '. ($target === 'REGION' ? 'style="display:none;"' : '') .'>';
-                echo '<input type="text" name="light_id['. $idx .']" value="'. ($row['light_id'] ?? 1) .'" class="w-12 bg-black border border-white/20 px-1 py-0.5" readonly>';
+                echo '<input type="text" name="light_id['. $idx .']" value="'. ($row['light_id'] ?? 1) .'" class="w-12 bg-black border border-white/20 px-1 py-0.5">';
                 echo '<button class="color-picker-btn bg-black border border-white/20 p-0.5" title="Pick Light"><span class="material-symbols-outlined text-[14px]">colorize</span></button>';
                 echo '</div>';
 
