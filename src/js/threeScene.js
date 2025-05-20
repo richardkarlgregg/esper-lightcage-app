@@ -905,6 +905,7 @@ if (typeof window !== 'undefined') {
   window.toggleBulb         = toggleBulb;
   window.setBulbBrightness  = setBulbBrightness;
   window.lights            = lights;  // Expose lights array
+  window.regionClusters    = regionClusters;  // Expose region mapping
 }
 
 function showClusterInfo(id, pos, bulbIdx) {

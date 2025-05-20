@@ -647,22 +647,22 @@ export default class LightSettingsManager {
             // Individual light targeting
             const lightIds = $currentCard.find('input[name^="light_id"]').val().split(',').map(id => id.trim());
             
-            // Reset all lights first
-            if (window.setBulbBrightness) {
-                // Reset all bulbs of the selected LED type
+            // Reset all lights first and hide them
+            if (window.setBulbBrightness && window.lights) {
                 const modelingLightMap = {
                     'PARALLEL': 0,
                     'CROSS': 1,
                     'NEUTRAL': 2
                 };
-                const bulbIndex = modelingLightMap[ledType];
                 
-                // Reset all lights to 0 brightness
-                if (window.lights) {
-                    window.lights.forEach((cluster, clusterId) => {
+                // Reset and hide all lights
+                window.lights.forEach((cluster, clusterId) => {
+                    // Hide all bulbs in this cluster
+                    cluster.spheres.forEach((sphere, bulbIndex) => {
                         window.setBulbBrightness(clusterId, bulbIndex, 0);
+                        sphere.visible = false;
                     });
-                }
+                });
             }
 
             // Set brightness for each selected light
@@ -676,10 +676,37 @@ export default class LightSettingsManager {
                     };
                     const bulbIndex = modelingLightMap[ledType];
                     
-                    // Set brightness for the specific bulb
-                    window.setBulbBrightness(clusterId, bulbIndex, brightness);
+                    // Show and set brightness for the specific bulb
+                    if (window.lights && window.lights[clusterId]) {
+                        const cluster = window.lights[clusterId];
+                        // Show only the selected LED type
+                        cluster.spheres.forEach((sphere, idx) => {
+                            sphere.visible = (idx === bulbIndex);
+                        });
+                        window.setBulbBrightness(clusterId, bulbIndex, brightness);
+                    }
                 }
             });
+
+            // Set region brightness for regions containing selected lights
+            if (window.regionClusters) {
+                // Find which regions contain our selected lights
+                const regionsToLight = new Set();
+                lightIds.forEach(lightId => {
+                    const clusterId = parseInt(lightId);
+                    // Check each region to see if it contains this light
+                    Object.entries(window.regionClusters).forEach(([region, clusters]) => {
+                        if (clusters.includes(clusterId)) {
+                            regionsToLight.add(region);
+                        }
+                    });
+                });
+
+                // Set brightness for regions containing selected lights
+                regionsToLight.forEach(region => {
+                    window.setRegionBrightness(region, brightness);
+                });
+            }
         }
 
         // Update modeling light based on LED selection
