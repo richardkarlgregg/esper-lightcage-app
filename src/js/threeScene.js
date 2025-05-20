@@ -6,6 +6,20 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
+const raycaster = new THREE.Raycaster();
+const pointer   = new THREE.Vector2();
+
+function onPointerDown(ev) {
+  // NDC coords ­-1 … +1
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((ev.clientX - rect.left) / rect.width)  * 2 - 1;
+  pointer.y = (-(ev.clientY - rect.top)  / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(lightGroup.children, true); // bulbs live in lightGroup
+  if (hits.length) focusOnBulbMesh(hits[0].object);    // first hit is nearest
+}
+
 let renderer, scene, camera, controls, lightGroup, lights = [], originalOpacities = {}, composer, bloomPass;
 let rotationGroup; // Parent group for sphere and lights
 let wireframeMesh; // The sphere mesh
@@ -23,6 +37,23 @@ let regionLightsVisible = true;   // default ON                  // { left: Poin
 const typePercent   = { parallel: 100, cross: 100, neutral: 100 };   // current slider levels
 const MASTER_GAIN   = 200;                    // tweak overall brightness
 let beamHelper;
+const BULB_LABEL = ['Parallel', 'Cross', 'Neutral'];   // bulbIndex → name
+
+
+// ─── overlay / drag helpers ───────────────────────────────
+let overlaySVG       = null;   // <svg> that holds the yellow line
+let clusterLine      = null;   // <line> element itself
+let currentClusterPos = null;  // THREE.Vector3 world-space centre of the cluster
+
+// ─── hover helpers ───────────────────────────────
+let hoverDiv      = null;      // <div> that shows live bulb info
+let lastHoverObj  = null;      // THREE.Mesh we’re currently over
+
+// ─── focus-state ──────────────────────────────
+let focused             = false;        // are we in a cluster zoom?
+let savedCamPos         = null;         // camera.position before zoom
+let savedControlsTarget = null;         // controls.target before zoom
+let savedRotY           = 0;            // rotationGroup.rotation.y before zoom
 
 // individual gain (0‒1) for each of the six region lights
 const regionGain = {
@@ -77,11 +108,15 @@ export function initThreeJS() {
     renderer.autoClear = false;
     container.appendChild(renderer.domElement);
 
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);   // NEW
+
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
     camera.position.set(0, 5, 12);
 
     controls = new OrbitControls(camera, renderer.domElement);
+    controls.addEventListener('change', updateConnectionLine); 
     controls.enableDamping = true;
     controls.enableZoom = true;
     controls.enablePan = true;
@@ -172,6 +207,7 @@ export function initThreeJS() {
         orientationAxes.rotation.y = -camera.rotation.y;
         orientationAxes.rotation.z = -camera.rotation.z;
         axesRenderer.render(axesScene, axesCamera);
+        updateConnectionLine();          // <─ NEW (keeps line “live”)
 
         composer.render();
     }
@@ -278,6 +314,12 @@ function createLightCluster(x, y, z, intensity) {
       const p = base.clone().add(off);
       cluster.spheres.push(addLightSphere(p, intensity));
     });
+
+    // tag bulbs with their cluster-id and bulb-index
+cluster.spheres.forEach((s, i) => {
+  s.userData.clusterId = cluster.id;
+  s.userData.bulbIndex = i;
+});
   
     lights.push(cluster);                 // one entry per *cluster*
     originalOpacities[cluster.id] = intensity;
@@ -405,6 +447,77 @@ function getTangentBasis(p) {
     lightGroup.add(s);
     return s;
   }
+
+/**
+ * Smoothly move the camera/controls so the clicked bulb fills the screen.
+ * The animation mimics focusOnLight(): first reset the rotation group,
+ * then lerp the camera & controls to their targets.
+ */
+export function focusOnBulbMesh(mesh) {
+
+  if (!focused) {
+        savedCamPos         = camera.position.clone();
+        savedControlsTarget = controls.target.clone();
+        savedRotY           = rotationGroup.rotation.y;
+        focused = true;
+      }
+
+
+  // ───── 1.  Pause auto-spin & reset rotation group ─────
+  stopSphereRotation();
+
+  const defaultRotY   = 0;                          // ‘home’ rotation
+  const startRotY     = rotationGroup.rotation.y;
+  let   rotProgress   = 0;
+
+  (function animateRotationBack() {
+    rotProgress = Math.min(rotProgress + 0.05, 1);  // linear ease
+    rotationGroup.rotation.y =
+      THREE.MathUtils.lerp(startRotY, defaultRotY, rotProgress);
+
+    if (rotProgress < 1) requestAnimationFrame(animateRotationBack);
+  })();
+
+
+  // ───── 2.  Work out final camera & target positions ─────
+  const targetPos   = mesh.getWorldPosition(new THREE.Vector3());
+
+  // Move the camera a bit “behind” the bulb (along its normal) and
+  // tilt slightly upward so the object sits nicely in frame.
+  const cameraTarget = targetPos
+    .clone()
+    .normalize()
+    .multiplyScalar(targetPos.length() + 4)   // pull back 4 units
+    .add(new THREE.Vector3(0, 1, 0));         // gentle up-tilt
+
+  const camStart = camera.position.clone();
+  const tgtStart = controls.target.clone();
+
+  let focusProgress = 0;
+  (function animateFocus() {
+    focusProgress = Math.min(focusProgress + 0.05, 1);
+
+    // same style as focusOnLight – lerp on every frame
+    camera.position.lerpVectors(camStart, cameraTarget, focusProgress);
+    controls.target.lerpVectors(tgtStart, targetPos, focusProgress);
+    controls.update();
+
+    if (focusProgress < 1) requestAnimationFrame(animateFocus);
+  })();
+
+  // (Optional) emphasise the clicked cluster
+  dimLightsExcept(mesh.userData.clusterId);
+
+  const centre = getClusterCentre(mesh.userData.clusterId);
+   showClusterInfo(
+     mesh.userData.clusterId,
+     centre,
+     mesh.userData.bulbIndex            // <─ NEW
+   );
+
+}
+
+
 
 export function focusOnLight(lightId) {
     // Pause automatic rotation
@@ -777,4 +890,233 @@ if (typeof window !== 'undefined') {
   window.setBulbVisibility  = setBulbVisibility;
   window.toggleBulb         = toggleBulb;
   window.setBulbBrightness  = setBulbBrightness;
+}
+
+function showClusterInfo(id, pos, bulbIdx) {
+  let div = document.getElementById('clusterInfo');
+  if (!div) {
+    div = document.createElement('div');
+    div.id = 'clusterInfo';
+    Object.assign(div.style, {
+      position: 'absolute',
+      top: '20px', right: '20px',
+      padding: '12px 16px',
+      background: 'rgba(0,0,0,.80)',
+      color: '#fff', borderRadius: '8px',
+      fontFamily: 'sans-serif', cursor: 'move',
+      zIndex: 2000,
+      width: '180px',            // fixed size
+      height: '120px',
+    });
+    document.body.appendChild(div);
+
+    /* ——— DRAG LOGIC ——— */
+    let dragging = false, offX = 0, offY = 0;
+    div.addEventListener('pointerdown', e => {
+     // start drag **only** when user clicks the panel itself,
+    // not its children (e.g. the Close button)
+      if (e.target !== div) return;
+      dragging = true;
+      offX = e.clientX - div.offsetLeft;
+      offY = e.clientY - div.offsetTop;
+      div.setPointerCapture(e.pointerId);
+    });
+    div.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      div.style.left = (e.clientX - offX) + 'px';
+      div.style.top  = (e.clientY - offY) + 'px';
+      updateConnectionLine();                 // ▲ keep line glued to panel
+    });
+    div.addEventListener('pointerup',   () => dragging = false);
+    div.addEventListener('pointercancel', () => dragging = false);
+  }
+
+  div.innerHTML = `
+    <strong>Cluster ${id}</strong><br/>
+    <em>${BULB_LABEL[bulbIdx] ?? 'Unknown'}</em><br/>   <!-- NEW -->
+    X ${pos.x.toFixed(2)}<br/>
+    Y ${pos.y.toFixed(2)}<br/>
+    Z ${pos.z.toFixed(2)}<br/>
+    <button id="clusterCloseBtn"
++         style="margin-top:8px; display:block; width:100%;">Close</button>
+  `;
+
+  document.getElementById('clusterCloseBtn').onclick = closeClusterInfo;
+
+  /* ——— yellow line ——— */
+  const svg = getOverlaySVG();
+  removeConnectionLine();                     // in case an old one exists
+  clusterLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  clusterLine.setAttribute('stroke', 'rgba(255, 199, 21, 1)');  // same golden hue
+  clusterLine.setAttribute('stroke-width', '1');
+  svg.appendChild(clusterLine);
+
+  currentClusterPos = pos.clone();
+  requestAnimationFrame(updateConnectionLine);  // wait 1 frame
+
+}
+
+
+function closeClusterInfo() {
+  const div = document.getElementById('clusterInfo');
+  if (div) div.remove();
+  removeConnectionLine();
+  unhideHoverInfo(); 
+  unfocusView();
+}
+
+function unfocusView() {
+  if (!focused) return;
+
+  stopSphereRotation();                       // optional
+
+  const cam0  = camera.position.clone();
+  const tgt0  = controls.target.clone();
+  const rot0  = rotationGroup.rotation.y;
+
+  let t = 0;
+  (function animateBack() {
+    t = Math.min(t + 0.05, 1);
+    camera.position.lerpVectors(cam0, savedCamPos,         t);
+    controls.target.lerpVectors(tgt0, savedControlsTarget, t);
+    rotationGroup.rotation.y = THREE.MathUtils.lerp(rot0, savedRotY, t);
+    controls.update();
+
+    if (t < 1) {
+      requestAnimationFrame(animateBack);
+    } else {
+      resetLights();                          // restore bulb opacities
+      focused = false;
+      // startSphereRotation();               // restart auto-spin if you like
+    }
+  })();
+}
+
+/*───────────────────────────────────────────────────────────*
+ *  DRAGGABLE PANEL  +  SCREEN-SPACE LINE TO CLUSTER
+ *───────────────────────────────────────────────────────────*/
+
+// return (and lazily create if necessary) a full-window SVG
+function getOverlaySVG() {
+  if (!overlaySVG) {
+    overlaySVG = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    Object.assign(overlaySVG.style, {
+      position: 'absolute', top: 0, left: 0,
+      width: '100%', height: '100%',
+      pointerEvents: 'none',   // let clicks pass through
+      zIndex: 1500
+    });
+    document.body.appendChild(overlaySVG);
+  }
+  return overlaySVG;
+}
+
+// called every frame (from animate) + on drag
+function updateConnectionLine() {
+  if (!clusterLine || !currentClusterPos) return;
+
+  // Project world-space position into screen-space
+  const { x: sx, y: sy } = worldToScreen(currentClusterPos);   // <─ NEW
+
+  // anchor point: centre-right edge of the panel
+  const panel = document.getElementById('clusterInfo');
+  if (!panel) return;
+  const rect = panel.getBoundingClientRect();
+  const px = rect.left + rect.width  / 2;
+  const py = rect.top  + rect.height / 2;
+
+  clusterLine.setAttribute('x1', px);
+  clusterLine.setAttribute('y1', py);
+  clusterLine.setAttribute('x2', sx);
+  clusterLine.setAttribute('y2', sy);
+}
+
+// remove line & overlay when we unfocus
+function removeConnectionLine() {
+  if (clusterLine && overlaySVG) {
+    overlaySVG.removeChild(clusterLine);
+    clusterLine  = null;
+    // keep the SVG; it’s inexpensive and may be reused
+  }
+}
+
+/*───────────────────────────────────────────────*
+ *   SCREEN-SPACE PROJECTION with canvas offset
+ *───────────────────────────────────────────────*/
+function worldToScreen(pos) {
+  const v = pos.clone().project(camera);
+  const rect = renderer.domElement.getBoundingClientRect();   // <─ NEW
+  return {
+    x: ( v.x * 0.5 + 0.5) * rect.width  + rect.left,
+    y: (-v.y * 0.5 + 0.5) * rect.height + rect.top
+  };
+}
+
+function getClusterCentre(clusterId) {                        // <─ NEW
+  const spheres = lights[clusterId].spheres;
+  const centre  = new THREE.Vector3();
+  spheres.forEach(s => centre.add(s.getWorldPosition(new THREE.Vector3())));
+  return centre.multiplyScalar(1 / spheres.length);
+}
+
+function showHoverInfo(obj) {
+  if (!hoverDiv) {
+    hoverDiv = document.createElement('div');
+    Object.assign(hoverDiv.style, {
+      position: 'absolute',
+      bottom: '20px', left: '20px',
+      padding: '6px 10px',
+      fontFamily: 'sans-serif',
+      fontSize: '12px',
+      color: '#fff',
+      background: 'rgba(0,0,0,.7)',
+      borderRadius: '4px',
+      pointerEvents: 'none',
+      zIndex: 1200
+    });
+    document.body.appendChild(hoverDiv);
+  }
+
+  const clId   = obj.userData.clusterId;
+  const bulbIx = obj.userData.bulbIndex;
+  const pos    = obj.getWorldPosition(new THREE.Vector3());
+
+  hoverDiv.innerHTML =
+    `Cluster ${clId}&nbsp;•&nbsp;${BULB_LABEL[bulbIx]}<br>` +
+    `X ${pos.x.toFixed(2)} Y ${pos.y.toFixed(2)} Z ${pos.z.toFixed(2)}`;
+}
+
+function hideHoverInfo() {
+  if (hoverDiv) hoverDiv.style.display = 'none';
+}
+
+function unhideHoverInfo() {
+  if (hoverDiv) hoverDiv.style.display = 'block';
+}
+
+function onPointerMove(ev) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((ev.clientX - rect.left) / rect.width)  * 2 - 1;
+  pointer.y = (-(ev.clientY - rect.top)  / rect.height) * 2 + 1;
+
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(lightGroup.children, true);
+
+  if (hits.length) {
+    const hitObj = hits[0].object;
+
+    // pointer cursor
+    renderer.domElement.style.cursor = 'pointer';
+
+    // update tooltip only if we switched bulbs
+    if (hitObj !== lastHoverObj) {
+      lastHoverObj = hitObj;
+      showHoverInfo(hitObj);
+      unhideHoverInfo();
+    }
+  } else {
+    renderer.domElement.style.cursor = 'auto';
+    lastHoverObj = null;
+    hideHoverInfo();
+  }
 }
