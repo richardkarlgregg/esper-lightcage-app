@@ -13,6 +13,8 @@ export default class LightSettingsManager {
         };
         this.previousLedType = null;
         this.saveTimeout = null;
+        this.isColorPickerActive = false;
+        this.activeColorPickerInput = null;
         this.init();
         this.render();
     }
@@ -240,6 +242,11 @@ export default class LightSettingsManager {
             this.debouncedSave();
         });
 
+        // Add change handler for light_id input
+        $(document).on('change', '#stage-composer-wrapper input[name^="light_id"]', () => {
+            this.debouncedSave();
+        });
+
         // Mouse wheel horizontal scroll
         $('#stage-timeline').on('wheel', function(e) {
             if (e.originalEvent.deltaY !== 0) {
@@ -255,6 +262,60 @@ export default class LightSettingsManager {
             const $group = $(this).closest('.stage-group');
             $group.toggleClass('open');
             $group.find('.stage-details').toggle();      // show / hide row
+        });
+
+        // Color picker button click handler
+        $(document).on('click', '#stage-composer-wrapper .color-picker-btn', e => {
+            e.preventDefault();
+            const $btn = $(e.currentTarget);
+            const $input = $btn.siblings('input');
+            
+            if (this.isColorPickerActive) {
+                // Deactivate color picker mode
+                this.deactivateColorPicker();
+            } else {
+                // Activate color picker mode
+                this.activateColorPicker($input);
+            }
+        });
+
+        // Handle light selection from Three.js scene
+        $(document).on('lightSelected', (e, lightId, isCtrlClick) => {
+            if (this.isColorPickerActive && this.activeColorPickerInput) {
+                const $input = $(this.activeColorPickerInput);
+                let currentValue = $input.val();
+                let lightIds = currentValue ? currentValue.split(',').map(id => id.trim()) : [];
+                
+                if (isCtrlClick) {
+                    // Toggle the selected light in the list
+                    const index = lightIds.indexOf(lightId.toString());
+                    if (index === -1) {
+                        lightIds.push(lightId);
+                    } else {
+                        lightIds.splice(index, 1);
+                    }
+                } else {
+                    // Single selection mode - replace the value
+                    lightIds = [lightId];
+                }
+                
+                // Update the input value
+                $input.val(lightIds.join(', '));
+                
+                // Only deactivate color picker if it's not a Ctrl+Click
+                if (!isCtrlClick) {
+                    this.deactivateColorPicker();
+                }
+                
+                this.debouncedSave();
+            }
+        });
+
+        // Handle escape key to cancel color picker mode
+        $(document).on('keydown', e => {
+            if (e.key === 'Escape' && this.isColorPickerActive) {
+                this.deactivateColorPicker();
+            }
         });
     }
 
@@ -387,7 +448,7 @@ export default class LightSettingsManager {
             return {
                 led: $card.find('input[type=radio][name^="led"]:checked').val() || '',
                 direction: target === 'REGION' ? $card.find('select[name^="direction"]').val() : null,
-                light_id: target === 'INDIVIDUAL' ? $card.find('select[name^="light_id"]').val() : null,
+                light_id: target === 'INDIVIDUAL' ? $card.find('input[name^="light_id"]').val() : null,
                 brightness: $card.find('input[name^="brightness"]').val(),
                 flash_duration: $card.find('input[name^="flash_duration"]').val(),
                 target: target
@@ -715,6 +776,48 @@ export default class LightSettingsManager {
         } else {
             $controls.removeClass('opacity-100').addClass('opacity-0');
         }
+    }
+
+    activateColorPicker($input) {
+        this.isColorPickerActive = true;
+        this.activeColorPickerInput = $input[0];
+        
+        // Add visual feedback
+        $input.addClass('border-esper-yellow');
+        $input.siblings('.color-picker-btn').addClass('bg-esper-yellow text-black');
+        
+        // Change cursor style
+        $('#sphere').css('cursor', 'crosshair');
+        
+        // Add overlay message
+        if (!$('#color-picker-overlay').length) {
+            $('body').append(`
+                <div id="color-picker-overlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 pointer-events-none">
+                    <div class="bg-black/80 text-white px-4 py-2 rounded-lg">
+                        Click on a light in the 3D scene to select it
+                        <div class="text-xs text-gray-400 mt-1">Hold Ctrl to select multiple lights</div>
+                        <div class="text-xs text-gray-400">Press ESC to cancel</div>
+                    </div>
+                </div>
+            `);
+        }
+    }
+
+    deactivateColorPicker() {
+        this.isColorPickerActive = false;
+        
+        // Remove visual feedback
+        if (this.activeColorPickerInput) {
+            $(this.activeColorPickerInput).removeClass('border-esper-yellow');
+            $(this.activeColorPickerInput).siblings('.color-picker-btn').removeClass('bg-esper-yellow text-black');
+            this.activeColorPickerInput = null;
+        }
+        
+        // Reset cursor style
+        $('#sphere').css('cursor', '');
+        
+        // Remove overlay
+        $('#color-picker-overlay').remove();
     }
 }
 

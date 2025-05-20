@@ -10,14 +10,28 @@ const raycaster = new THREE.Raycaster();
 const pointer   = new THREE.Vector2();
 
 function onPointerDown(ev) {
-  // NDC coords ­-1 … +1
+  // NDC coords -1 … +1
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.x = ((ev.clientX - rect.left) / rect.width)  * 2 - 1;
   pointer.y = (-(ev.clientY - rect.top)  / rect.height) * 2 + 1;
 
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(lightGroup.children, true); // bulbs live in lightGroup
-  if (hits.length) focusOnBulbMesh(hits[0].object);    // first hit is nearest
+  
+  if (hits.length) {
+    const hitObj = hits[0].object;
+    const clusterId = hitObj.userData.clusterId;
+    const bulbIndex = hitObj.userData.bulbIndex;
+    const isCtrlClick = ev.ctrlKey || ev.metaKey; // metaKey for Mac support
+    
+    // Emit lightSelected event with the light ID and Ctrl+Click status
+    $(document).trigger('lightSelected', [clusterId, isCtrlClick]);
+    
+    // Only focus on the bulb if we're not in color picker mode
+    if (!document.querySelector('#color-picker-overlay')) {
+      focusOnBulbMesh(hitObj);
+    }
+  }
 }
 
 let renderer, scene, camera, controls, lightGroup, lights = [], originalOpacities = {}, composer, bloomPass;
@@ -47,7 +61,7 @@ let currentClusterPos = null;  // THREE.Vector3 world-space centre of the cluste
 
 // ─── hover helpers ───────────────────────────────
 let hoverDiv      = null;      // <div> that shows live bulb info
-let lastHoverObj  = null;      // THREE.Mesh we’re currently over
+let lastHoverObj  = null;      // THREE.Mesh we're currently over
 
 // ─── focus-state ──────────────────────────────
 let focused             = false;        // are we in a cluster zoom?
@@ -207,7 +221,7 @@ export function initThreeJS() {
         orientationAxes.rotation.y = -camera.rotation.y;
         orientationAxes.rotation.z = -camera.rotation.z;
         axesRenderer.render(axesScene, axesCamera);
-        updateConnectionLine();          // <─ NEW (keeps line “live”)
+        updateConnectionLine();          // <─ NEW (keeps line "live")
 
         composer.render();
     }
@@ -466,7 +480,7 @@ export function focusOnBulbMesh(mesh) {
   // ───── 1.  Pause auto-spin & reset rotation group ─────
   stopSphereRotation();
 
-  const defaultRotY   = 0;                          // ‘home’ rotation
+  const defaultRotY   = 0;                          // 'home' rotation
   const startRotY     = rotationGroup.rotation.y;
   let   rotProgress   = 0;
 
@@ -482,7 +496,7 @@ export function focusOnBulbMesh(mesh) {
   // ───── 2.  Work out final camera & target positions ─────
   const targetPos   = mesh.getWorldPosition(new THREE.Vector3());
 
-  // Move the camera a bit “behind” the bulb (along its normal) and
+  // Move the camera a bit "behind" the bulb (along its normal) and
   // tilt slightly upward so the object sits nicely in frame.
   const cameraTarget = targetPos
     .clone()
@@ -1036,7 +1050,7 @@ function removeConnectionLine() {
   if (clusterLine && overlaySVG) {
     overlaySVG.removeChild(clusterLine);
     clusterLine  = null;
-    // keep the SVG; it’s inexpensive and may be reused
+    // keep the SVG; it's inexpensive and may be reused
   }
 }
 

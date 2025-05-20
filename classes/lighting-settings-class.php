@@ -218,11 +218,10 @@ private function render_stage_card( array $row, int $i ): void {
                 echo '</select>';
 
                 /* Light ID select (tiny) */
-                echo '<select name="light_id['. $idx .']" class="ml-auto bg-black border border-white/20 px-1 py-0.5 light-id-select" '. ($target === 'REGION' ? 'style="display:none;"' : '') .'>';
-                for ($i = 1; $i <= 10; $i++) {
-                    echo '<option value="'. $i .'" '. selected( $row['light_id'] ?? 1, $i, false ) .'>Light '. $i .'</option>';
-                }
-                echo '</select>';
+                echo '<div class="flex items-center gap-1 light-id-select" '. ($target === 'REGION' ? 'style="display:none;"' : '') .'>';
+                echo '<input type="text" name="light_id['. $idx .']" value="'. ($row['light_id'] ?? 1) .'" class="w-12 bg-black border border-white/20 px-1 py-0.5" readonly>';
+                echo '<button class="color-picker-btn bg-black border border-white/20 p-0.5" title="Pick Light"><span class="material-symbols-outlined text-[14px]">colorize</span></button>';
+                echo '</div>';
 
             echo '</div>';
 
