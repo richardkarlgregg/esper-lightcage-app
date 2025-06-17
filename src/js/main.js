@@ -58,6 +58,6 @@ $(document).ready(function () {
     store.takeManager.setupEventListeners();
     store.exportManager.setupEventListeners();
 
-    store.uiManager.openJob(646, 'Job 1');
+    //store.uiManager.openJob(646, 'Job 1');
 
 });
