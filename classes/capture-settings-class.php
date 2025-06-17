@@ -77,6 +77,129 @@ function esper_get_capture_template($post) {
             </div>
 
             <div class="bg-black p-6">
+    <div class="w-full mb-4">
+        <h3>Current Stage Settings</h3>
+    </div>
+
+    <?php $composer = new StageComposer( $post->ID ); ?>
+
+    <?php if ( empty( $composer->rows ) ) : ?>
+        <p class="opacity-70">No stage settings found.</p>
+    <?php else : ?>
+        <div class="-mx-2 flex overflow-x-auto pb-4">
+
+            <?php foreach ( $composer->rows as $i => $row ) :
+                $target    = strtoupper( $row['target']   ?? '' );
+                $led       = strtoupper( $row['led']      ?? '' );
+                $direction = strtoupper( $row['direction']?? '' );
+
+                /* icon for direction  */
+                $dir_icon = 'start';
+                if ( $direction === 'TOP'    ) $dir_icon = 'north';
+                if ( $direction === 'BOTTOM' ) $dir_icon = 'south';
+
+                /* helper for lamp dots */
+                $active   = 'bg-esper-yellow';
+                $inactive = 'bg-black border border-esper-yellow';
+            ?>
+                <!-- Card -->
+                <div class="mx-2 w-64 flex-shrink-0 bg-black text-white border border-white border-opacity-10 rounded-lgx">
+
+                    <!-- Header -->
+                    <h4 class="text-black font-semibold bg-esper-yellow uppercase w-full text-xs px-3 py-2 flex justify-between items-center">
+                        <span>Stage&nbsp;<?php echo $i + 1; ?></span>
+                        <span><?php echo esc_html( $led ); ?></span>
+                    </h4>
+
+                    <!-- Body: LED diagram + details -->
+                    <div class="flex">
+
+                        <!-- LED tri-dot diagram -->
+                        <div class="flex flex-col items-center justify-center w-20 p-3">
+                            <div class="flex justify-between w-full">
+                                <span class="inline-block w-4 h-4 rounded-full <?php echo ( $led === 'PARALLEL' ) ? $active : $inactive; ?>"></span>
+                                <span class="inline-block w-4 h-4 rounded-full <?php echo ( $led === 'CROSS'    ) ? $active : $inactive; ?>"></span>
+                            </div>
+                            <div class="flex justify-center w-full mt-4">
+                                <span class="inline-block w-4 h-4 rounded-full <?php echo ( $led === 'NEUTRAL'  ) ? $active : $inactive; ?>"></span>
+                            </div>
+                        </div>
+
+                        <!-- Details -->
+                        <dl class="text-sm p-4 space-y-2 flex-1">
+                            <?php if ( $target === 'REGION' ) : ?>
+                                <div class="flex items-center">
+                                    <span class="material-symbols-outlined text-esper-yellow text-base mr-2" aria-hidden="true">
+                                        <?php echo $dir_icon; ?>
+                                    </span>
+                                    <span class="sr-only">Direction:</span>
+                                    <?php echo esc_html( $row['direction'] ); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ( $target === 'INDIVIDUAL' ) : ?>
+                                <div class="flex items-center">
+                                    <span class="material-symbols-outlined text-esper-yellow text-base mr-2" aria-hidden="true">
+                                        lightbulb
+                                    </span>
+                                    <span class="sr-only">Light ID:</span>
+                                    <?php echo esc_html( $row['light_id'] ?: '—' ); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <!-- Brightness -->
+                            <div>
+                                <div class="flex items-center mb-1">
+                                    <span class="material-symbols-outlined text-esper-yellow text-base mr-2" aria-hidden="true">
+                                        wb_incandescent
+                                    </span>
+                                    <span class="sr-only">Brightness:</span>
+                                    <?php echo intval( $row['brightness'] ); ?> %
+                                </div>
+                                <div class="relative w-full bg-black bg-opacity-25 h-1 rounded">
+                                    <div class="bg-esper-yellow bg-opacity-75 h-1 rounded"
+                                         style="width: <?php echo min( 100, max( 0, intval( $row['brightness'] ) ) ); ?>%;"></div>
+                                </div>
+                            </div>
+
+                            <!-- Flash duration -->
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined text-esper-yellow text-base mr-2" aria-hidden="true">
+                                    flash_on
+                                </span>
+                                <span class="sr-only">Flash duration:</span>
+                                <?php echo esc_html( $row['flash_duration'] ); ?> s
+                            </div>
+
+                            <!-- Target type -->
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined text-esper-yellow text-base mr-2" aria-hidden="true">
+                                    my_location
+                                </span>
+                                <span class="sr-only">Target:</span>
+                                <?php echo esc_html( $target ); ?>
+                            </div>
+                        </dl>
+                    </div> <!-- /flex -->
+                </div> <!-- /card -->
+            <?php endforeach; ?>
+
+        </div>
+    <?php endif; ?>
+</div>
+
+
+
+
+
+
+            <?php
+
+
+
+            ?>
+
+            <div class="bg-black p-6">
                 <div class="w-full mb-4">
                     <h3>Current Camera Settings</h3>
                 </div>

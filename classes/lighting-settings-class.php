@@ -16,7 +16,7 @@ class StageComposer {
     protected $meta_key = 'composer_stages';
 
     /** array of saved rows */
-    protected $rows;
+    public $rows;
 
     /** … baseFields definition stays the same … */
 
