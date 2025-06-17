@@ -143,9 +143,6 @@ export default class UIManager {
             $('.folder-item[data-id="' + jobPostID + '"] .add-btn').first().trigger('click');
         });
 
-
-
-    
         // Event handlers for folder tree items
         $(document).on('click', '.folder-item', function(e) {
             if ($(e.target).closest('.add-btn').length) return;
@@ -213,11 +210,11 @@ export default class UIManager {
                     // Show parent's arrow
                     const $arrow = parentItem.find('.material-symbols-outlined').first();
                     $arrow.removeClass('invisible');
-    
+
                     // Expand parent by removing hidden class
                     $childrenContainer.removeClass('hidden');
                     $arrow.addClass('rotate-90');
-    
+
                     // Add the new item
                     const newItem = self.createFolderItem({
                         id: response.data.id,
@@ -226,7 +223,7 @@ export default class UIManager {
                         children: []
                     });
                     $childrenContainer.append(newItem);
-    
+
                     // Load the new capture or session
                     store.navigationManager.pushScreen(response.data.id, childType);
                     $('.folder-item').removeClass('bg-esper-yellow bg-opacity-10');
@@ -273,7 +270,7 @@ export default class UIManager {
                 try {
                     const response = await store.postManager.createPost('job', newJobLabel);
                     if (response.success && response.data.id) {
-                        openJob(response.data.id, newJobLabel);
+                        self.openJob(response.data.id, newJobLabel);
                     }
                 } catch (error) {
                     console.error('Error creating job:', error);
@@ -327,7 +324,7 @@ export default class UIManager {
                                 ${job.title}
                             `
                         }).on('click', function() {
-                            openJob(job.id, job.title);
+                            self.openJob(job.id, job.title);
                             $('#jobModal').fadeOut(200);
                         });
                         
@@ -342,42 +339,6 @@ export default class UIManager {
             }
         }
     
-        // Open a specific job
-        async function openJob(jobId, jobTitle) {
-            currentJobId = jobId;
-            $('#currentJobTitle').text(jobTitle);
-            
-            try {
-                
-                
-                // Then load the hierarchy for the folder tree
-                const response = await $.post(esperApi.ajaxurl, {
-                    action: 'esper_get_hierarchy',
-                    nonce: esperApi.nonce,
-                    job_id: jobId
-                });
-
-                $('#sideMenu').show();
-                $('#sidebar').show();
-                $('#divider').show();
-                
-                $('#folderTree').empty();
-                
-                if (response.success && response.data.length > 0) {
-                    const job = response.data.find(j => j.id === jobId);
-                    if (job) {
-                        $('#folderTree').append(self.createFolderItem(job));
-                    }
-                }
-
-                // First load the job content
-                await store.navigationManager.pushScreen(jobId, 'job');
-            } catch (error) {
-                console.error('Error loading job:', error);
-                store.notificationManager.showError('Error loading job');
-            }
-        }
-    
         // Close current job
         function closeCurrentJob() {
             currentJobId = null;
@@ -386,8 +347,8 @@ export default class UIManager {
             showDefaultContent();
 
             $('#sideMenu').hide();
-                $('#sidebar').hide();
-                $('#divider').hide();
+            $('#sidebar').hide();
+            $('#divider').hide();
         }
     
         // Show default content
@@ -589,5 +550,38 @@ export default class UIManager {
             //console.log("Fade out complete!");
             if (typeof callback === "function") callback(); // Execute callback if provided
         });
+    }
+
+    // Open a specific job
+    async openJob(jobId, jobTitle) {
+        $('#currentJobTitle').text(jobTitle);
+        
+        try {
+            // Then load the hierarchy for the folder tree
+            const response = await $.post(esperApi.ajaxurl, {
+                action: 'esper_get_hierarchy',
+                nonce: esperApi.nonce,
+                job_id: jobId
+            });
+
+            $('#sideMenu').show();
+            $('#sidebar').show();
+            $('#divider').show();
+            
+            $('#folderTree').empty();
+            
+            if (response.success && response.data.length > 0) {
+                const job = response.data.find(j => j.id === jobId);
+                if (job) {
+                    $('#folderTree').append(this.createFolderItem(job));
+                }
+            }
+
+            // First load the job content
+            await store.navigationManager.pushScreen(jobId, 'job');
+        } catch (error) {
+            console.error('Error loading job:', error);
+            store.notificationManager.showError('Error loading job');
+        }
     }
 }
